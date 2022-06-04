@@ -31,8 +31,6 @@ Darknet YOLO
 
 Installation
 ------------------
-
-Ubuntu Linux
 ~~~~~~~
 
 Python 3 + Tkinter
