@@ -9,7 +9,7 @@ Prerequisites
 
 Darknet should be installed from (https://github.com/AlexeyAB/darknet).
 
-Change your DEFAULT_SETTINGS path to point to your installed Darknet path for use.  
+Change your DEFAULT_SETTINGS path (located at libs/DEFAULT_SETTINGS.py) to point to your installed Darknet path for use.  
 
 Ensure you put the yolov4-tiny.conv.29 weights in your Darknet path.  You can get these weights from:
 https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
