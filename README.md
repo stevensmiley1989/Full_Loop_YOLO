@@ -1,9 +1,6 @@
 # Full_Loop_YOLO
 Full_Loop_YOLO.py is a wrapper for creating custom darknet YoloV4 tiny &amp; regular sized models on your custom datasets. 
 
-
-'''
-Full_Loop_Yolo
 ========
 Created by Steven Smiley 3/20/2022
 
