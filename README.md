@@ -40,7 +40,7 @@ Python 3 + Tkinter
     source venv_Full_Loop_YOLO/bin/activate
     
     cd ~/Full_Loop_YOLO
-    sudo pip3 install -r requirements.txt
+    pip3 install -r requirements.txt
     nano libs/DEFAULT_SETTINGS.py #edit the path for darknet to your installed path above
     python3 Full_Loop_YOLO.py
 ~~~~~~~
