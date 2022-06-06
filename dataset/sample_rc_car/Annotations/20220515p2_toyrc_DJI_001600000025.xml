@@ -1,0 +1,26 @@
+<annotation>
+	<folder>JPEGImages</folder>
+	<filename>20220515p2_toyrc_DJI_001600000025.jpg</filename>
+	<path>/Volumes/Elements/Drone_Videos/Combined_transporter9_camo_only_upto_5_15_2022/JPEGImages/20220515p2_toyrc_DJI_001600000025.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>3840</width>
+		<height>2160</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>transporter9_camo</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>1883</xmin>
+			<ymin>1072</ymin>
+			<xmax>1923</xmax>
+			<ymax>1111</ymax>
+		</bndbox>
+	</object>
+</annotation>

@@ -1,0 +1,26 @@
+<annotation>
+	<folder>JPEGImages</folder>
+	<filename>20220512_toyrc_DJI_0018_00000035.jpg</filename>
+	<path>/media/steven/Elements/Drone_Videos/Combined_transporter9_only_upto_5_15_2022/JPEGImages/20220512_toyrc_DJI_0018_00000035.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1920</width>
+		<height>1080</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>transporter9</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>864</xmin>
+			<ymin>495</ymin>
+			<xmax>928</xmax>
+			<ymax>525</ymax>
+		</bndbox>
+	</object>
+</annotation>

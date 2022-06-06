@@ -1,0 +1,26 @@
+<annotation>
+	<folder>JPEGImages</folder>
+	<filename>20220513_toyrc_DJI_0020_00000021.jpg</filename>
+	<path>/Volumes/Elements/Drone_Videos/Other0020/JPEGImages/20220513_toyrc_DJI_0020_00000021.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>3840</width>
+		<height>2160</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>transporter9</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>1753</xmin>
+			<ymin>855</ymin>
+			<xmax>1860</xmax>
+			<ymax>1003</ymax>
+		</bndbox>
+	</object>
+</annotation>
