@@ -1762,6 +1762,7 @@ class yolo_cfg:
                 self.df_i=self.df[self.df['label_i']==unique_label].copy()
                 self.df_i=self.df_i.drop_duplicates().reset_index().drop('index',axis=1)
                 self.df_i=self.df_i.sample(frac=1) #shuffle all rows 
+                self.df_i=self.df_i.sort_values(by='path_jpeg_dest_i')
                 total_list_i=list(self.df_i['path_jpeg_dest_i'])
                 train_list_i=total_list_i[:int(self.TRAIN_SPLIT*len(self.df_i)/100.)]
                 val_list_i=total_list_i[int(self.TRAIN_SPLIT*len(self.df_i)/100.):]
