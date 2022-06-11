@@ -202,7 +202,7 @@ class main_entry:
 
         self.SETTINGS_FILE_LIST=self.files_keep
         self.df_comb=pd.DataFrame(columns=['times','items'])
-        self.df_comb['times']=[os.path.getmtime(os.path.join('libs/',w+'.py')) for w in self.SETTINGS_FILE_LIST]
+        self.df_comb['times']=[os.path.getmtime(os.path.join('libs',w+'.py')) for w in self.SETTINGS_FILE_LIST] #edit sjs 6/11/2022 use to be libs/
         self.df_comb['items']=[w for w in self.SETTINGS_FILE_LIST]
         self.df_comb=self.df_comb.sort_values(by='times',ascending=True).reset_index().drop('index',axis=1)
         self.SETTINGS_FILE_LIST=list(self.df_comb['items'])
@@ -282,7 +282,7 @@ class main_entry:
         # files_keep.append('DEFAULT_SETTINGS')
         self.SETTINGS_FILE_LIST=self.files_keep
         self.df_comb=pd.DataFrame(columns=['times','items'])
-        self.df_comb['times']=[os.path.getmtime(os.path.join('libs/',w+'.py')) for w in self.SETTINGS_FILE_LIST]
+        self.df_comb['times']=[os.path.getmtime(os.path.join('libs',w+'.py')) for w in self.SETTINGS_FILE_LIST] #edit sjs 6/11/2022 use to be libs/
         self.df_comb['items']=[w for w in self.SETTINGS_FILE_LIST]
         self.df_comb=self.df_comb.sort_values(by='items',ascending=True).reset_index().drop('index',axis=1)
         self.SETTINGS_FILE_LIST=list(self.df_comb['items'])
@@ -318,7 +318,7 @@ class main_entry:
         # self.dropdown_3_label=Button(self.root,text='Edit Script Paths',command=self.run_cmd_editpaths,bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
         # self.dropdown_3_label.grid(row=5,column=1,sticky='ne')        
     def run_cmd_libs(self):
-        cmd_i=open_cmd+" libs/{}.py".format(self.USER_SELECTION.get())
+        cmd_i=open_cmd+" {}.py".format(os.path.join('libs',self.USER_SELECTION.get()))
         os.system(cmd_i)
     # def run_cmd_scripts(self):
     #     if os.path.exists(self.USER_SELECTION2.get()):
@@ -332,7 +332,7 @@ class main_entry:
         self.USER=self.USER_SELECTION.get()
         self.USER=self.USER.strip()
         get_default_settings(self.USER)
-        SAVED_SETTINGS_PATH=os.path.join('libs/{}'.format(self.USER))
+        SAVED_SETTINGS_PATH=os.path.join('libs',self.USER)
         self.close()
     # def submit_script(self):
         
@@ -756,7 +756,7 @@ class yolo_cfg:
             self.tiny_conv29_path=os.path.join(self.darknet_path,"yolov4.conv.137")
         self.prefix_foldername='{}_w{}_h{}_d{}_c{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes)
         self.save_cfg_path=os.path.join(self.base_path,'{}_w{}_h{}_d{}_c{}.cfg'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
-        self.best_weights_path=os.path.join(self.backup_path,self.save_cfg_path.replace('.cfg','').split('/')[-1]+'_train_best.weights')
+        self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path.replace('.cfg',''))+'_train_best.weights')
         self.testcfg_path=self.save_cfg_path.replace('.cfg','_test.cfg')
         self.testobjdata_path=self.data_path
         self.model_i_path=os.path.join(self.MODEL_PATHS,'{}_w{}_h{}_d{}_c{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
@@ -829,10 +829,10 @@ class yolo_cfg:
         yolov4_choice=self.var_yolo_choice.get()
         if yolov4_choice.find('tiny')!=-1:
             self.tiny_conv29_path=os.path.join(self.darknet_path,"yolov4-tiny.conv.29")
-            self.cfg_vanilla_path='libs/custom-yolov4-tiny-detector.cfg'
+            self.cfg_vanilla_path=os.path.join('libs','custom-yolov4-tiny-detector.cfg')
         elif yolov4_choice.find('regular')!=-1:
             self.tiny_conv29_path=os.path.join(self.darknet_path,"yolov4.conv.137")
-            self.cfg_vanilla_path='libs/yolov4-custom.cfg'
+            self.cfg_vanilla_path=os.path.join('libs','yolov4-custom.cfg')
         
         #self.cfg_vanilla_path='libs/yolov4-custom.cfg'
         f=open(self.cfg_vanilla_path,'r')
@@ -1104,7 +1104,7 @@ class yolo_cfg:
         cmd_i=open_cmd+" '{}'".format(self.open_data_path_label_var.get())
         self.open_data_path_button=Button(self.root,image=self.icon_single_file,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_data_path_button.grid(row=7,column=4+1,sticky='se')
-        self.open_data_path_note=tk.Label(self.root,text="{}".format(self.open_data_path_label_var.get().split('/')[-1]),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_data_path_note=tk.Label(self.root,text="{}".format(os.path.basename(self.open_data_path_label_var.get())),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_data_path_note.grid(row=8,column=4+1,sticky='ne')
         # cmd_i=open_cmd+" '{}'".format(self.open_data_path_label_var.get())
         # self.open_data_path_label=Button(self.root,textvariable=self.open_data_path_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
@@ -1323,7 +1323,7 @@ class yolo_cfg:
         f.writelines('config_path_test='+str(self.save_cfg_path_test)+'\n')
         f.writelines('obj_path='+str(self.names_path)+'\n')
         if self.best_weights_path==None:
-            self.best_weights_path=os.path.join(self.backup_path,self.save_cfg_path_test.replace('_test.cfg','').split('/')[-1]+'_train_best.weights')
+            self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path_test.replace('_test.cfg',''))+'_train_best.weights')
         f.writelines('best_weights='+str(self.best_weights_path)+'\n')
         f.writelines('imW='+str(self.WIDTH_NUM)+'\n')
         f.writelines('imH='+str(self.HEIGHT_NUM)+'\n')
@@ -1337,7 +1337,7 @@ class yolo_cfg:
         f.writelines('data_path='+str(self.data_path)+'\n')
         f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
         if self.best_weights_path==None:
-            self.best_weights_path=os.path.join(self.backup_path,self.save_cfg_path_test.replace('_test.cfg','').split('/')[-1]+'_train_best.weights')
+            self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path_test.replace('_test.cfg',''))+'_train_best.weights')
         f.writelines('best_weights='+str(self.best_weights_path)+'\n')
         f.writelines('cd {}\n'.format(self.darknet_path))
         f.writelines('$darknet detector demo $data_path $config_path_test $best_weights -c 0\n')
@@ -1368,7 +1368,7 @@ class yolo_cfg:
         f.writelines('data_path='+str(self.data_path)+'\n')
         f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
         if self.best_weights_path==None:
-            self.best_weights_path=os.path.join(self.backup_path,self.save_cfg_path_test.replace('_test.cfg','').split('/')[-1]+'_train_best.weights')
+            self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path_test.replace('_test.cfg',''))+'_train_best.weights')
         f.writelines('best_weights='+str(self.best_weights_path)+'\n')
         f.writelines('mp4_video='+str(self.mp4_video_path)+'\n')
         f.writelines('cd {}\n'.format(self.darknet_path))
@@ -1398,10 +1398,10 @@ class yolo_cfg:
         f=open(self.save_cfg_path_test.replace('.cfg','_mp4_record.sh'),'w')
         f.writelines('config_path_test='+str(self.save_cfg_path_test)+'\n')
         f.writelines('data_path='+str(self.data_path)+'\n')
-        f.writelines('avi_output='+str(os.path.join(self.base_path,self.mp4_video_path.split('/')[-1].replace('.mp4','.avi')))+'\n')
+        f.writelines('avi_output='+str(os.path.join(self.base_path,os.path.basename(self.mp4_video_path).replace('.mp4','.avi')))+'\n')
         f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
         if self.best_weights_path==None:
-            self.best_weights_path=os.path.join(self.backup_path,self.save_cfg_path_test.replace('_test.cfg','').split('/')[-1]+'_train_best.weights')
+            self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path_test.replace('_test.cfg',''))+'_train_best.weights')
         f.writelines('best_weights='+str(self.best_weights_path)+'\n')
         f.writelines('mp4_video='+str(self.mp4_video_path)+'\n')
 
@@ -1423,7 +1423,7 @@ class yolo_cfg:
         #f.writelines('best_weights='+str(self.best_weights_path)+'\n')
         f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
         f.writelines('mp4_video='+str(self.mp4_video_path)+'\n')
-        f.writelines('avi_output='+str(os.path.join(self.base_path,self.mp4_video_path.split('/')[-1].replace('.mp4','')+'__PREDICTED_WITH-'+self.model_path_test.split('/')[-1]+'.avi'))+'\n')
+        f.writelines('avi_output='+str(os.path.join(self.base_path,os.path.basename(self.mp4_video_path).replace('.mp4','')+'__PREDICTED_WITH-'+os.path.basename(self.model_path_test)+'.avi'))+'\n')
         f.writelines('cd {}\n'.format(self.darknet_path))
         f.writelines('$darknet detector demo $data_path $config_path_test $best_weights $mp4_video -i 0 -thresh {} -out_filename $avi_output\n'.format(str(round(float(self.THRESH_VAR.get()),2))))
         f.close()
@@ -1436,7 +1436,7 @@ class yolo_cfg:
         f.writelines('data_path='+str(self.data_path)+'\n')
         f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
         if self.best_weights_path==None:
-            self.best_weights_path=os.path.join(self.backup_path,self.save_cfg_path_test.replace('_test.cfg','').split('/')[-1]+'_train_best.weights')
+            self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path_test.replace('_test.cfg',''))+'_train_best.weights')
         f.writelines('best_weights='+str(self.best_weights_path)+'\n')
         if self.img_list_path==None:
             f.writelines('path_test_list_txt='+str(self.valid_list_path)+'\n')
@@ -1457,32 +1457,41 @@ class yolo_cfg:
         self.root.destroy()
 
     def save_settings(self,save_root='libs'):
-        if os.path.exists('libs/DEFAULT_SETTINGS.py'):
-            f=open('libs/DEFAULT_SETTINGS.py','r')
+        if os.path.exists(os.path.join('libs','DEFAULT_SETTINGS.py')):
+            f=open(os.path.join('libs','DEFAULT_SETTINGS.py'),'r')
             f_read=f.readlines()
             f.close()
+            from libs import DEFAULT_SETTINGS as DS
+            all_variables = dir(DS)
+            all_real_variables=[]
+            # Iterate over the whole list where dir( )
+            # is stored.
+            for name in all_variables:
+                # Print the item if it doesn't start with '__'
+                if not name.startswith('__'):
+                    if name.find('path_prefix_volumes_one')==-1 and name.find('path_prefix_elements')==-1 and name.find('path_prefix_mount_mac')==-1 and name!='os':
+                        all_real_variables.append(name)
             f_new=[]
-            for line in f_read:
-                if line.find("path_prefix")==-1 or line.find('PREFIX=')!=-1 or line.find("format(path_prefix)")!=-1 and line.find('os.path')==-1 and line.find('makedir')==-1:
-                    if line.find('=')!=-1:
-                        prefix_i=line.split('=')[0]
-                        try:
-                            prefix_i_comb="self."+prefix_i
-                            prefix_i_comb=prefix_i_comb.strip()
-                            print(prefix_i_comb)
-                            prefix_i_value=eval(prefix_i_comb)
-                        except:
-                            pass
-                        if line.split('=')[1].find("r'")!=-1:
-                            prefix_i_value="r'"+prefix_i_value+"'"
-                        elif type(prefix_i_value).__name__.find('int')!=-1:
-                            pass
-                        elif type(prefix_i_value).__name__.find('str')!=-1:
-                            prefix_i_value="'"+prefix_i_value+"'"
-                        f_new.append(prefix_i+"="+str(prefix_i_value)+'\n')
+            for prefix_i in all_real_variables:
+                try:
+                    prefix_i_comb="self."+prefix_i
+                    prefix_i_comb=prefix_i_comb.strip()
+                    print(prefix_i_comb)
+                    prefix_i_value=eval(prefix_i_comb)
+                except:
+                    pass
+                if prefix_i=='path_prefix':
+                    pass
+                elif (prefix_i.lower().find('path')!=-1 or prefix_i.lower().find('background')!=-1):
+                    prefix_i_value="r'"+prefix_i_value+"'"
+                elif type(prefix_i_value).__name__.find('int')!=-1:
+                    pass
+                elif type(prefix_i_value).__name__.find('str')!=-1:
+                    prefix_i_value="'"+prefix_i_value+"'"
+                f_new.append(prefix_i+"="+str(prefix_i_value)+'\n')               
             prefix_save=_platform+'_'+self.prefix_foldername+'_SAVED_SETTINGS'
             f_new.append('YOLO_MODEL_PATH=r"{}"\n'.format(os.path.join(self.base_path_OG,self.prefix_foldername)))
-            f=open('{}/{}.py'.format(save_root,prefix_save.replace('-','_')),'w')
+            f=open('{}.py'.format(os.path.join(save_root,prefix_save.replace('-','_'))),'w')
             wrote=[f.writelines(w) for w in f_new]
             f.close()
 
@@ -1517,13 +1526,13 @@ class yolo_cfg:
                     self.total_annos_list.append(os.path.join(self.path_Annotations,img_i_name+'.xml'))
         if self.var_overwrite.get()=='No':
             self.yolo_files=[os.path.join(self.path_Yolo,w) for w in os.listdir(self.path_Yolo) if w.find('df_YOLO.pkl')!=-1]
-            self.yolo_ints=[int(w.split('/')[-1].split('_df_YOLO.pkl')[0]) for w in self.yolo_files if w[0]!='.']
+            self.yolo_ints=[int(os.path.basename(w).split('_df_YOLO.pkl')[0]) for w in self.yolo_files if w[0]!='.']
             self.max_ints=max(self.yolo_ints)
             self.counts=self.max_ints
         elif self.var_overwrite.get()=='Add':
             self.yolo_files=[os.path.join(self.path_Yolo,w) for w in os.listdir(self.path_Yolo) if w.find('df_YOLO.pkl')!=-1]
             if len(self.yolo_files)>0:
-                self.yolo_ints=[int(w.split('/')[-1].split('_df_YOLO.pkl')[0]) for w in self.yolo_files if w[0]!='.']
+                self.yolo_ints=[int(os.path.basename(w).split('_df_YOLO.pkl')[0]) for w in self.yolo_files if w[0]!='.']
                 self.max_ints=max(self.yolo_ints)
                 self.counts=self.max_ints+self.increment
             annos_combined=list(set(annos_new))+list(set(annos_old)-set(annos_new))
@@ -1550,7 +1559,7 @@ class yolo_cfg:
         self.get_all_annos()
         count=self.counts
         for full_anno in tqdm(self.total_annos_list):
-            anno=full_anno.split('/')[-1]
+            anno=os.path.basename(full_anno) #.split('/')[-1]
             if count==self.counts:
                 count_str=self.pad(count)
                 self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
@@ -1841,7 +1850,7 @@ class yolo_cfg:
         cmd_i=open_cmd+" '{}'".format(self.open_backup_models_label_var.get())
         self.open_backup_button=Button(self.root,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_backup_button.grid(row=3,column=5,sticky='se')
-        self.open_backup_note=tk.Label(self.root,text=self.open_backup_models_label_var.get().split('/')[-1],bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_backup_note=tk.Label(self.root,text=os.path.basename(self.open_backup_models_label_var.get()),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_backup_note.grid(row=4,column=5,sticky='ne')
         # cmd_i=open_cmd+" '{}'".format(self.open_backup_models_label_var.get())
         # self.open_backup_models_label=Button(self.root,textvariable=self.open_backup_models_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
