@@ -372,6 +372,14 @@ class yolo_cfg:
         self.XML_EXT=DEFAULT_SETTINGS.XML_EXT
         self.JPG_EXT=DEFAULT_SETTINGS.JPG_EXT
         self.COLOR=DEFAULT_SETTINGS.COLOR
+        if os.path.exists('YOUTUBE_KEY.txt'):
+            f=open('YOUTUBE_KEY.txt')
+            f_read=f.readlines()
+            f.close()
+            self.YOUTUBE_KEY=f_read[0].strip()
+        else:
+            self.YOUTUBE_KEY="xxxx-xxxx-xxxx-xxxx-xxxx"
+        self.YOUTUBE_KEY_VAR=None
         self.DNN_PATH=os.path.join(os.getcwd(),"resources/yolo_dnn_multi_drone_hdmi.py")
         self.THRESH=0.5 #default threshold for Yolo
         self.SAVED_SETTINGS_PATH=SAVED_SETTINGS_PATH
@@ -1092,6 +1100,8 @@ class yolo_cfg:
         self.create_test_bash_mp4_record()
         self.create_test_bash_images_with_predictions()
         self.create_test_bash_dnn()
+        self.YOUTUBE_RTMP()
+        self.create_test_bash_dnn_rtmp()
         self.remaining_buttons()
 
 
@@ -1193,8 +1203,25 @@ class yolo_cfg:
         self.train_yolo_objs_button_note.grid(row=11,column=1,sticky='ne')
         self.test_yolo()
         self.test_yolo_predict()
+        self.test_yolodnn()
         self.open_mp4()
-        
+        self.test_yolodnn_rtmp()
+    
+    def YOUTUBE_RTMP(self):
+        if self.YOUTUBE_KEY_VAR==None:
+            self.YOUTUBE_KEY_VAR=tk.StringVar()
+            self.YOUTUBE_KEY_VAR.set(self.YOUTUBE_KEY)
+            self.YOUTUBE_KEY_entry=tk.Entry(self.root,textvariable=self.YOUTUBE_KEY_VAR)
+            self.YOUTUBE_KEY_entry.grid(row=16,column=2,sticky='sw')
+            self.YOUTUBE_KEY_label=tk.Label(self.root,text='YOUTUBE STREAM KEY',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.YOUTUBE_KEY_label.grid(row=17,column=2,sticky='nw')  
+            
+            self.SETTINGS_YOUTUBE_LIST=['720p','1080p','480p']
+            self.USER_SELECTION_yt=tk.StringVar()
+            self.USER_SELECTION_yt.set('720p')
+            self.dropdown_yt=tk.OptionMenu(self.root,self.USER_SELECTION_yt,*self.SETTINGS_YOUTUBE_LIST)
+            self.dropdown_yt.grid(row=16,column=4,sticky='sw')
+
 
 
     def test_yolo(self):
@@ -1205,6 +1232,27 @@ class yolo_cfg:
         self.test_yolo_objs_button.grid(row=12,column=1,sticky='se')
         self.test_yolo_objs_button_note=tk.Label(self.root,text='5.a \n Test Yolo',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.test_yolo_objs_button_note.grid(row=13,column=1,sticky='ne')
+
+    def test_yolodnn(self):
+        self.TMP_create_test_dnn_bash()
+        cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','dnn.sh'))
+        #cmd_i=" bash '{}'".format(self.tmp_test_path)
+        self.test_yolo_objsdnn_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.test_yolo_objsdnn_button.grid(row=10,column=2,sticky='se')
+        self.test_yolo_objsdnn_button_note=tk.Label(self.root,text='5.a.2 \n Test Yolo DNN',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.test_yolo_objsdnn_button_note.grid(row=11,column=2,sticky='ne')
+
+    def test_yolodnn_rtmp(self):
+        self.test_yolo_objsdnn_rtmp_button=Button(self.root,image=self.icon_test,command=self.run_cmd_rtmp,bg=self.root_bg,fg=self.root_fg)
+        self.test_yolo_objsdnn_rtmp_button.grid(row=16,column=1,sticky='se')
+        self.test_yolo_objsdnn_rtmp_button_note=tk.Label(self.root,text='5.d \n Test Yolo DNN RTMP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.test_yolo_objsdnn_rtmp_button_note.grid(row=17,column=1,sticky='ne')
+    
+    def run_cmd_rtmp(self):
+        self.create_test_bash_dnn_rtmp()
+        self.TMP_create_test_dnn_rtmp_bash()
+        cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','dnn_rtmp.sh'))
+        self.run_cmd(cmd_i)
 
     def test_yolo_predict(self):
         self.create_test_bash_images_with_predictions()
@@ -1329,7 +1377,61 @@ class yolo_cfg:
         f.writelines('imH='+str(self.HEIGHT_NUM)+'\n')
         f.writelines('cd {}\n'.format(self.DNN_PATH.replace('yolo_dnn_multi_drone_hdmi.py','')))
         f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
-    
+        f.close()
+
+    def TMP_create_test_dnn_bash(self):
+        self.check_backup_path_weights()
+        self.create_model_test()
+        self.read_model_test()
+        tmp_path=os.path.join(self.base_path_OG,'temp')
+        self.tmp_test_path=os.path.join(tmp_path,'testdnn.sh')
+        f=open(self.tmp_test_path,'w')
+        [f.writelines(line) for line in self.cli_path_test_lines]
+        f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
+        f.writelines('cd {}\n'.format(self.darknet_path))
+        f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+        f.close()
+
+    def create_test_bash_dnn_rtmp(self):
+        self.check_backup_path_weights()
+        self.YOUTUBE_KEY=self.YOUTUBE_KEY_VAR.get()
+        fo=open('YOUTUBE_KEY.txt','w')
+        fo_read=fo.writelines(self.YOUTUBE_KEY+'\n')
+        fo.close()
+        f=open(self.save_cfg_path_test.replace('.cfg','dnn_rtmp.sh'),'w')
+        f.writelines('config_path_test='+str(self.save_cfg_path_test)+'\n')
+        f.writelines('obj_path='+str(self.names_path)+'\n')
+        if self.best_weights_path==None:
+            self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path_test.replace('_test.cfg',''))+'_train_best.weights')
+        f.writelines('best_weights='+str(self.best_weights_path)+'\n')
+        f.writelines('imW='+str(self.WIDTH_NUM)+'\n')
+        f.writelines('imH='+str(self.HEIGHT_NUM)+'\n')
+
+        f.writelines('YOUTUBE_RTMP={}\n'.format(self.YOUTUBE_KEY))
+        f.writelines('YOUTUBE_STREAM_RES={}\n'.format(self.USER_SELECTION_yt.get()))
+        f.writelines('cd {}\n'.format(self.DNN_PATH.replace('yolo_dnn_multi_drone_hdmi.py','')))
+        f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+        f.close()
+
+    def TMP_create_test_dnn_rtmp_bash(self):
+        self.check_backup_path_weights()
+        self.create_model_test()
+        self.read_model_test()
+        tmp_path=os.path.join(self.base_path_OG,'temp')
+        self.tmp_test_path=os.path.join(tmp_path,'testdnn_rtmp.sh')
+        self.YOUTUBE_KEY=self.YOUTUBE_KEY_VAR.get()
+        fo=open('YOUTUBE_KEY.txt','w')
+        fo_read=fo.writelines(self.YOUTUBE_KEY+'\n')
+        fo.close()
+        f=open(self.tmp_test_path,'w')
+        [f.writelines(line) for line in self.cli_path_test_lines]
+        f.writelines('YOUTUBE_RTMP={}\n'.format(self.YOUTUBE_KEY))
+        f.writelines('YOUTUBE_STREAM_RES={}\n'.format(self.USER_SELECTION_yt.get()))
+        f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
+        f.writelines('cd {}\n'.format(self.darknet_path))
+        f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+        f.close()
+
     def create_test_bash(self):
         self.check_backup_path_weights()
         f=open(self.save_cfg_path_test.replace('.cfg','.sh'),'w')
@@ -1558,6 +1660,7 @@ class yolo_cfg:
         self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
         self.get_all_annos()
         count=self.counts
+        label='None'
         for full_anno in tqdm(self.total_annos_list):
             anno=os.path.basename(full_anno) #.split('/')[-1]
             if count==self.counts:

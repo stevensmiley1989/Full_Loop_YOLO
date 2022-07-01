@@ -213,6 +213,61 @@ def savePascalVocFormat(filename, bndboxes, labels, imagePath, imageData,scores,
 
         writer.save(targetFile=filename)
         return
+
+
+import subprocess as sp
+class YOUTUBE_RTMP:
+    def __init__(self,YOUTUBE_STREAM_KEY):
+        self.YOUTUBE_STREAM_KEY=YOUTUBE_STREAM_KEY
+        self.initiate=True
+    def Preprocess(self,HEIGHT_i,WIDTH_i,VBR_i):
+        self.HEIGHT_i=HEIGHT_i
+        self.WIDTH_i=WIDTH_i
+        self.VBR_i=VBR_i     
+        self.initiate=False
+        self.startFFmpeg_Process()
+    def startFFmpeg_Process(self):
+        self.cmd=["ffmpeg","-y","-f","lavfi","-i","anullsrc","-f","rawvideo","-vcodec","rawvideo", "-s","{}x{}".format(self.HEIGHT_i,self.WIDTH_i),
+        "-pix_fmt","bgr24","-i","-","-acodec","aac","-ar","44100","-b:a","712000","-vcodec","libx264","-preset","medium","-b:v","{}".format(self.VBR_i),"-bufsize","0","-pix_fmt",
+        "yuv420p","-f","flv","-crf","18","rtmp://a.rtmp.youtube.com/live2/{}".format(self.YOUTUBE_STREAM_KEY)]
+        self.process = sp.Popen(self.cmd, stdin=sp.PIPE, stdout=sp.DEVNULL, stderr=sp.STDOUT)
+    def write(self,frame,VBR_i):
+        # initiate FFmpeg process on first run
+        if self.initiate:
+            # start pre-processing and initiate process
+            self.Preprocess(frame.shape[1],frame.shape[0],VBR_i)
+            # Check status of the process
+            assert self.process is not None
+        # write the frame
+        try:
+            self.process.stdin.write(frame.tostring())
+        except (OSError, IOError):
+            # log something is wrong!
+            print(
+                "BrokenPipeError caught"
+            )
+            raise ValueError  # for testing purpose only
+    def close(self):
+        if self.process.stdin:
+            self.process.stdin.close()  # close `stdin` output
+        self.process.wait()  # wait if still process is still processing some information
+        self.process = None
+  
+
+def YOUTUBE_STREAM_RESOLUTION(res='720p'):
+    #returns the height,width, and video bit rate
+    if res=='720p':
+        return 720,1280,'4000k'
+    elif res=='1080p':
+        return 1080,1920,'6000k'
+    elif res=='480p':
+        return 480,854,'2000k'
+    elif res=='360p':
+        return 640,360,'1000k'
+    else:
+        print('DID NOT RECOGNIZE res=={}\n so using res==720p'.format(res))
+        return 720,1280,'4000k'
+
 weightsPath1="{}Images/Drone_Images/Yolo/backup_models/custom-yolov4-tiny-detector_VisDrone_best.weights".format(path_prefix)
 labelsPath1="{}Images/Drone_Images/Yolo/obj.names".format(path_prefix)
 configPath1="{}Jetson_Stuff/YOLOv4/darknet/cfg/custom-yolov4-tiny-detector_VisDrone_test.cfg".format(path_prefix)
@@ -235,6 +290,8 @@ ap.add_argument("--imW",type=str,default=imW,help='Width of input image')
 ap.add_argument("--imH",type=str,default=imH,help='Height of input image')
 ap.add_argument("--video",type=str,default=video,help='0 for webcam etc')
 ap.add_argument("--save",type=str,default=save,help='save annotations')
+ap.add_argument("--YOUTUBE_RTMP",type=str,default="xxxx-xxxx-xxxx-xxxx-xxxx",help="The YOUTUBE STREAM RTMP Key")
+ap.add_argument("--YOUTUBE_STREAM_RES",type=str,default='720p',help="Youtube Stream Height")
 args = vars(ap.parse_args())
 weightsPath=args['weightsPath']
 labelsPath=args['labelsPath']
@@ -243,6 +300,8 @@ video=args['video']
 imW=args['imW']
 imH=args['imH']
 save=args['save']
+YOUTUBE_STREAM_KEY = args['YOUTUBE_RTMP']
+YOUTUBE_STREAM_RES = args['YOUTUBE_STREAM_RES']
 imW, imH = int(imW), int(imH)
 video=video.strip()
 if video=='0':
@@ -253,6 +312,13 @@ if save=='No':
     save=False
 else:
     save=True
+
+if YOUTUBE_STREAM_KEY!='xxxx-xxxx-xxxx-xxxx-xxxx':
+    RTMP=True
+    writer=YOUTUBE_RTMP(YOUTUBE_STREAM_KEY)
+else:
+    RTMP=False
+
     
     
 def create_output_paths(unique_device=UNIQUE_DEVICE,video_device=str(video)):
@@ -386,9 +452,11 @@ def key_capture_thread():
 #videostream = VideoStream(video,resolution=(640,480),framerate=30).start()
 videostream = VideoStream(video,resolution=(imW,imH),framerate=30).start()
 window_name='YOLO camera'
+
 def do_stuff():
     global time_found,target_found,myrtmp_addr
     th.Thread(target=key_capture_thread,args=(),name='key_capture_thread',daemon=True).start()
+    time_last=time.time()
     while keep_going:
         
 
@@ -516,6 +584,10 @@ def do_stuff():
                    if time.time()-time_found>0.1:
                         time_found=time.time()
                cv2.imshow('YOLO DNN',image)
+               if RTMP:
+                YH_i,YW_i,VBR_i=YOUTUBE_STREAM_RESOLUTION(res=YOUTUBE_STREAM_RES)
+                image=cv2.resize(image,(YW_i,YH_i))
+                writer.write(image,VBR_i)
                if cv2.waitKey(1) == ord('q'):
                    break
                #cv2.waitKey(0)
