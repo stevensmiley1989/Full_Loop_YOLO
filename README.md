@@ -27,7 +27,11 @@ Darknet YOLO
     make #modify MakeFile before to use cuda
     wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
     wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.conv.137
+    
 ~~~~~~~
+
+
+
 
 Installation
 ------------------
@@ -46,6 +50,13 @@ Python 3 + Tkinter
 ~~~~~~~
 
 ## [YouTube Tutorial](https://youtu.be/3cNyFcDw4ks)
+
+Optional
+------------------
+RTMP to YOUTUBE
+Make sure you have a https://www.youtube.com/ account and have started a RTMP Stream.
+Use that given key when running Yolo DNN RTMP.
+
 
 ## Contact-Info<a class="anchor" id="4"></a>
 
