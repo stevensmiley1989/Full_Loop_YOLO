@@ -91,7 +91,8 @@ for i in tqdm(range(len(df))):
             left_x=int(line.split('left_x:')[1].split('top_y')[0].strip())
             top_y=int(line.split('top_y:')[1].split('width:')[0].strip())
             width_i=int(line.split('width:')[1].split('height:')[0].strip())
-            height_i=int(line.split('height:')[1].split(')')[0].strip())   
+            height_i=int(line.split('height:')[1].split(')')[0].strip())  
+            confidence=line.split(':')[1].split('%')[0].strip()
             pose='Unspecified'
             truncated='0' 
             difficult='0'
@@ -101,6 +102,7 @@ for i in tqdm(range(len(df))):
             ymax=min(height,top_y+height_i)  
             f.writelines('\t<object>\n')
             f.writelines('\t\t<name>{}</name>\n'.format(name))
+            f.writelines('\t\t<confidence>{}</confidence>\n'.format(confidence))
             f.writelines('\t\t<pose>{}</pose>\n'.format(pose))       
             f.writelines('\t\t<truncated>{}</truncated>\n'.format(truncated))
             f.writelines('\t\t<difficult>{}</difficult>\n'.format(difficult))
