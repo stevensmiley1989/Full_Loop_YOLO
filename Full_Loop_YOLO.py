@@ -383,6 +383,7 @@ class yolo_cfg:
         self.DNN_PATH=os.path.join(os.getcwd(),"resources/yolo_dnn_multi_drone_hdmi.py")
         self.THRESH=0.5 #default threshold for Yolo
         self.IOU_THRESH=0.5 #default IOU Threshold for Yolo
+        self.random='0' #default for cfg 
         self.SAVED_SETTINGS_PATH=SAVED_SETTINGS_PATH
         self.root=root_tk
         self.root.bind('<Escape>',self.close)
@@ -500,6 +501,14 @@ class yolo_cfg:
         self.num_classes_entry.grid(row=15,column=0,sticky='se')
         self.num_classes_label=tk.Label(self.root,text='num_classes',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.num_classes_label.grid(row=16,column=0,sticky='ne')
+
+        self.random_VAR=tk.StringVar()
+        self.random_VAR.set(self.random)
+        self.random_options=['0','1']
+        self.random_dropdown=tk.OptionMenu(self.root,self.random_VAR,*self.random_options)
+        self.random_dropdown.grid(row=17,column=0,sticky='se')       
+        self.random_label=tk.Label(self.root,text='random',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.random_label.grid(row=18,column=0,sticky='ne')
 
         self.generate_cfg_button=Button(self.root,image=self.icon_config,command=self.generate_cfg,bg=self.root_bg,fg=self.root_fg)
         self.generate_cfg_button.grid(row=3,column=0,sticky='s')
@@ -728,6 +737,7 @@ class yolo_cfg:
         self.HEIGHT_NUM=int(self.HEIGHT_NUM_VAR.get().strip())
         self.num_div=int(self.num_div_VAR.get().strip())
         self.num_classes=int(self.num_classes_VAR.get().strip())
+        self.random=self.random_VAR.get()
         if generate:
             self.update_height(self.HEIGHT_NUM)
             self.update_width(self.WIDTH_NUM)
@@ -743,7 +753,10 @@ class yolo_cfg:
             self.base_path_OG=self.base_path_OG
         else:
             self.base_path_OG=os.path.join(os.getcwd(),'tmp_cfgs')
-        self.base_path=os.path.join(self.base_path_OG,'{}_w{}_h{}_d{}_c{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
+        if self.random=='0':
+            self.base_path=os.path.join(self.base_path_OG,'{}_w{}_h{}_d{}_c{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
+        else:
+            self.base_path=os.path.join(self.base_path_OG,'{}_w{}_h{}_d{}_c{}_r{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes,self.random)) 
         try:
             os.makedirs(self.base_path)
         except:
@@ -763,12 +776,20 @@ class yolo_cfg:
             self.tiny_conv29_path=os.path.join(self.darknet_path,"yolov4-tiny.conv.29")
         elif yolov4_choice.find('regular')!=-1:
             self.tiny_conv29_path=os.path.join(self.darknet_path,"yolov4.conv.137")
-        self.prefix_foldername='{}_w{}_h{}_d{}_c{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes)
-        self.save_cfg_path=os.path.join(self.base_path,'{}_w{}_h{}_d{}_c{}.cfg'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
+        if self.random=='0':
+            self.prefix_foldername='{}_w{}_h{}_d{}_c{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes)
+            self.save_cfg_path=os.path.join(self.base_path,'{}_w{}_h{}_d{}_c{}.cfg'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
+        else:
+            self.prefix_foldername='{}_w{}_h{}_d{}_c{}_r{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes,self.random)
+            self.save_cfg_path=os.path.join(self.base_path,'{}_w{}_h{}_d{}_c{}_r{}.cfg'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes,self.random))
+        
         self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path.replace('.cfg',''))+'_train_best.weights')
         self.testcfg_path=self.save_cfg_path.replace('.cfg','_test.cfg')
         self.testobjdata_path=self.data_path
-        self.model_i_path=os.path.join(self.MODEL_PATHS,'{}_w{}_h{}_d{}_c{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
+        if self.random=='0':
+            self.model_i_path=os.path.join(self.MODEL_PATHS,'{}_w{}_h{}_d{}_c{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
+        else:
+            self.model_i_path=os.path.join(self.MODEL_PATHS,'{}_w{}_h{}_d{}_c{}_r{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes,self.random))
         switch_basepath.switch_config(self.prefix_foldername)
         if self.path_predJPEGImages==None:
             self.path_predJPEGImages=self.path_JPEGImages
@@ -797,6 +818,7 @@ class yolo_cfg:
         self.policy=[w for w in cfg if w.find('policy=')!=-1][0]
         self.steps=[w for w in cfg if w.find('steps=')!=-1][0]
         self.scales=[w for w in cfg if w.find('scales=')!=-1][0]
+
         
     def count_layers(self,cfg):
         self.layers_dic={int(w.split('layer')[1].strip()):i for i,w in enumerate(cfg) if w.find('#layer')!=-1}
@@ -814,11 +836,12 @@ class yolo_cfg:
                 self.layers[layer]=[w if w.find('filters')==-1 else w.replace(w.split('filters=')[1].strip(),str(int(w.split('filters=')[1].strip())/(2**num)))for w in lines]
     def update_classes(self):
         self.linear_filters=(self.num_classes+5)*3
+        self.random=self.random_VAR.get()
         for layer,lines in self.layers.items():
             if "".join(lines).find('classes=')!=-1:
                 self.layers[layer]=[w if w.find('classes')==-1 else w.replace(w.split('classes=')[1].strip(),str(self.num_classes))for w in lines]
             if "".join(lines).find('activation=linear')!=-1:
-                self.layers[layer]=[w if w.find('filters')==-1 else w.replace(w.split('filters=')[1].strip(),str(self.linear_filters)) for w in lines]
+                self.layers[layer]=[w if w.find('filters')==-1 else w.replace(w.split('filters=')[1].strip(),str(int(self.linear_filters))) for w in lines]
     def update_height(self,height):
         self.height=self.height.split('=')[0]+'='+str(height)+'\n'
     def update_width(self,width):
@@ -879,6 +902,22 @@ class yolo_cfg:
         for i,layer in self.layers.items():
             self.new_cfg+=layer
         f=open(self.save_cfg_path.replace('.cfg','_train.cfg'),'w')
+        new_lines=[]
+        if self.random=='0':
+            for line in self.new_cfg:
+                if line.find('random=')!=-1:
+                    line='random=0\n'
+                else:
+                    pass
+                new_lines.append(line)
+        else:
+             for line in self.new_cfg:
+                if line.find('random=')!=-1:
+                    line='random=1\n'
+                else:
+                    pass
+                new_lines.append(line)           
+        self.new_cfg=new_lines
         [f.writelines(w) for w in self.new_cfg]
         f.close()
         print('generated cfg files for train: \n {}'.format(self.save_cfg_path_train))
@@ -910,6 +949,22 @@ class yolo_cfg:
         for i,layer in self.layers.items():
             self.new_test_cfg+=layer
         f=open(self.save_cfg_path.replace('.cfg','_test.cfg'),'w')
+        new_lines=[]
+        if self.random=='0':
+            for line in self.new_cfg:
+                if line.find('random=')!=-1:
+                    line='random=0\n'
+                else:
+                    pass
+                new_lines.append(line)
+        else:
+             for line in self.new_cfg:
+                if line.find('random=')!=-1:
+                    line='random=1\n'
+                else:
+                    pass
+                new_lines.append(line)           
+        self.new_cfg=new_lines
         [f.writelines(w) for w in self.new_test_cfg]
         f.close()
         print('generated cfg files for test: \n {}'.format(self.save_cfg_path_test))
@@ -1129,7 +1184,10 @@ class yolo_cfg:
         self.names_path=os.path.join(self.base_path,'obj.names')
 
         self.tiny_conv29_path=os.path.join(self.darknet_path,"yolov4-tiny.conv.29")
-        self.save_cfg_path=os.path.join(self.base_path,'{}_w{}_h{}_d{}_c{}.cfg'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
+        if self.random=='0':
+            self.save_cfg_path=os.path.join(self.base_path,'{}_w{}_h{}_d{}_c{}.cfg'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
+        else:
+            self.save_cfg_path=os.path.join(self.base_path,'{}_w{}_h{}_d{}_c{}_r{}.cfg'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes,self.random))
 
         self.train_yolo()
 
@@ -1485,8 +1543,10 @@ class yolo_cfg:
             self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path_test.replace('_test.cfg',''))+'_train_best.weights')
         f.writelines('best_weights='+str(self.best_weights_path)+'\n')
         f.writelines('mp4_video='+str(self.mp4_video_path)+'\n')
+        f.writelines('result_mp4_file={}\n'.format(os.path.join(os.path.dirname(self.data_path),os.path.basename(self.mp4_video_path).split('.')[0]+'_results.txt')))
         f.writelines('cd {}\n'.format(self.darknet_path))
-        f.writelines('$darknet detector demo $data_path $config_path_test $best_weights $mp4_video -i 0 -thresh {}\n'.format(str(round(float(self.THRESH_VAR.get()),2))))
+
+        f.writelines('$darknet detector demo $data_path $config_path_test $best_weights $mp4_video -i 0 -thresh {} > $result_mp4_file \n'.format(str(round(float(self.THRESH_VAR.get()),2))))
         f.close()
         #os.system('sudo chmod 777 "{}"'.format(self.save_cfg_path_test.replace('.cfg','_mp4.sh')))
 
@@ -1503,8 +1563,9 @@ class yolo_cfg:
         #f.writelines('best_weights='+str(self.best_weights_path)+'\n')
         f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
         f.writelines('mp4_video='+str(self.mp4_video_path)+'\n')
+        f.writelines('result_mp4_file={}\n'.format(os.path.join(os.path.dirname(self.data_path),os.path.basename(self.mp4_video_path).split('.')[0]+'_results.txt')))
         f.writelines('cd {}\n'.format(self.darknet_path))
-        f.writelines('$darknet detector demo $data_path $config_path_test $best_weights $mp4_video -i 0 -thresh {}\n'.format(str(round(float(self.THRESH_VAR.get()),2))))
+        f.writelines('$darknet detector demo $data_path $config_path_test $best_weights $mp4_video -i 0 -thresh {} > $result_mp4_file\n'.format(str(round(float(self.THRESH_VAR.get()),2))))
         f.close()
         
     def create_test_bash_mp4_record(self):
@@ -1569,6 +1630,9 @@ class yolo_cfg:
 
     def create_test_bash_images_with_predictions_mAP(self):
         self.check_backup_path_weights()
+        self.THRESH=self.THRESH_VAR.get()
+        self.IOU_THRESH=self.IOU_THRESH_VAR.get()
+        self.POINTS=self.POINTS_VAR.get().split(':')[0]
         f=open(self.save_cfg_path_test.replace('.cfg','_images_with_predictions_mAP.sh'),'w')
         f.writelines('config_path_test='+str(self.save_cfg_path_test)+'\n')
         f.writelines('data_path='+str(self.data_path)+'\n')
@@ -1582,20 +1646,21 @@ class yolo_cfg:
             sample_fo_read=sample_fo.readlines()
             sample_fo.close()
 
-            self.result_list_path=os.path.join(self.base_path,'obj'+os.path.dirname(os.path.dirname(sample_fo_read[0].replace('\n','').strip())).replace('/','_').rstrip('/').lstrip('/')+'_THRESH{}__IOU{}__results.txt'.format(str(self.THRESH).replace('.','p'),str(self.IOU_THRESH).replace('.','p')))
+            self.result_list_path=os.path.join(self.base_path,'obj'+os.path.dirname(os.path.dirname(sample_fo_read[0].replace('\n','').strip())).replace('/','_').rstrip('/').lstrip('/')+'_THRESH{}__IOU{}__POINTS{}_results.txt'.format(str(self.THRESH).replace('.','p'),str(self.IOU_THRESH).replace('.','p'),str(self.POINTS).replace('.','p')))
         else:
             f.writelines('path_test_list_txt='+str(self.img_list_path)+'\n')
             sample_fo=open(self.img_list_path,'r')
             sample_fo_read=sample_fo.readlines()
             sample_fo.close()
-            self.result_list_path=os.path.join(self.base_path,'obj'+os.path.dirname(os.path.dirname(sample_fo_read[0].replace('\n','').strip())).replace('/','_').rstrip('/').lstrip('/')+'_THRESH{}__IOU{}__results.txt'.format(str(self.THRESH).replace('.','p'),str(self.IOU_THRESH).replace('.','p')))
+            self.result_list_path=os.path.join(self.base_path,'obj'+os.path.dirname(os.path.dirname(sample_fo_read[0].replace('\n','').strip())).replace('/','_').rstrip('/').lstrip('/')+'_THRESH{}__IOU{}__POINTS{}_results.txt'.format(str(self.THRESH).replace('.','p'),str(self.IOU_THRESH).replace('.','p'),str(self.POINTS).replace('.','p')))
         f.writelines('path_result_list_txt='+str(self.result_list_path)+'\n')
         f.writelines('thresh='+str(self.THRESH)+'\n')
         f.writelines('iou_thresh='+str(self.IOU_THRESH)+'\n')
+        f.writelines('points='+str(self.POINTS)+'\n')
         filter_path=os.path.join(os.getcwd(),'resources/filter_results.py')
         f.writelines('filter_path={}\n'.format(filter_path))
         create_yolov4_metrics=os.path.join(os.getcwd(),'resources/yolov4_metrics.py')
-        f.writelines('python3 {} --filter_path=$filter_path --thresh=$thresh --iou_thresh=$iou_thresh --config_path_test=$config_path_test --data_path=$data_path --darknet=$darknet --best_weights=$best_weights --path_test_list_txt=$path_test_list_txt --path_result_list_txt=$path_result_list_txt\n'.format(create_yolov4_metrics))
+        f.writelines('python3 {} --points=$points --filter_path=$filter_path --thresh=$thresh --iou_thresh=$iou_thresh --config_path_test=$config_path_test --data_path=$data_path --darknet=$darknet --best_weights=$best_weights --path_test_list_txt=$path_test_list_txt --path_result_list_txt=$path_result_list_txt\n'.format(create_yolov4_metrics))
         f.close()
         #os.system('sudo chmod 777 "{}"'.format(self.save_cfg_path_test.replace('.cfg','_images_with_predictions.sh')))
 
@@ -1951,6 +2016,8 @@ class yolo_cfg:
         print('\nOBJECT COUNTS')
         for label,(count_train,count_val) in self.label_counter.items():
             print("LABEL={}; TRAIN={}; VALID={}".format(label,count_train,count_val))
+
+        
         self.THRESH_VAR=tk.StringVar()
         self.THRESH_VAR.set(self.THRESH)
         self.THRESH_entry=tk.Entry(self.root,textvariable=self.THRESH_VAR)
@@ -1959,10 +2026,18 @@ class yolo_cfg:
         self.THRESH_label.grid(row=9,column=2,sticky='nw')
         self.IOU_THRESH_VAR=tk.StringVar()
         self.IOU_THRESH_VAR.set(self.IOU_THRESH)
-        self.IOU_THRESH_entry=tk.Entry(self.root,textvariable=self.THRESH_VAR)
+        self.IOU_THRESH_entry=tk.Entry(self.root,textvariable=self.IOU_THRESH_VAR)
         self.IOU_THRESH_entry.grid(row=8,column=3,sticky='sw')
         self.IOU_THRESH_label=tk.Label(self.root,text='IOU Threshold',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.IOU_THRESH_label.grid(row=9,column=3,sticky='nw')
+        self.POINTS_VAR=tk.StringVar()
+        self.POINTS_LIST=['0: Custom','11: PascalVOC 2007','101: MS COCO']
+        self.POINTS_VAR.set('0: Custom')
+        self.POINTS=self.POINTS_VAR.get().split(':')[0]
+        self.POINTS_dropdown=tk.OptionMenu(self.root,self.POINTS_VAR,*self.POINTS_LIST)
+        self.POINTS_dropdown.grid(row=8,column=4,sticky='sw')
+        self.POINTS_label=tk.Label(self.root,text='POINTS',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.POINTS_label.grid(row=9,column=4,sticky='nw')
         self.create_yolo_scripts_buttons()
         self.load_yolo_scripts_buttons()
     def load_yolo_scripts_buttons(self):
