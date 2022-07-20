@@ -1190,6 +1190,7 @@ class yolo_cfg:
             self.save_cfg_path=os.path.join(self.base_path,'{}_w{}_h{}_d{}_c{}_r{}.cfg'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes,self.random))
 
         self.train_yolo()
+        self.train_yolov7()
 
     def open_mp4(self):
         if self.mp4_selected==True:
@@ -1209,6 +1210,7 @@ class yolo_cfg:
         self.open_mp4_label.grid(row=19,column=5,columnspan=50,sticky='sw')
         self.mp4_selected=True
         self.test_yolo_mp4()
+        self.test_yolov7_mp4()
         self.dropdowntest_menu()
 
     def open_MOVMP4(self):
@@ -1259,7 +1261,7 @@ class yolo_cfg:
         cmd_i=" bash '{}'".format(self.save_cfg_path_train.replace('.cfg','.sh'))
         self.train_yolo_objs_button=Button(self.root,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.train_yolo_objs_button.grid(row=10,column=1,sticky='se')
-        self.train_yolo_objs_button_note=tk.Label(self.root,text='4. \n Train Yolo',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.train_yolo_objs_button_note=tk.Label(self.root,text='4.a \n Train Yolo',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.train_yolo_objs_button_note.grid(row=11,column=1,sticky='ne')
         self.test_yolo()
         self.test_yolo_predict()
@@ -1352,7 +1354,58 @@ class yolo_cfg:
             self.test_mp4_yolo_objs_button.grid(row=14,column=1,sticky='se')
             self.test_mp4_yolo_objs_button_note=tk.Label(self.root,text='5.b \n Test Yolo - mp4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolo_objs_button_note.grid(row=15,column=1,sticky='ne')
-    
+
+    def train_yolov7(self):
+        if os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_mp4_yolov7()
+            cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7)
+            self.test_mp4_yolov7_objs_button=Button(self.root,image=self.icon_test_mp4,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_mp4_yolov7_objs_button.grid(row=10-7,column=10,sticky='se')
+            self.test_mp4_yolov7_objs_button_note=tk.Label(self.root,text='4.b Train YoloV7',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_mp4_yolov7_objs_button_note.grid(row=11-7,column=10,sticky='ne')
+            self.test_yolov7_mp4()
+            self.test_yolov7_webcam()
+
+    def test_yolov7_mp4(self):
+        if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_mp4_yolov7()
+            cmd_i=" bash '{}'".format(self.TEST_MP4_YOLOV7)
+            self.test_mp4_yolov7_objs_button=Button(self.root,image=self.icon_test_mp4,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_mp4_yolov7_objs_button.grid(row=14-7,column=10,sticky='se')
+            self.test_mp4_yolov7_objs_button_note=tk.Label(self.root,text='6.a \n Test YoloV7 - mp4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_mp4_yolov7_objs_button_note.grid(row=15-7,column=10,sticky='ne')
+
+    def test_yolov7_webcam(self):
+        if os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_webcam_yolov7()
+            cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7)
+            self.test_webcam_yolov7_objs_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_webcam_yolov7_objs_button.grid(row=12-7,column=10,sticky='se')
+            self.test_webcam_yolov7_objs_button_note=tk.Label(self.root,text='6.b \n Test YoloV7 - webcam',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_objs_button_note.grid(row=13-7,column=10,sticky='ne')
+
+    def create_train_bash_yolov7(self):
+        self.TRAIN_YOLOV7=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7.sh')
+        f=open(self.TRAIN_YOLOV7,'w')
+        f.writelines('cd {} \n'.format(self.yolov7_path))
+        f.writelines("python3 train.py --workers 8 --device 0 --batch-size 32 --data {} --img {} {} --cfg {} --weights '' --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.yolov7_path_name,self.yolov7_path_hyp))
+        f.close()
+
+
+    def create_test_bash_mp4_yolov7(self):
+        self.TEST_MP4_YOLOV7=os.path.join(os.path.dirname(self.data_path),'test_MP4_custom_Yolov7.sh')
+        f=open(self.TEST_MP4_YOLOV7,'w')
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path))
+        f.close()
+
+    def create_test_bash_webcam_yolov7(self):
+        self.TEST_WEBCAM_YOLOV7=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7.sh')
+        f=open(self.TEST_WEBCAM_YOLOV7,'w')
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source 0 \n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM))
+        f.close()
+
     def create_YAML(self):
         self.YAML_PATH=os.path.join(os.path.dirname(self.data_path),'custom.yaml')
         f=open(self.YAML_PATH,'w')
@@ -1389,11 +1442,8 @@ class yolo_cfg:
         self.yolov7_path_cfg=os.path.join(self.yolov7_path,'cfg/training/yolov7-tiny.yaml')
         self.yolov7_path_name=os.path.join(os.path.dirname(self.data_path),'yolov7-tiny')
         self.yolov7_path_hyp=os.path.join(self.yolov7_path,'data/hyp.scratch.tiny.yaml')
+        self.create_train_bash_yolov7()
         self.TRAIN_YOLOV7=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7.sh')
-        f=open(self.TRAIN_YOLOV7,'w')
-        f.writelines('cd {} \n'.format(self.yolov7_path))
-        f.writelines("python3 train.py --workers 8 --device 0 --batch-size 32 --data {} --img {} {} --cfg {} --weights '' --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.yolov7_path_name,self.yolov7_path_hyp))
-        f.close()
         #python detect.py --weights yolov7.pt --conf 0.25 --img-size 640 --source inference/images/horses.jpg
         #python3 detect.py --weights yolov7.pt --conf 0.25 --img-size 640 --source 0
         self.yolov7_path_test=os.path.join(self.yolov7_path,'detect.py')
@@ -1405,11 +1455,11 @@ class yolo_cfg:
                 self.yolov7_path_weights=os.path.join(self.yolov7_path_weights_main,'last.pt')
         else:
             self.yolov7_path_weights=os.path.join(self.yolov7_path_weights_main,'last.pt')
-        self.TEST_YOLOV7=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7.sh')
-        f=open(self.TEST_YOLOV7,'w')
-        f.writelines('cd {}\n'.format(self.yolov7_path))
-        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source 0 \n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM))
-        f.close()
+        self.create_test_bash_webcam_yolov7()
+        self.create_test_bash_mp4_yolov7()
+
+
+
     def create_obj_data(self):
         try:
             os.makedirs(self.backup_path)
