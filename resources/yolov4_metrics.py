@@ -41,6 +41,7 @@ ap.add_argument("--path_result_list_txt",type=str,default=None,help="path for ou
 ap.add_argument("--iou_thresh",type=str,default=None,help='iou threshold')
 ap.add_argument("--thresh",type=str,default=None,help='threshold')
 ap.add_argument("--filter_path",type=str,default=None,help='filter path')
+ap.add_argument("--points",type=str,default=None,help='points for IoU')
 args=ap.parse_args()
 
 #config_path_test
@@ -87,6 +88,12 @@ if args.filter_path!=None:
     print("--filter_path == {}".format(filter_path))
 else:
     print('WARNING! \n \t --filter_path\t None specified')
+#points
+if args.filter_path!=None:
+    points=args.points
+    print("--points == {}".format(points))
+else:
+    print('WARNING! \n \t --points\t None specified')
 #path_test_list_txt
 valid_list=False #check to make sure valid list of yolo .txt/.jpg files in same directory
 jpg_list=True #check to make sure at least jpg list exists
@@ -171,7 +178,7 @@ if args.path_result_list_txt!=None:
 else:
     print('WARNING! \n \t --path_result_list_txt\t None specified')
 
-if path_result_list_txt and best_weights and darknet and darknet_dir and data_path and config_path_test and path_test_list_txt and valid_list and iou_thresh and thresh:
+if path_result_list_txt and best_weights and darknet and darknet_dir and data_path and config_path_test and path_test_list_txt and valid_list and iou_thresh and thresh and points:
     f=open(data_path,'r')
     f_read=f.readlines()
     f.close()
@@ -195,8 +202,9 @@ if path_result_list_txt and best_weights and darknet and darknet_dir and data_pa
     f.writelines('path_result_list_txt={}\n'.format(path_result_list_txt))
     f.writelines('thresh={}\n'.format(thresh))
     f.writelines('iou_thresh={}\n'.format(iou_thresh))
+    f.writelines('points={}\n'.format(points))
     f.writelines('cd {}\n'.format(darknet_dir))
-    f.writelines('$darknet detector map $data_path $config_path_test $best_weights -thresh $thresh -iou_thresh $iou_thresh -points 0 -dont_show -ext_output > $path_result_list_txt \n')
+    f.writelines('$darknet detector map $data_path $config_path_test $best_weights -thresh $thresh -iou_thresh $iou_thresh -points $points -dont_show -ext_output > $path_result_list_txt \n')
     f.writelines('filter_path={}\n'.format(filter_path))
     f.writelines('python3 $filter_path --path_result_list_txt=$path_result_list_txt \n')
     f.writelines('echo $(cat "{}") >> $path_result_list_txt\n'.format(new_prediction_path))
