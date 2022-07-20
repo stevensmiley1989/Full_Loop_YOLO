@@ -1352,7 +1352,64 @@ class yolo_cfg:
             self.test_mp4_yolo_objs_button.grid(row=14,column=1,sticky='se')
             self.test_mp4_yolo_objs_button_note=tk.Label(self.root,text='5.b \n Test Yolo - mp4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolo_objs_button_note.grid(row=15,column=1,sticky='ne')
-
+    
+    def create_YAML(self):
+        self.YAML_PATH=os.path.join(os.path.dirname(self.data_path),'custom.yaml')
+        f=open(self.YAML_PATH,'w')
+        f.writelines('train: {}\n'.format(str(self.train_list_path)))
+        f.writelines('val: {}\n'.format(str(self.valid_list_path)))
+        f.writelines('test: {}\n'.format(str(self.valid_list_path)))
+        f.writelines('# number of classes\n')
+        f.writelines('nc: {}\n'.format(str(self.num_classes)))
+        f.writelines('# class names\n')
+        class_names_string=''
+        if os.path.exists(self.names_path):
+            fo=open(self.names_path,'r')
+            fo_read=fo.readlines()
+            fo.close()
+            self.found_names={w.replace('\n',''):j for j,w in enumerate(fo_read)}
+        else:
+            self.found_names={}
+            for i in range(self.num_classes):
+                self.found_names[i]=i
+        for k,i in self.found_names.items():
+            class_names_string+=' {},'.format(k)
+        f.writelines('names: [{}]'.format(class_names_string))
+        f.close()
+        if os.path.exists('libs/yolov7_path.py'):
+            from libs import yolov7_path
+            self.yolov7_path=yolov7_path.yolov7_path
+            if os.path.exists(self.yolov7_path):
+                pass
+            else:
+                self.yolov7_path=''
+        else:
+            self.yolov7_path=''
+        self.yolov7_path_train=os.path.join(self.yolov7_path,'train.py')
+        self.yolov7_path_cfg=os.path.join(self.yolov7_path,'cfg/training/yolov7-tiny.yaml')
+        self.yolov7_path_name=os.path.join(os.path.dirname(self.data_path),'yolov7-tiny')
+        self.yolov7_path_hyp=os.path.join(self.yolov7_path,'data/hyp.scratch.tiny.yaml')
+        self.TRAIN_YOLOV7=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7.sh')
+        f=open(self.TRAIN_YOLOV7,'w')
+        f.writelines('cd {} \n'.format(self.yolov7_path))
+        f.writelines("python3 train.py --workers 8 --device 0 --batch-size 32 --data {} --img {} {} --cfg {} --weights '' --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.yolov7_path_name,self.yolov7_path_hyp))
+        f.close()
+        #python detect.py --weights yolov7.pt --conf 0.25 --img-size 640 --source inference/images/horses.jpg
+        #python3 detect.py --weights yolov7.pt --conf 0.25 --img-size 640 --source 0
+        self.yolov7_path_test=os.path.join(self.yolov7_path,'detect.py')
+        self.yolov7_path_weights_main=os.path.join(self.yolov7_path_name,'weights')
+        if os.path.exists(self.yolov7_path_weights_main):
+            if 'best.pt' in os.listdir(self.yolov7_path_weights_main):
+                self.yolov7_path_weights=os.path.join(self.yolov7_path_weights_main,'best.pt')
+            else:
+                self.yolov7_path_weights=os.path.join(self.yolov7_path_weights_main,'last.pt')
+        else:
+            self.yolov7_path_weights=os.path.join(self.yolov7_path_weights_main,'last.pt')
+        self.TEST_YOLOV7=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7.sh')
+        f=open(self.TEST_YOLOV7,'w')
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source 0 \n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM))
+        f.close()
     def create_obj_data(self):
         try:
             os.makedirs(self.backup_path)
@@ -1368,6 +1425,7 @@ class yolo_cfg:
         f.writelines('eval=coco\n')
         f.close()
         self.create_model_test()
+        self.create_YAML()
 
     def create_model_test(self):
         try:
