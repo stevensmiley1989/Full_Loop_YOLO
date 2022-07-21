@@ -19,11 +19,13 @@ https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yo
 
 ~~~~~~~
 
-Darknet YOLO
+Darknet Yolov4
 .. code:: shell
     cd ~/
-    git clone https://github.com/AlexeyAB/darknet
+    #git clone https://github.com/AlexeyAB/darknet
+    git clone https://github.com/stevensmiley1989/darknet.git
     cd darknet
+    git switch smiley #if using smiley branch, this is a version control method
     make #modify MakeFile before to use cuda
     wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
     wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.conv.137
@@ -31,6 +33,17 @@ Darknet YOLO
 ~~~~~~~
 
 
+~~~~~~~
+
+Yolov7
+.. code:: shell
+    cd ~/
+    #git clone https://github.com/WongKinYiu/yolov7.git
+    git clone https://github.com/stevensmiley1989/yolov7.git
+    cd yolov7
+    git switch smiley #if using smiley branch, this is a version control method
+    pip3 install -r requirements.txt #you might need to adjust things manually here for versions of PyTorch    
+~~~~~~~
 
 
 Installation
@@ -46,6 +59,7 @@ Python 3 + Tkinter
     cd ~/Full_Loop_YOLO
     pip3 install -r requirements.txt
     nano libs/DEFAULT_SETTINGS.py #edit the path for darknet to your installed path above
+    nano libs/yolov7_path.py #edit the path for yolov7 to your installed path above
     python3 Full_Loop_YOLO.py
 ~~~~~~~
 
