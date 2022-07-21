@@ -1,15 +1,20 @@
 # Full_Loop_YOLO
 ![Full_Loop_YOLO.py](https://github.com/stevensmiley1989/Full_Loop_YOLO/blob/main/misc/Full_Loop_YOLO_GUI_Screenshot.png)
-Full_Loop_YOLO.py is a wrapper for creating custom darknet YoloV4 tiny &amp; regular sized models on your custom datasets. 
+Full_Loop_YOLO.py is a wrapper for creating custom darknet YoloV4-tiny &amp; regular sized models on your custom datasets.
+Furthermore, you can train and test Yolov7-tiny as of 7/20/2020.
 
 It is written in Python and uses Tkinter for its graphical interface.
 
 Prerequisites
 ------------------
 
-Darknet should be installed from (https://github.com/AlexeyAB/darknet).
+Darknet (Yolov4) should be installed from (https://github.com/AlexeyAB/darknet).  A version controlled fork is shown in these instructions below.
+
+Yolov7 should be installed from (https://github.com/WongKinYiu/yolov7).  A version controlled fork is shown in these instructions below.
 
 Change your DEFAULT_SETTINGS path (located at libs/DEFAULT_SETTINGS.py) to point to your installed Darknet path for use.  
+
+Change your yolov7 path (located at libs/yolov7_path.py) to point to your installed yolov7 path for use. 
 
 Ensure you put the yolov4-tiny.conv.29 weights in your Darknet path.  You can get these weights from:
 https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
