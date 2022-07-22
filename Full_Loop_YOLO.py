@@ -53,6 +53,7 @@ import traceback
 import matplotlib.pyplot as plt
 from functools import partial
 from threading import Thread
+from multiprocessing import Process
 import shutil
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
@@ -383,7 +384,10 @@ class yolo_cfg:
         self.DNN_PATH=os.path.join(os.getcwd(),"resources/yolo_dnn_multi_drone_hdmi.py")
         self.THRESH=0.5 #default threshold for Yolo
         self.IOU_THRESH=0.5 #default IOU Threshold for Yolo
-        self.random='0' #default for cfg 
+        if os.path.basename(SAVED_SETTINGS_PATH).find('_r1_')==-1:
+            self.random='0' #default for cfg 
+        else:
+            self.random='1'
         self.SAVED_SETTINGS_PATH=SAVED_SETTINGS_PATH
         self.root=root_tk
         self.root.bind('<Escape>',self.close)
@@ -1532,12 +1536,17 @@ class yolo_cfg:
         self.run_cmd(cmd_i)
 
     def convert_tflite(self):
-        if os.path.exists(os.path.join(self.CWD,'libs/tensorflow_yolov4_tflite_path.py')) and (self.WIDTH_NUM==self.HEIGHT_NUM) and os.path.exists(self.best_weights_path):
-            self.create_tflite_bash()
-            self.convert_tflite_button=Button(self.root,image=self.icon_test,command=self.run_create_tflite_bash,bg=self.root_bg,fg=self.root_fg)
-            self.convert_tflite_button.grid(row=10-7,column=13,sticky='se')
-            self.convert_tflite_button_note=tk.Label(self.root,text='Convert Yolov4 to TFLITE',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.convert_tflite_button_note.grid(row=11-7,column=13,sticky='ne')
+        print(os.path.exists(os.path.join(self.CWD,'libs/tensorflow_yolov4_tflite_path.py')))
+        print((self.WIDTH_NUM==self.HEIGHT_NUM))
+        
+        if self.best_weights_path:
+            print(os.path.exists(self.best_weights_path))
+            if os.path.exists(os.path.join(self.CWD,'libs/tensorflow_yolov4_tflite_path.py')) and (self.WIDTH_NUM==self.HEIGHT_NUM) and os.path.exists(self.best_weights_path):
+                self.create_tflite_bash()
+                self.convert_tflite_button=Button(self.root,image=self.icon_test,command=self.run_create_tflite_bash,bg=self.root_bg,fg=self.root_fg)
+                self.convert_tflite_button.grid(row=10-7,column=13,sticky='se')
+                self.convert_tflite_button_note=tk.Label(self.root,text='Convert Yolov4 to TFLITE',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+                self.convert_tflite_button_note.grid(row=11-7,column=13,sticky='ne')
 
     def run_create_tflite_bash(self):
         self.create_tflite_bash()
@@ -2232,10 +2241,116 @@ class yolo_cfg:
         while len(input_i)!=pad_len:
             input_i='0'+input_i
         return input_i
+    def copy_files(self,file_source,file_dest):
+        shutil.copy(file_source,file_dest)
+    def write_Yolo(self,xmin,xmax,ymin,ymax,imgSize,className,path_anno_dest_i):
+        classIndex,xcen,ycen,w,h=self.BndBox2Yolo(xmin,xmax,ymin,ymax,imgSize,className)
+        yolo_i=" ".join([str(yolo) for yolo in (int(classIndex),xcen,ycen,w,h)])
+        f=open(path_anno_dest_i,'a')
+        f.writelines(yolo_i+'\n')
+        f.close()
+    def read_XML(self,anno,i,count):
+        #print('LENGTH OF DF: ',len(self.df))
+        #for anno in tqdm(os.listdir(self.path_Annotations)):
+        if anno[0]!='.' and anno.find('.xml')!=-1:
+            img_i_name=anno.split('.xml')[0]
+            path_anno_i=os.path.join(self.path_Annotations,img_i_name+'.xml')
+            path_jpeg_i=os.path.join(self.path_JPEGImages,img_i_name+'.jpg')
+            path_anno_dest_xml_i=os.path.join(self.path_Yolo,img_i_name+'.xml')
+            path_anno_dest_i=os.path.join(self.path_Yolo,img_i_name+'.txt')
+            path_jpeg_dest_i=os.path.join(self.path_Yolo,img_i_name+'.jpg')
+            f=open(path_anno_i,'r')
+            f_read=f.readlines()
+            f.close()
+            f=open(path_anno_dest_i,'w')
+            f.close()
+            #img_i=plt.imread(path_jpeg_i)
+            #imgSize=img_i.shape
+            
+
+            parser = etree.XMLParser(encoding=ENCODE_METHOD)
+            xmltree = ElementTree.parse(path_anno_i, parser=parser).getroot()
+            filename = xmltree.find('filename').text
+            for size_iter in xmltree.findall('size'):
+                width_i=int(size_iter.find('width').text)
+                height_i=int(size_iter.find('height').text)
+                depth_i=int(size_iter.find('depth').text)
+                imgSize=tuple([height_i,width_i,depth_i])
+            num_objs=[w for w in f_read if w.find('object')!=-1]
+            num_objs=len(num_objs)
+            if num_objs==0:
+                print('No objects found')
+                #self.df.at[i,'xmin']=str(0)
+                #self.df.at[i,'xmax']=str(width_i)
+                #self.df.at[i,'ymin']=str(0)
+                #self.df.at[i,'ymax']=str(height_i)
+                #self.df.at[i,'width']=imgSize[1]
+                #self.df.at[i,'height']=imgSize[0]
+                self.df.at[i,'label_i']=label
+                #self.df.at[i,'path_jpeg_i']=path_jpeg_i
+                #self.df.at[i,'path_anno_i']=path_anno_i
+                self.df.at[i,'path_jpeg_dest_i']=path_jpeg_dest_i
+                #self.df.at[i,'path_anno_dest_i']=path_anno_dest_i
+                i+=1
+                count+=1
+                if count%self.increment==0 and len(self.df)>0:
+                    print('count=',count)
+                    self.df=self.df.drop_duplicates(keep='last').reset_index().drop('index',axis=1)
+                    self.df.to_pickle(self.df_filename,protocol=2)
+                    count_str=self.pad(count)
+                    self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
+                    #self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
+                    self.df=pd.DataFrame(columns=['label_i','path_jpeg_dest_i'])
+                    i=0
+                    print(self.df_filename,'of {}'.format(self.total_annos))
+            else:
+                for object_iter in xmltree.findall('object'):
+                    bndbox = object_iter.find("bndbox")
+                    label = object_iter.find('name').text
+                    if label not in self.found_names.keys():
+                        self.found_names[label]=len(self.found_names.keys())+0
+                    xmin = int(float(bndbox.find('xmin').text))
+                    ymin = int(float(bndbox.find('ymin').text))
+                    xmax = int(float(bndbox.find('xmax').text))
+                    ymax = int(float(bndbox.find('ymax').text))
+                    #self.df.at[i,'xmin']=str(xmin)
+                    #self.df.at[i,'xmax']=str(xmax)
+                    #self.df.at[i,'ymin']=str(ymin)
+                    #self.df.at[i,'ymax']=str(ymax)
+                    #self.df.at[i,'width']=imgSize[1]
+                    #self.df.at[i,'height']=imgSize[0]
+                    self.df.at[i,'label_i']=label
+                    #self.df.at[i,'path_jpeg_i']=path_jpeg_i
+                    #self.df.at[i,'path_anno_i']=path_anno_i
+                    self.df.at[i,'path_jpeg_dest_i']=path_jpeg_dest_i
+                    #self.df.at[i,'path_anno_dest_i']=path_anno_dest_i
+                    Thread(target=self.write_Yolo,args=(xmin,xmax,ymin,ymax,imgSize,self.found_names[label],path_anno_dest_i,)).start()
+                    # classIndex,xcen,ycen,w,h=self.BndBox2Yolo(xmin,xmax,ymin,ymax,imgSize,self.found_names[label])
+                    # yolo_i=" ".join([str(yolo) for yolo in (int(classIndex),xcen,ycen,w,h)])
+                    # f=open(path_anno_dest_i,'a')
+                    # f.writelines(yolo_i+'\n')
+                    # f.close()
+                    i+=1
+                    count+=1
+                    if count%self.increment==0 and len(self.df)>0:
+                        print('count=',count)
+                        self.df=self.df.drop_duplicates(keep='last').reset_index().drop('index',axis=1)
+                        self.df.to_pickle(self.df_filename,protocol=2)
+                        count_str=self.pad(count)
+                        self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
+                        #self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
+                        self.df=pd.DataFrame(columns=['label_i','path_jpeg_dest_i'])
+                        i=0
+                        print(self.df_filename,'of {}'.format(self.total_annos))
+                
+            Thread(target=self.copy_files,args=(path_jpeg_i,path_jpeg_dest_i,)).start()
+            Thread(target=self.copy_files,args=(path_anno_i,path_anno_dest_xml_i,)).start()
+            return i,count
     def convert_PascalVOC_to_YOLO(self):
         self.found_names={}
         i=0
-        self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
+        #self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
+        self.df=pd.DataFrame(columns=['label_i','path_jpeg_dest_i'])
         self.get_all_annos()
         count=self.counts
         label='None'
@@ -2249,7 +2364,11 @@ class yolo_cfg:
             if os.path.exists(self.df_filename) and self.var_overwrite.get()=='No':
                 print(self.df_filename)
                 print('found')
+                keep_columns=list(self.df.columns)
                 self.df=pd.read_pickle(self.df_filename)
+                drop_columns=[col for col in self.df.columns if col not in keep_columns]
+                if len(drop_columns)>0:
+                    self.df.drop(drop_columns,axis=1,inplace=True)
                 #self.found_names={w:i for i,w in enumerate(self.df['label_i'].unique())}
                 if os.path.exists(self.names_path):
                     f=open(self.names_path,'r')
@@ -2257,6 +2376,7 @@ class yolo_cfg:
                     f.close()
                     self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
                 else:
+                    print('READING self.path_Yolo again')
                     df_pkls=os.listdir(self.path_Yolo)
                     df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
                     for pkl_i in tqdm(df_pkls):
@@ -2271,7 +2391,11 @@ class yolo_cfg:
                 break
             else:
                 if os.path.exists(self.df_filename) and self.var_overwrite.get()=='Add':
+                    keep_columns=list(self.df.columns)
                     self.df=pd.read_pickle(self.df_filename)
+                    drop_columns=[col for col in self.df.columns if col not in keep_columns]
+                    if len(drop_columns)>0:
+                        self.df.drop(drop_columns,axis=1,inplace=True)
                     #self.found_names={w:i for i,w in enumerate(self.df['label_i'].unique())}
                     if os.path.exists(self.names_path):
                         f=open(self.names_path,'r')
@@ -2293,6 +2417,7 @@ class yolo_cfg:
                     i=len(self.df)
                 else:
                     if i==0:
+                        print('Removing self.path_Yolo: \n {}'.format(self.path_Yolo))
                         #if os.path.exists(os.path.join(self.path_Yolo,'backup_models')):
                         #    os.system('mv {} ..'.format(os.path.join(self.path_Yolo,'backup_models')))
                         #    os.system('rm -rf {}'.format(self.path_Yolo))
@@ -2301,100 +2426,10 @@ class yolo_cfg:
                         os.system('rm -rf {}'.format(self.path_Yolo))
                     pass
                 if os.path.exists(self.path_Yolo)==False:
+                    print('Creating self.path_Yolo: \n {}'.format(self.path_Yolo))
                     os.makedirs(self.path_Yolo)
-            #for anno in tqdm(os.listdir(self.path_Annotations)):
-            if anno[0]!='.' and anno.find('.xml')!=-1:
-                img_i_name=anno.split('.xml')[0]
-                path_anno_i=os.path.join(self.path_Annotations,img_i_name+'.xml')
-                path_jpeg_i=os.path.join(self.path_JPEGImages,img_i_name+'.jpg')
-                path_anno_dest_xml_i=os.path.join(self.path_Yolo,img_i_name+'.xml')
-                path_anno_dest_i=os.path.join(self.path_Yolo,img_i_name+'.txt')
-                path_jpeg_dest_i=os.path.join(self.path_Yolo,img_i_name+'.jpg')
-                f=open(path_anno_i,'r')
-                f_read=f.readlines()
-                f.close()
-                f=open(path_anno_dest_i,'w')
-                f.close()
-                #img_i=plt.imread(path_jpeg_i)
-                #imgSize=img_i.shape
-                
-
-                parser = etree.XMLParser(encoding=ENCODE_METHOD)
-                xmltree = ElementTree.parse(path_anno_i, parser=parser).getroot()
-                filename = xmltree.find('filename').text
-                for size_iter in xmltree.findall('size'):
-                    width_i=int(size_iter.find('width').text)
-                    height_i=int(size_iter.find('height').text)
-                    depth_i=int(size_iter.find('depth').text)
-                    imgSize=tuple([height_i,width_i,depth_i])
-                num_objs=[w for w in f_read if w.find('object')!=-1]
-                num_objs=len(num_objs)
-                if num_objs==0:
-                    print('No objects found')
-                    self.df.at[i,'xmin']=str(0)
-                    self.df.at[i,'xmax']=str(width_i)
-                    self.df.at[i,'ymin']=str(0)
-                    self.df.at[i,'ymax']=str(height_i)
-                    self.df.at[i,'width']=imgSize[1]
-                    self.df.at[i,'height']=imgSize[0]
-                    self.df.at[i,'label_i']=label
-                    self.df.at[i,'path_jpeg_i']=path_jpeg_i
-                    self.df.at[i,'path_anno_i']=path_anno_i
-                    self.df.at[i,'path_jpeg_dest_i']=path_jpeg_dest_i
-                    self.df.at[i,'path_anno_dest_i']=path_anno_dest_i
-                    i+=1
-                    count+=1
-                    if count%self.increment==0 and len(self.df)>0:
-                        print('count=',count)
-                        self.df=self.df.drop_duplicates(keep='last').reset_index().drop('index',axis=1)
-                        self.df.to_pickle(self.df_filename,protocol=2)
-                        count_str=self.pad(count)
-                        self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
-                        self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
-                        i=0
-                        print(self.df_filename,'of {}'.format(self.total_annos))
-                else:
-                    for object_iter in xmltree.findall('object'):
-                        bndbox = object_iter.find("bndbox")
-                        label = object_iter.find('name').text
-                        if label not in self.found_names.keys():
-                            self.found_names[label]=len(self.found_names.keys())+0
-                        xmin = int(float(bndbox.find('xmin').text))
-                        ymin = int(float(bndbox.find('ymin').text))
-                        xmax = int(float(bndbox.find('xmax').text))
-                        ymax = int(float(bndbox.find('ymax').text))
-                        self.df.at[i,'xmin']=str(xmin)
-                        self.df.at[i,'xmax']=str(xmax)
-                        self.df.at[i,'ymin']=str(ymin)
-                        self.df.at[i,'ymax']=str(ymax)
-                        self.df.at[i,'width']=imgSize[1]
-                        self.df.at[i,'height']=imgSize[0]
-                        self.df.at[i,'label_i']=label
-                        self.df.at[i,'path_jpeg_i']=path_jpeg_i
-                        self.df.at[i,'path_anno_i']=path_anno_i
-                        self.df.at[i,'path_jpeg_dest_i']=path_jpeg_dest_i
-                        self.df.at[i,'path_anno_dest_i']=path_anno_dest_i
-                        
-                        classIndex,xcen,ycen,w,h=self.BndBox2Yolo(xmin,xmax,ymin,ymax,imgSize,self.found_names[label])
-                        yolo_i=" ".join([str(yolo) for yolo in (int(classIndex),xcen,ycen,w,h)])
-                        f=open(path_anno_dest_i,'a')
-                        f.writelines(yolo_i+'\n')
-                        f.close()
-                        i+=1
-                        count+=1
-                        if count%self.increment==0 and len(self.df)>0:
-                            print('count=',count)
-                            self.df=self.df.drop_duplicates(keep='last').reset_index().drop('index',axis=1)
-                            self.df.to_pickle(self.df_filename,protocol=2)
-                            count_str=self.pad(count)
-                            self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
-                            self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
-                            i=0
-                            print(self.df_filename,'of {}'.format(self.total_annos))
-                    
-  
-                shutil.copy(path_jpeg_i,path_jpeg_dest_i)
-                shutil.copy(path_anno_i,path_anno_dest_xml_i)
+            #Thread(target=self.read_XML,args=(anno,i,count,)).start()
+            i,count=self.read_XML(anno,i,count)
         if len(self.df)>0:
             self.df=self.df.drop_duplicates(keep='last').reset_index().drop('index',axis=1)
             self.df.to_pickle(self.df_filename,protocol=2)  
@@ -2448,6 +2483,7 @@ class yolo_cfg:
             unique_label_count_val=0
             for yolo_file_i in tqdm(self.yolo_files):
                 self.df=pd.read_pickle(yolo_file_i)
+                self.df=self.df.reset_index().drop('index',axis=1)
                 #pprint(self.df)
                 self.df_i=self.df[self.df['label_i']==unique_label].copy()
                 self.df_i=self.df_i.drop_duplicates().reset_index().drop('index',axis=1)
