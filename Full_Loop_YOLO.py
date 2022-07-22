@@ -704,7 +704,7 @@ class yolo_cfg:
                     del self.open_predjpeg_label
                     cmd_i=open_cmd+" '{}'".format(self.open_predjpeg_label_var.get())
                     self.open_predjpeg_label=Button(self.root,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
-                    self.open_predjpeg_label.grid(row=10,column=5,columnspan=50,sticky='sw')
+                    self.open_predjpeg_label.grid(row=10+11,column=5,columnspan=50,sticky='sw')
                     self.path_predJPEGImages=self.foldername
                     print(self.path_predJPEGImages)   
                     create_img_list.create_img_list(self.path_predJPEGImages)
@@ -1379,6 +1379,7 @@ class yolo_cfg:
             self.test_mp4_yolov7_e6e_objs_button_note.grid(row=11-7,column=11,sticky='ne')
             self.test_yolov7_mp4_e6e()
             self.test_yolov7_webcam_e6e()
+            self.test_yolov7_mAP_e6e()
 
     def train_yolov7_re(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -1390,6 +1391,7 @@ class yolo_cfg:
             self.test_mp4_yolov7_re_objs_button_note.grid(row=11-7,column=12,sticky='ne')
             self.test_yolov7_mp4_re()
             self.test_yolov7_webcam_re()
+            self.test_yolov7_mAP_re()
 
     def test_yolov7_mp4(self):
         if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
@@ -1447,12 +1449,39 @@ class yolo_cfg:
 
     def test_yolov7_mAP(self):
         if os.path.exists('libs/yolov7_path.py'):
-            self.create_predict_bash_mAP_yolov7()
-            cmd_i=" bash '{}'".format(self.TEST_PREDICT_YOLOV7)
-            self.test_predict_MAP_yolov7_objs_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_predict_MAP_yolov7_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_predict_bash_mAP_yolov7,bg=self.root_bg,fg=self.root_fg)
             self.test_predict_MAP_yolov7_objs_button.grid(row=16-7,column=10,sticky='se')
             self.test_predict_MAP_yolov7_objs_button_note=tk.Label(self.root,text='7.c.1 Predict Yolov7-tiny \n mAP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_predict_MAP_yolov7_objs_button_note.grid(row=17-7,column=10,sticky='ne')
+
+    def run_create_predict_bash_mAP_yolov7(self):
+        self.create_predict_bash_mAP_yolov7()
+        cmd_i=" bash '{}'".format(self.TEST_PREDICT_YOLOV7)
+        self.run_cmd(cmd_i)
+
+    def test_yolov7_mAP_e6e(self):
+        if os.path.exists('libs/yolov7_path.py'):
+            self.test_predict_MAP_yolov7_e6e_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_predict_bash_mAP_yolov7_e6e,bg=self.root_bg,fg=self.root_fg)
+            self.test_predict_MAP_yolov7_e6e_objs_button.grid(row=16-7,column=11,sticky='se')
+            self.test_predict_MAP_yolov7_e6e_objs_button_note=tk.Label(self.root,text='7.c.2 Predict Yolov7-e6e \n mAP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_predict_MAP_yolov7_e6e_objs_button_note.grid(row=17-7,column=11,sticky='ne')
+
+    def run_create_predict_bash_mAP_yolov7_e6e(self):
+        self.create_predict_bash_mAP_yolov7_e6e()
+        cmd_i=" bash '{}'".format(self.TEST_PREDICT_YOLOV7_e6e)
+        self.run_cmd(cmd_i)
+
+    def test_yolov7_mAP_re(self):
+        if os.path.exists('libs/yolov7_path.py'):
+            self.test_predict_MAP_yolov7_re_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_predict_bash_mAP_yolov7_re,bg=self.root_bg,fg=self.root_fg)
+            self.test_predict_MAP_yolov7_re_objs_button.grid(row=16-7,column=12,sticky='se')
+            self.test_predict_MAP_yolov7_re_objs_button_note=tk.Label(self.root,text='7.c.3 Predict Yolov7-re \n mAP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_predict_MAP_yolov7_re_objs_button_note.grid(row=17-7,column=12,sticky='ne')
+
+    def run_create_predict_bash_mAP_yolov7_re(self):
+        self.create_predict_bash_mAP_yolov7_re()
+        cmd_i=" bash '{}'".format(self.TEST_PREDICT_YOLOV7_re)
+        self.run_cmd(cmd_i)
 
     def create_train_bash_yolov7(self):
         self.TRAIN_YOLOV7=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7-tiny.sh')
@@ -1522,13 +1551,43 @@ class yolo_cfg:
     def create_predict_bash_mAP_yolov7(self):
         self.TEST_PREDICT_YOLOV7=os.path.join(os.path.dirname(self.data_path),'predict_custom_mAP_IOU{}_CONF{}_Yolov7-tiny.sh'.format(str(self.IOU_THRESH).replace('.','p'),str(self.THRESH).replace('.','p')))
         f=open(self.TEST_PREDICT_YOLOV7,'w')
-        
-        f.writelines('path_result_list_txt={}\n'.format(self.valid_list_path))
+               
+        self.create_YAML()  
+        f.writelines('path_result_list_txt={}\n'.format(self.test_list_path))
         f.writelines('path_predictions_folder={}\n'.format(os.path.join(self.yolov7_path_project_tiny,'predictions')))
         f.writelines('path_objs_names={}\n'.format(self.names_path))
         f.writelines('cd {}\n'.format(self.yolov7_path))
         #python test.py --data data/coco.yaml --img 640 --batch 32 --conf 0.001 --iou 0.65 --device 0 --weights yolov7.pt --name yolov7_640_val
-        f.writelines("python3 test.py --data {} --weights {} --conf {} --img-size {} --batch 32 --iou {} --project {} --name predictions --exist-ok --save-txt --save-conf --verbose --task val --device 0\n".format(self.YAML_PATH, self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.IOU_THRESH,self.yolov7_path_project_tiny))
+        f.writelines("python3 test.py --data {} --weights {} --conf {} --img-size {} --batch 32 --iou {} --project {} --name predictions --exist-ok --save-txt --save-conf --verbose --task test --device 0\n".format(self.YAML_PATH, self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.IOU_THRESH,self.yolov7_path_project_tiny))
+        f.writelines('cd {}\n'.format(self.CWD))
+        f.writelines('python3 resources/convert_predictions_to_xml_yolov7.py --path_result_list_txt=$path_result_list_txt --path_predictions_folder=$path_predictions_folder --path_objs_names=$path_objs_names \n')
+        f.close()
+
+    def create_predict_bash_mAP_yolov7_e6e(self):
+        self.TEST_PREDICT_YOLOV7_e6e=os.path.join(os.path.dirname(self.data_path),'predict_custom_mAP_IOU{}_CONF{}_Yolov7-e6e.sh'.format(str(self.IOU_THRESH).replace('.','p'),str(self.THRESH).replace('.','p')))
+        f=open(self.TEST_PREDICT_YOLOV7_e6e,'w')
+        
+        self.create_YAML()  
+        f.writelines('path_result_list_txt={}\n'.format(self.test_list_path))
+        f.writelines('path_predictions_folder={}\n'.format(os.path.join(self.yolov7_path_project_e6e,'predictions')))
+        f.writelines('path_objs_names={}\n'.format(self.names_path))
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        #python test.py --data data/coco.yaml --img 640 --batch 32 --conf 0.001 --iou 0.65 --device 0 --weights yolov7.pt --name yolov7_640_val
+        f.writelines("python3 test.py --data {} --weights {} --conf {} --img-size {} --batch 1 --iou {} --project {} --name predictions --exist-ok --save-txt --save-conf --verbose --task test --device 0\n".format(self.YAML_PATH, self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.IOU_THRESH,self.yolov7_path_project_e6e))
+        f.writelines('cd {}\n'.format(self.CWD))
+        f.writelines('python3 resources/convert_predictions_to_xml_yolov7.py --path_result_list_txt=$path_result_list_txt --path_predictions_folder=$path_predictions_folder --path_objs_names=$path_objs_names \n')
+        f.close()
+
+    def create_predict_bash_mAP_yolov7_re(self):
+        self.TEST_PREDICT_YOLOV7_re=os.path.join(os.path.dirname(self.data_path),'predict_custom_mAP_IOU{}_CONF{}_Yolov7.sh'.format(str(self.IOU_THRESH).replace('.','p'),str(self.THRESH).replace('.','p')))
+        f=open(self.TEST_PREDICT_YOLOV7_re,'w')
+        self.create_YAML()  
+        f.writelines('path_result_list_txt={}\n'.format(self.test_list_path))
+        f.writelines('path_predictions_folder={}\n'.format(os.path.join(self.yolov7_path_project_re,'predictions')))
+        f.writelines('path_objs_names={}\n'.format(self.names_path))
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        #python test.py --data data/coco.yaml --img 640 --batch 32 --conf 0.001 --iou 0.65 --device 0 --weights yolov7.pt --name yolov7_640_val
+        f.writelines("python3 test.py --data {} --weights {} --conf {} --img-size {} --batch 32 --iou {} --project {} --name predictions --exist-ok --save-txt --save-conf --verbose --task test --device 0\n".format(self.YAML_PATH, self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.IOU_THRESH,self.yolov7_path_project_re))
         f.writelines('cd {}\n'.format(self.CWD))
         f.writelines('python3 resources/convert_predictions_to_xml_yolov7.py --path_result_list_txt=$path_result_list_txt --path_predictions_folder=$path_predictions_folder --path_objs_names=$path_objs_names \n')
         f.close()
@@ -1538,7 +1597,13 @@ class yolo_cfg:
         f=open(self.YAML_PATH,'w')
         f.writelines('train: {}\n'.format(str(self.train_list_path)))
         f.writelines('val: {}\n'.format(str(self.valid_list_path)))
-        f.writelines('test: {}\n'.format(str(self.valid_list_path)))
+        if self.img_list_path==None:
+            f.writelines('test: {}\n'.format(str(self.valid_list_path)))
+            self.test_list_path=self.valid_list_path
+        else:
+            f.writelines('test: {}\n'.format(str(self.img_list_path)))
+            self.test_list_path=self.img_list_path
+        #f.writelines('test: {}\n'.format(str(self.valid_list_path)))
         f.writelines('# number of classes\n')
         f.writelines('nc: {}\n'.format(str(self.num_classes)))
         f.writelines('# class names\n')
