@@ -13,9 +13,13 @@ Darknet (Yolov4) should be installed from (https://github.com/AlexeyAB/darknet).
 
 Yolov7 should be installed from (https://github.com/WongKinYiu/yolov7).  A version controlled fork is shown in these instructions below.
 
+tensorflow-yolov4-tflite installed from (https://github.com/stevensmiley1989/tensorflow-yolov4-tflite) and switched to the smiley_yolov4tiny branch.
+
 Change your DEFAULT_SETTINGS path (located at libs/DEFAULT_SETTINGS.py) to point to your installed Darknet path for use.  
 
 Change your yolov7 path (located at libs/yolov7_path.py) to point to your installed yolov7 path for use. 
+
+Change your tensorflow-yolov4-tflite path (located at libs/tensorflow_yolov4_tflite_path.py) to point to your installed path for use.
 
 Ensure you put the yolov4-tiny.conv.29 weights in your Darknet path.  You can get these weights from:
 https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
@@ -56,6 +60,16 @@ Yolov7
     pip3 install -r requirements.txt #you might need to adjust things manually here for versions of PyTorch    
 ~~~~~~~
 
+~~~~~~~
+
+tensorflow-yolov4-tflite
+.. code:: shell
+    cd ~/
+    git clone https://github.com/stevensmiley1989/tensorflow-yolov4-tflite.git
+    cd tensorflow-yolov4-tflite
+    git switch smiley_yolov4tiny #
+    pip3 install -r requirements_smiley_yolov4_tiny_converter.txt #you might need to adjust things manually    
+~~~~~~~
 
 Installation
 ------------------
