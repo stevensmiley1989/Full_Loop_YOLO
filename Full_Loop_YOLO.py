@@ -1368,6 +1368,7 @@ class yolo_cfg:
             self.test_mp4_yolov7_objs_button_note.grid(row=11-7,column=10,sticky='ne')
             self.test_yolov7_mp4()
             self.test_yolov7_webcam()
+            self.test_yolov7_webcam_RTMP()
             self.test_yolov7_mAP()
 
     def train_yolov7_e6e(self):
@@ -1380,6 +1381,7 @@ class yolo_cfg:
             self.test_mp4_yolov7_e6e_objs_button_note.grid(row=11-7,column=11,sticky='ne')
             self.test_yolov7_mp4_e6e()
             self.test_yolov7_webcam_e6e()
+            self.test_yolov7_webcam_e6e_RTMP()
             self.test_yolov7_mAP_e6e()
 
     def train_yolov7_re(self):
@@ -1392,6 +1394,7 @@ class yolo_cfg:
             self.test_mp4_yolov7_re_objs_button_note.grid(row=11-7,column=12,sticky='ne')
             self.test_yolov7_mp4_re()
             self.test_yolov7_webcam_re()
+            self.test_yolov7_webcam_re_RTMP()
             self.test_yolov7_mAP_re()
 
     def test_yolov7_mp4(self):
@@ -1430,6 +1433,20 @@ class yolo_cfg:
             self.test_webcam_yolov7_objs_button_note=tk.Label(self.root,text='7.a.1 Test Yolov7-tiny \n webcam',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_objs_button_note.grid(row=13-7,column=10,sticky='ne')
 
+    def test_yolov7_webcam_RTMP(self):
+        if os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_webcam_yolov7_RTMP()
+            cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_RTMP)
+            self.test_webcam_yolov7_RTMP_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_test_bash_webcam_yolov7_RTMP,bg=self.root_bg,fg=self.root_fg)
+            self.test_webcam_yolov7_RTMP_objs_button.grid(row=12-7,column=10+3,sticky='se')
+            self.test_webcam_yolov7_RTMP_objs_button_note=tk.Label(self.root,text='7.d.1 Test Yolov7-tiny \n webcam RTMP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_RTMP_objs_button_note.grid(row=13-7,column=10+3,sticky='ne')
+
+    def run_create_test_bash_webcam_yolov7_RTMP(self):
+        self.create_test_bash_webcam_yolov7_RTMP()
+        cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_RTMP)
+        self.run_cmd(cmd_i)
+
     def test_yolov7_webcam_e6e(self):
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_webcam_yolov7_e6e()
@@ -1439,6 +1456,20 @@ class yolo_cfg:
             self.test_webcam_yolov7_e6e_objs_button_note=tk.Label(self.root,text='7.a.2 Test Yolov7-E6E \n webcam',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_e6e_objs_button_note.grid(row=13-7,column=11,sticky='ne')
 
+    def test_yolov7_webcam_e6e_RTMP(self):
+        if os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_webcam_yolov7_e6e_RTMP()
+            cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_e6e_RTMP)
+            self.test_webcam_yolov7_e6e_RTMP_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_test_bash_webcam_yolov7_e6e_RTMP,bg=self.root_bg,fg=self.root_fg)
+            self.test_webcam_yolov7_e6e_RTMP_objs_button.grid(row=12-7,column=11+3,sticky='se')
+            self.test_webcam_yolov7_e6e_RTMP_objs_button_note=tk.Label(self.root,text='7.d.2 Test Yolov7-E6E \n webcam RTMP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_e6e_RTMP_objs_button_note.grid(row=13-7,column=11+3,sticky='ne')
+
+    def run_create_test_bash_webcam_yolov7_e6e_RTMP(self):
+        self.create_test_bash_webcam_yolov7_e6e_RTMP()
+        cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_e6e_RTMP)
+        self.run_cmd(cmd_i)    
+
     def test_yolov7_webcam_re(self):
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_webcam_yolov7_re()
@@ -1447,6 +1478,22 @@ class yolo_cfg:
             self.test_webcam_yolov7_re_objs_button.grid(row=12-7,column=12,sticky='se')
             self.test_webcam_yolov7_re_objs_button_note=tk.Label(self.root,text='7.a.3 Test Yolov7 \n webcam',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_re_objs_button_note.grid(row=13-7,column=12,sticky='ne')
+
+ 
+
+    def test_yolov7_webcam_re_RTMP(self):
+        if os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_webcam_yolov7_re_RTMP()
+            cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_re_RTMP)
+            self.test_webcam_yolov7_re_RTMP_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_test_bash_webcam_yolov7_re_RTMP,bg=self.root_bg,fg=self.root_fg)
+            self.test_webcam_yolov7_re_RTMP_objs_button.grid(row=12-7,column=12+3,sticky='se')
+            self.test_webcam_yolov7_re_RTMP_objs_button_note=tk.Label(self.root,text='7.d.3 Test Yolov7 \n webcam RTMP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_re_RTMP_objs_button_note.grid(row=13-7,column=12+3,sticky='ne')
+
+    def run_create_test_bash_webcam_yolov7_re_RTMP(self):
+        self.create_test_bash_webcam_yolov7_re_RTMP()
+        cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_re_RTMP)
+        self.run_cmd(cmd_i)  
 
     def test_yolov7_mAP(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -1534,6 +1581,8 @@ class yolo_cfg:
         f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e))
         f.close()
 
+
+
     def create_test_bash_mp4_yolov7_re(self):
         self.TEST_MP4_YOLOV7_re=os.path.join(os.path.dirname(self.data_path),'test_MP4_custom_Yolov7.sh')
         f=open(self.TEST_MP4_YOLOV7_re,'w')
@@ -1541,11 +1590,26 @@ class yolo_cfg:
         f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re))
         f.close()
 
+
+
     def create_test_bash_webcam_yolov7(self):
         self.TEST_WEBCAM_YOLOV7=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7-tiny.sh')
         f=open(self.TEST_WEBCAM_YOLOV7,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
         f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
+        f.close()
+
+    def create_test_bash_webcam_yolov7_RTMP(self):
+        self.TEST_WEBCAM_YOLOV7_RTMP=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7-tiny_RTMP.sh')
+        f=open(self.TEST_WEBCAM_YOLOV7_RTMP,'w')
+        self.YOUTUBE_KEY=self.YOUTUBE_KEY_VAR.get()
+        fo=open('YOUTUBE_KEY.txt','w')
+        fo_read=fo.writelines(self.YOUTUBE_KEY+'\n')
+        fo.close()
+        f.writelines('YOUTUBE_RTMP={}\n'.format(self.YOUTUBE_KEY))
+        f.writelines('YOUTUBE_STREAM_RES={}\n'.format(self.USER_SELECTION_yt.get()))
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
         f.close()
 
     def create_test_bash_webcam_yolov7_e6e(self):
@@ -1555,11 +1619,37 @@ class yolo_cfg:
         f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
         f.close()
 
+    def create_test_bash_webcam_yolov7_e6e_RTMP(self):
+        self.TEST_WEBCAM_YOLOV7_e6e_RTMP=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7-e6e_RTMP.sh')
+        f=open(self.TEST_WEBCAM_YOLOV7_e6e_RTMP,'w')
+        self.YOUTUBE_KEY=self.YOUTUBE_KEY_VAR.get()
+        fo=open('YOUTUBE_KEY.txt','w')
+        fo_read=fo.writelines(self.YOUTUBE_KEY+'\n')
+        fo.close()
+        f.writelines('YOUTUBE_RTMP={}\n'.format(self.YOUTUBE_KEY))
+        f.writelines('YOUTUBE_STREAM_RES={}\n'.format(self.USER_SELECTION_yt.get()))
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
+        f.close()
+
     def create_test_bash_webcam_yolov7_re(self):
         self.TEST_WEBCAM_YOLOV7_re=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7.sh')
         f=open(self.TEST_WEBCAM_YOLOV7_re,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
         f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
+        f.close()
+
+    def create_test_bash_webcam_yolov7_re_RTMP(self):
+        self.TEST_WEBCAM_YOLOV7_re_RTMP=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7_RTMP.sh')
+        f=open(self.TEST_WEBCAM_YOLOV7_re_RTMP,'w')
+        self.YOUTUBE_KEY=self.YOUTUBE_KEY_VAR.get()
+        fo=open('YOUTUBE_KEY.txt','w')
+        fo_read=fo.writelines(self.YOUTUBE_KEY+'\n')
+        fo.close()
+        f.writelines('YOUTUBE_RTMP={}\n'.format(self.YOUTUBE_KEY))
+        f.writelines('YOUTUBE_STREAM_RES={}\n'.format(self.USER_SELECTION_yt.get()))
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
         f.close()
 
     def create_predict_bash_mAP_yolov7(self):
