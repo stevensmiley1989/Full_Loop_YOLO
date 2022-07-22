@@ -1271,6 +1271,7 @@ class yolo_cfg:
         self.test_yolodnn()
         self.open_mp4()
         self.test_yolodnn_rtmp()
+        self.convert_tflite()
     
     def YOUTUBE_RTMP(self):
         if self.YOUTUBE_KEY_VAR==None:
@@ -1483,6 +1484,19 @@ class yolo_cfg:
         cmd_i=" bash '{}'".format(self.TEST_PREDICT_YOLOV7_re)
         self.run_cmd(cmd_i)
 
+    def convert_tflite(self):
+        if os.path.exists(os.path.join(self.CWD,'libs/tensorflow_yolov4_tflite_path.py')) and (self.WIDTH_NUM==self.HEIGHT_NUM) and os.path.exists(self.best_weights_path):
+            self.create_tflite_bash()
+            self.convert_tflite_button=Button(self.root,image=self.icon_test,command=self.run_create_tflite_bash,bg=self.root_bg,fg=self.root_fg)
+            self.convert_tflite_button.grid(row=10-7,column=13,sticky='se')
+            self.convert_tflite_button_note=tk.Label(self.root,text='Convert Yolov4 to TFLITE',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.convert_tflite_button_note.grid(row=11-7,column=13,sticky='ne')
+
+    def run_create_tflite_bash(self):
+        self.create_tflite_bash()
+        cmd_i=" bash '{}'".format(self.tensorflow_yolov4_tflite_bash_PATH)
+        self.run_cmd(cmd_i)
+
     def create_train_bash_yolov7(self):
         self.TRAIN_YOLOV7=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7-tiny.sh')
         f=open(self.TRAIN_YOLOV7,'w')
@@ -1591,6 +1605,37 @@ class yolo_cfg:
         f.writelines('cd {}\n'.format(self.CWD))
         f.writelines('python3 resources/convert_predictions_to_xml_yolov7.py --path_result_list_txt=$path_result_list_txt --path_predictions_folder=$path_predictions_folder --path_objs_names=$path_objs_names \n')
         f.close()
+
+    def create_tflite_bash(self):
+        if os.path.exists(os.path.join(self.CWD,'libs/tensorflow_yolov4_tflite_path.py')) and (self.WIDTH_NUM==self.HEIGHT_NUM) and os.path.exists(self.best_weights_path):
+            from libs import tensorflow_yolov4_tflite_path
+            self.tensorflow_yolov4_tflite_PATH=tensorflow_yolov4_tflite_path.path
+            self.tensorflow_yolov4_tflite_bash_OG_PATH=os.path.join(self.CWD,'resources/tensorflow_yolov4_tflite_bash_OG.sh')
+            self.convert_config_OG_path=os.path.join(self.CWD,'resources/convert_config_OG.py')
+            self.tensorflow_yolov4_tflite_bash_PATH=os.path.join(os.path.dirname(self.data_path),'tensorflow_yolov4_tflite_bash.sh')
+            OUTPUT_PATH=os.path.join(os.path.dirname(self.data_path),os.path.basename(self.best_weights_path.split('.')[0]))
+            
+            f=open(self.tensorflow_yolov4_tflite_bash_PATH,'w')
+            f.writelines('BASEPATH={}\n'.format(self.tensorflow_yolov4_tflite_PATH))
+            f.writelines('CONFIGPATH=$BASEPATH/core/config.py\n')
+            f.writelines('CONFIGPATH_OG=$BASEPATH/core/config_OG.py\n')
+            f.writelines('OBJ_NAMES={}\n'.format(self.names_path))
+            f.writelines('WEIGHTS_PATH={}\n'.format(self.best_weights_path))
+            f.writelines('OUTPUT_PATH={}\n'.format(OUTPUT_PATH))
+            f.writelines('TFLITE_PATH={}\n'.format(os.path.join(OUTPUT_PATH,os.path.basename(OUTPUT_PATH)+'-fp32.tflite')))
+            f.writelines('NEW_OBJ_NAMES={}\n'.format(os.path.join(OUTPUT_PATH,os.path.basename(OUTPUT_PATH)+'-fp32.txt')))
+            f.writelines('INPUT_SIZE={}\n'.format(self.WIDTH_NUM)) #these have to be the same size
+            f.writelines('CONVERT_CONFIG_OG_PATH={}\n'.format(self.convert_config_OG_path))
+            f.writelines('echo "If this fails to export, try another libGLdispatch location"\n')
+            f.writelines('export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libGLdispatch.so.0 \n')
+            f.writelines('python3 $CONVERT_CONFIG_OG_PATH --CONFIGPATH=$CONFIGPATH --CONFIGPATH_OG=$CONFIGPATH_OG --OBJ_NAMES=$OBJ_NAMES \n')
+            f.writelines('cd $BASEPATH \n')
+            f.writelines('python3 save_model.py --weights $WEIGHTS_PATH --output $OUTPUT_PATH --input_size $INPUT_SIZE \n')
+            f.writelines('python3 convert_tflite.py --weights $OUTPUT_PATH --output $TFLITE_PATH --input_size $INPUT_SIZE \n')
+            f.writelines('cp $OBJ_NAMES $NEW_OBJ_NAMES \n')
+            f.close()
+
+
 
     def create_YAML(self):
         self.YAML_PATH=os.path.join(os.path.dirname(self.data_path),'custom.yaml')
