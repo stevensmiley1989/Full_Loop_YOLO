@@ -2,7 +2,7 @@
 ![Full_Loop_YOLO.py](https://github.com/stevensmiley1989/Full_Loop_YOLO/blob/main/misc/Full_Loop_YOLO_GUI_Screenshot.png)
 
 Full_Loop_YOLO.py is a wrapper for creating custom darknet YoloV4-tiny &amp; regular sized models on your custom datasets.
-Furthermore, you can train and test Yolov7-tiny as of 7/20/2020.
+Furthermore, you can train and test Yolov7-tiny as of 7/20/2020.  You may also convert your Yolov4-tiny weights to TFLITE with the click of a button.
 
 It is written in Python and uses Tkinter for its graphical interface.
 
