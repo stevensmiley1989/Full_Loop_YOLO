@@ -77,7 +77,10 @@ ENCODE_METHOD = DEFAULT_ENCODING
 from resources import switch_basepath
 from resources import create_img_list
 from resources import create_imgs_from_video
-switch_basepath.switch_scripts()
+global return_to_main
+return_to_main=True
+
+#switch_basepath.switch_scripts()
 def get_default_settings(SAVED_SETTINGS='SAVED_SETTINGS'):
     global DEFAULT_SETTINGS
     try:
@@ -103,7 +106,8 @@ else:
     else:
         open_cmd='start'
 #pprint(cfg_vanilla)
-
+global PROCEED 
+PROCEED=False
 class main_entry:
     global SAVED_SETTINGS_PATH
     def __init__(self,root_tk):
@@ -147,6 +151,9 @@ class main_entry:
         self.canvas_columnspan=50
         self.canvas_rowspan=50
         self.root_background_img=r"misc/gradient_green.jpg"
+        
+        self.INITIAL_CHECK()
+    def INITIAL_CHECK(self):
         self.get_update_background_img()
         self.root.configure(bg=self.root_bg)
         self.dropdown=None
@@ -212,6 +219,8 @@ class main_entry:
         self.dropdown_menu()
         self.submit_label=Button(self.root,text='Submit',command=self.submit,bg=self.root_fg,fg=self.root_bg,font=('Arial',12))
         self.submit_label.grid(row=1,column=5,sticky='se')
+        self.delete_label=Button(self.root,text='Delete',command=self.popupWindow_delete,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
+        self.delete_label.grid(row=2,column=5,sticky='se')
         # self.submit2_label=Button(self.root,text='Run Script',command=self.submit_script,bg=self.root_fg,fg=self.root_bg,font=('Arial',12))
         # self.submit2_label.grid(row=4,column=1,sticky='se')
         # self.select_file_script_label=Button(self.root,image=self.icon_folder,command=self.select_file_script,bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
@@ -328,8 +337,64 @@ class main_entry:
     def run_cmd_editpaths(self):
         cmd_i=open_cmd+" {}".format(self.list_script_path)
         os.system(cmd_i)
+    def popupWindow_delete(self):
+
+        self.USER=self.USER_SELECTION.get()
+        self.USER=self.USER.strip()
+        get_default_settings(self.USER)
+        SAVED_SETTINGS_PATH=os.path.join('libs',self.USER)
+        if os.path.exists(SAVED_SETTINGS_PATH+".py"):
+            f=open(SAVED_SETTINGS_PATH+".py")
+            f_read=f.readlines()
+            f.close()
+            path_of_interest='None'
+            for line in f_read:
+                if line.find('YOLO_MODEL_PATH')!=-1:                   
+                    path_of_interest=line.split('=')[1].replace('\n','').strip().replace('r"','"').replace("r'","'").replace("'","").replace('"',"")
+
+        #self.delete_note1=tk.Label(self.top,text='Are you sure you want to delete all associated files with:',bg=self.root_bg,fg=self.root_fg,font=("Arial", 12))
+        #self.delete_note1.grid(row=0,column=0,sticky='w')
+        if path_of_interest!='None':
+            delete_prompt="{}.py \n and \n {}".format(SAVED_SETTINGS_PATH,path_of_interest)
+        else:
+            delete_prompt="{}.py".format(SAVED_SETTINGS_PATH)
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//2.0),int(self.root.winfo_screenheight()*0.95//6.0)) )
+        self.top.configure(background = 'black')
+        self.top.title('Are you sure you want to delete all associated files with')
+        self.delete_note2=tk.Label(self.top,text='{}'.format(delete_prompt),bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.delete_note2.grid(row=0,column=0,columnspan=5,sticky='ne')
+        self.b=Button(self.top,text='Yes',command=self.delete,bg=self.root_fg, fg=self.root_bg)
+        self.b.grid(row=4,column=1,sticky='se')
+        self.c=Button(self.top,text='No',command=self.cleanup,bg=self.root_bg, fg=self.root_fg)
+        self.c.grid(row=4,column=2,sticky='se')
+
+    def delete(self):
+        self.USER=self.USER_SELECTION.get()
+        self.USER=self.USER.strip()
+        get_default_settings(self.USER)
+        SAVED_SETTINGS_PATH=os.path.join('libs',self.USER)
+        if os.path.exists(SAVED_SETTINGS_PATH+".py"):
+            f=open(SAVED_SETTINGS_PATH+".py")
+            f_read=f.readlines()
+            f.close()
+            for line in f_read:
+                if line.find('YOLO_MODEL_PATH')!=-1:
+                    
+                    path_of_interest=line.split('=')[1].replace('\n','').strip().replace('r"','"').replace("r'","'").replace("'","").replace('"',"")
+                    print('Found YOLO_MODEL_PATH: \n{} \n'.format(path_of_interest))
+                    if os.path.exists(path_of_interest):
+                        os.system('rm -rf {}'.format(path_of_interest))
+                        print('Deleted all files located at {}'.format(path_of_interest))
+        os.remove(SAVED_SETTINGS_PATH+".py")
+        print('Deleted SAVED_SETTINGS_PATH: \n',SAVED_SETTINGS_PATH)
+        self.cleanup()
+        self.INITIAL_CHECK()
+
     def submit(self):
         global SAVED_SETTINGS_PATH
+        global PROCEED 
+        PROCEED=True
         self.USER=self.USER_SELECTION.get()
         self.USER=self.USER.strip()
         get_default_settings(self.USER)
@@ -352,6 +417,8 @@ class main_entry:
         self.canvas.create_image(0,0,image=self.bg,anchor='nw')
     def close(self):
         self.root.destroy()
+    def cleanup(self):
+        self.top.destroy()
 
 class yolo_cfg:
     def __init__(self,root_tk,SAVED_SETTINGS_PATH):
@@ -418,7 +485,8 @@ class yolo_cfg:
         self.root_H=int(self.root.winfo_screenheight()*0.95)
         self.root_W=int(self.root.winfo_screenwidth()*0.95)
         self.root.geometry(str(self.root_W)+'x'+str(self.root_H))
-        self.root.title("Full-Loop YOLO")
+        self.root.title(os.path.basename(self.SAVED_SETTINGS_PATH))
+        #self.root.title("Full-Loop YOLO")
         self.root_bg=DEFAULT_SETTINGS.root_bg#'black'
         self.root_fg=DEFAULT_SETTINGS.root_fg#'lime'
         self.canvas_columnspan=DEFAULT_SETTINGS.canvas_columnspan
@@ -440,6 +508,8 @@ class yolo_cfg:
         # self.top.destroy()
         # self.root.deiconify()
 
+        self.remaining_buttons_clicked=True
+
 
     #Buttons
         self.basepath_now_selected=False
@@ -460,6 +530,14 @@ class yolo_cfg:
         self.save_settings_button.grid(row=1,column=4,sticky='se')
         self.save_settings_note=tk.Label(self.root,text='Save Settings',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.save_settings_note.grid(row=2,column=4,sticky='ne')
+
+        self.return_to_main_button=Button(self.root,text='Return to Main Menu',command=self.return_to_main,bg=self.root_fg,fg=self.root_bg)
+        self.return_to_main_button.grid(row=0,column=0,sticky='se')
+        # self.return_to_main_note=tk.Label(self.root,text='Main Menu',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        # self.return_to_main_note.grid(row=1,column=1,sticky='nw')
+
+
+
 
         self.open_basepath_label_var=tk.StringVar()
         self.open_basepath_label_var.set(self.base_path_OG)
@@ -554,7 +632,19 @@ class yolo_cfg:
         self.button_yolo_tiny.grid(row=5,column=0,stick='se')
         self.button_yolo_regular=ttk.Radiobutton(text='Yolov4',style='Normal.TRadiobutton',variable=self.var_yolo_choice,value='Yolov4')
         self.button_yolo_regular.grid(row=6,column=0,stick='ne')
+    
+    def TEST_BUTTONS(self):
+        self.popup_TEST_button=Button(self.root,text='TEST Script Buttons',command=self.popupWindow_TEST,bg=self.root_fg,fg=self.root_bg)
+        self.popup_TEST_button.grid(row=13,column=2,sticky='sw')
 
+    def TRAIN_BUTTONS(self):
+        self.popup_TRAIN_button=Button(self.root,text='TRAIN Script Buttons',command=self.popupWindow_TRAIN,bg=self.root_fg,fg=self.root_bg)
+        self.popup_TRAIN_button.grid(row=12,column=2,sticky='sw')
+
+    def return_to_main(self):
+        global return_to_main
+        return_to_main=True
+        self.root.destroy()
     def select_file_mp4(self,file_i):
         filetypes=(('mp4','*.mp4'),('All files','*.*'))
         if os.path.exists(self.mp4_video_path):
@@ -799,6 +889,8 @@ class yolo_cfg:
             self.path_predJPEGImages=self.path_JPEGImages
         if self.path_MOVMP4==None:
             self.path_MOVMP4=self.path_JPEGImages
+        self.save_settings()   
+        self.root.title(os.path.basename(self.SAVED_SETTINGS_PATH))
     def get_header(self,cfg):
         self.net='[net]\n'
         self.Testing="# Testing\n"
@@ -1084,19 +1176,21 @@ class yolo_cfg:
         self.create_yolo_objs_button_note.grid(row=2,column=1,sticky='ne')
 
         self.var_overwrite=tk.StringVar()
-        df_pkls=os.listdir(self.path_Yolo)
-        df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
-        self.found_names={}
-        if len(df_pkls)>0:
-            for pkl_i in tqdm(df_pkls):
-                self.df_pkl=pd.read_pickle(pkl_i)
-                names_possible=list(self.df_pkl['label_i'].unique())
-                for name in names_possible:
-                    if name not in self.found_names.keys():
-                        self.found_names[name]=len(self.found_names.keys())+0
-            f=open(self.names_path,'w')
-            f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
-            f.close()
+        # df_pkls=os.listdir(self.path_Yolo)
+        # df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
+        # self.found_names={}
+        # if len(df_pkls)>0:
+        #     for pkl_i in tqdm(df_pkls):
+        #         self.df_pkl=pd.read_pickle(pkl_i)
+        #         names_possible=list(self.df_pkl['label_i'].unique())
+        #         for name in names_possible:
+        #             if name not in self.found_names.keys():
+        #                 self.found_names[name]=len(self.found_names.keys())+0
+        #     f=open(self.names_path,'w')
+        #     f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
+        #     f.close()
+        if os.path.exists(os.path.join(self.path_Yolo,os.path.basename(self.names_path))) and os.path.exists(self.names_path)==False:
+            shutil.copy(os.path.join(self.path_Yolo,os.path.basename(self.names_path)),self.names_path)
         if os.path.exists(self.names_path):
             f=open(self.names_path,'r')
             f_read=f.readlines()
@@ -1104,6 +1198,7 @@ class yolo_cfg:
             self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
             self.var_overwrite.set('No')
         else:
+
             self.var_overwrite.set('Yes')
         self.style2=ttk.Style()
         self.style2.configure('Normal.TRadiobutton',
@@ -1164,6 +1259,7 @@ class yolo_cfg:
         self.YOUTUBE_RTMP()
         self.create_test_bash_dnn_rtmp()
         self.remaining_buttons()
+        self.labelImg_buttons()
 
 
     def remaining_buttons(self):
@@ -1192,11 +1288,21 @@ class yolo_cfg:
             self.save_cfg_path=os.path.join(self.base_path,'{}_w{}_h{}_d{}_c{}.cfg'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
         else:
             self.save_cfg_path=os.path.join(self.base_path,'{}_w{}_h{}_d{}_c{}_r{}.cfg'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes,self.random))
-
-        self.train_yolo()
-        self.train_yolov7()
-        self.train_yolov7_e6e()
-        self.train_yolov7_re()
+        self.remaining_buttons_clicked=True
+        self.TRAIN_BUTTONS()
+        self.TEST_BUTTONS()
+        #self.test_yolo()
+        #self.test_yolo_predict()
+        #self.test_yolo_predict_mAP()
+        #self.test_yolodnn()
+        self.open_mp4()
+        #self.test_yolodnn_rtmp()
+        self.convert_tflite()
+        #self.train_yolo()
+        #self.train_yolov7()
+        #self.train_yolov7_e6e()
+        #self.train_yolov7_re()
+        self.calculate_epochs_yolov4()
 
     def open_mp4(self):
         if self.mp4_selected==True:
@@ -1214,10 +1320,15 @@ class yolo_cfg:
         cmd_i=open_cmd+" '{}'".format(self.open_mp4_label_var.get())
         self.open_mp4_label=Button(self.root,textvariable=self.open_mp4_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_mp4_label.grid(row=19,column=5,columnspan=50,sticky='sw')
+        
+
+        if self.mp4_selected==True and self.remaining_buttons_clicked==False:
+            self.popupWindow_TEST()
+        #self.test_yolo_mp4()
+        #self.test_yolov7_mp4()
         self.mp4_selected=True
-        self.test_yolo_mp4()
-        self.test_yolov7_mp4()
         self.dropdowntest_menu()
+        self.remaining_buttons_clicked=False
 
     def open_MOVMP4(self):
         if self.MOVMP4_selected==True:
@@ -1265,32 +1376,27 @@ class yolo_cfg:
 
     def train_yolo(self):
         cmd_i=" bash '{}'".format(self.save_cfg_path_train.replace('.cfg','.sh'))
-        self.train_yolo_objs_button=Button(self.root,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-        self.train_yolo_objs_button.grid(row=10,column=1,sticky='se')
-        self.train_yolo_objs_button_note=tk.Label(self.root,text='4.a \n Train Yolov4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-        self.train_yolo_objs_button_note.grid(row=11,column=1,sticky='ne')
-        self.test_yolo()
-        self.test_yolo_predict()
-        self.test_yolo_predict_mAP()
-        self.test_yolodnn()
-        self.open_mp4()
-        self.test_yolodnn_rtmp()
-        self.convert_tflite()
+        self.train_yolo_objs_button=Button(self.top,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.train_yolo_objs_button.grid(row=3,column=2,sticky='se')
+        self.train_yolo_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.train_yolo_objs_button_note.grid(row=4,column=2,sticky='ne')
+        
     
     def YOUTUBE_RTMP(self):
         if self.YOUTUBE_KEY_VAR==None:
             self.YOUTUBE_KEY_VAR=tk.StringVar()
             self.YOUTUBE_KEY_VAR.set(self.YOUTUBE_KEY)
             self.YOUTUBE_KEY_entry=tk.Entry(self.root,textvariable=self.YOUTUBE_KEY_VAR)
-            self.YOUTUBE_KEY_entry.grid(row=16,column=2,sticky='sw')
+            self.YOUTUBE_KEY_entry.grid(row=11,column=2,sticky='sw')
             self.YOUTUBE_KEY_label=tk.Label(self.root,text='YOUTUBE STREAM KEY',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
-            self.YOUTUBE_KEY_label.grid(row=17,column=2,sticky='nw')  
+            self.YOUTUBE_KEY_label.grid(row=11,column=2,sticky='nw')  
             
             self.SETTINGS_YOUTUBE_LIST=['720p','1080p','480p']
             self.USER_SELECTION_yt=tk.StringVar()
             self.USER_SELECTION_yt.set('720p')
             self.dropdown_yt=tk.OptionMenu(self.root,self.USER_SELECTION_yt,*self.SETTINGS_YOUTUBE_LIST)
-            self.dropdown_yt.grid(row=16,column=4,sticky='sw')
+            self.dropdown_yt.grid(row=11,column=3,sticky='sw')
+
 
 
 
@@ -1298,25 +1404,34 @@ class yolo_cfg:
         self.TMP_create_test_bash()
         cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','.sh'))
         #cmd_i=" bash '{}'".format(self.tmp_test_path)
-        self.test_yolo_objs_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-        self.test_yolo_objs_button.grid(row=12,column=1,sticky='se')
-        self.test_yolo_objs_button_note=tk.Label(self.root,text='5.a \n Test Yolov4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-        self.test_yolo_objs_button_note.grid(row=13,column=1,sticky='ne')
+        self.test_yolo_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.test_yolo_objs_button.grid(row=5,column=2,sticky='se')
+        self.test_yolo_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.test_yolo_objs_button_note.grid(row=6,column=2,sticky='ne')
+
+    # def test_yolo(self):
+    #     self.TMP_create_test_bash()
+    #     cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','.sh'))
+    #     #cmd_i=" bash '{}'".format(self.tmp_test_path)
+    #     self.test_yolo_objs_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+    #     self.test_yolo_objs_button.grid(row=12,column=1,sticky='se')
+    #     self.test_yolo_objs_button_note=tk.Label(self.root,text='5.a \n Test Yolov4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+    #     self.test_yolo_objs_button_note.grid(row=13,column=1,sticky='ne')
 
     def test_yolodnn(self):
         self.TMP_create_test_dnn_bash()
         cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','dnn.sh'))
         #cmd_i=" bash '{}'".format(self.tmp_test_path)
-        self.test_yolo_objsdnn_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-        self.test_yolo_objsdnn_button.grid(row=10,column=2,sticky='se')
-        self.test_yolo_objsdnn_button_note=tk.Label(self.root,text='5.d \n Test Yolov4 \n DNN',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-        self.test_yolo_objsdnn_button_note.grid(row=11,column=2,sticky='ne')
+        self.test_yolo_objsdnn_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.test_yolo_objsdnn_button.grid(row=13,column=2,sticky='se')
+        self.test_yolo_objsdnn_button_note=tk.Label(self.top,text='DNN \n webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.test_yolo_objsdnn_button_note.grid(row=14,column=2,sticky='ne')
 
     def test_yolodnn_rtmp(self):
-        self.test_yolo_objsdnn_rtmp_button=Button(self.root,image=self.icon_test,command=self.run_cmd_rtmp,bg=self.root_bg,fg=self.root_fg)
-        self.test_yolo_objsdnn_rtmp_button.grid(row=16,column=1,sticky='se')
-        self.test_yolo_objsdnn_rtmp_button_note=tk.Label(self.root,text='5.c \n Test Yolov4 \n DNN RTMP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-        self.test_yolo_objsdnn_rtmp_button_note.grid(row=17,column=1,sticky='ne')
+        self.test_yolo_objsdnn_rtmp_button=Button(self.top,image=self.icon_test,command=self.run_cmd_rtmp,bg=self.root_bg,fg=self.root_fg)
+        self.test_yolo_objsdnn_rtmp_button.grid(row=3,column=2,sticky='se')
+        self.test_yolo_objsdnn_rtmp_button_note=tk.Label(self.top,text='DNN webcam \n RTMP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.test_yolo_objsdnn_rtmp_button_note.grid(row=4,column=2,sticky='ne')
     
     def run_cmd_rtmp(self):
         self.create_test_bash_dnn_rtmp()
@@ -1328,19 +1443,19 @@ class yolo_cfg:
         self.create_test_bash_images_with_predictions()
         cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','_images_with_predictions.sh'))
         #cmd_i=" bash '{}'".format(self.tmp_test_path)
-        self.test_yolo_pred_objs_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-        self.test_yolo_pred_objs_button.grid(row=12,column=2,sticky='se')
-        self.test_yolo_pred_objs_button_note=tk.Label(self.root,text='5.e \n Predict Images \n Yolov4 chips',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-        self.test_yolo_pred_objs_button_note.grid(row=13,column=2,sticky='ne')
+        self.test_yolo_pred_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.test_yolo_pred_objs_button.grid(row=11,column=2,sticky='se')
+        self.test_yolo_pred_objs_button_note=tk.Label(self.top,text='chips\n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.test_yolo_pred_objs_button_note.grid(row=12,column=2,sticky='ne')
 
     def test_yolo_predict_mAP(self):
         self.create_test_bash_images_with_predictions_mAP()
         cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','_images_with_predictions_mAP.sh'))
         #cmd_i=" bash '{}'".format(self.tmp_test_path)
-        self.test_yolo_res_objs_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-        self.test_yolo_res_objs_button.grid(row=14,column=2,sticky='se')
-        self.test_yolo_res_objs_button_note=tk.Label(self.root,text='5.f \n Predict Images \n Yolov4 mAP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-        self.test_yolo_res_objs_button_note.grid(row=15,column=2,sticky='ne')
+        self.test_yolo_res_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.test_yolo_res_objs_button.grid(row=9,column=2,sticky='se')
+        self.test_yolo_res_objs_button_note=tk.Label(self.top,text='mAP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.test_yolo_res_objs_button_note.grid(row=10,column=2,sticky='ne')
         
 
     def test_yolo_mp4(self):
@@ -1357,94 +1472,115 @@ class yolo_cfg:
             #os.system('xdg-open {}'.format(self.tmp_test_path))
             #cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','_mp4.sh'))
             #print('cmd_i: \n {}'.format(cmd_i))
-            self.test_mp4_yolo_objs_button=Button(self.root,image=self.icon_test_mp4,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-            self.test_mp4_yolo_objs_button.grid(row=14,column=1,sticky='se')
-            self.test_mp4_yolo_objs_button_note=tk.Label(self.root,text='5.b \n Test Yolov4 \n mp4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_mp4_yolo_objs_button_note.grid(row=15,column=1,sticky='ne')
-    
+            self.test_mp4_yolo_objs_button=Button(self.top,image=self.icon_test_mp4,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_mp4_yolo_objs_button.grid(row=7,column=2,sticky='se')
+            self.test_mp4_yolo_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_mp4_yolo_objs_button_note.grid(row=8,column=2,sticky='ne')
+    def labelImg_buttons(self):
+        if os.path.exists('libs/labelImg_path.py'):
+
+            self.labelImg_button=Button(self.root,image=self.icon_labelImg,command=self.open_labelImg,bg=self.root_bg,fg=self.root_fg)
+            self.labelImg_button.grid(row=9,column=4,sticky='se')
+            self.labelImg_button_note=tk.Label(self.root,text='LabelImg',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.labelImg_button_note.grid(row=10,column=4,sticky='ne')           
+
+    def open_labelImg(self):
+        from libs import labelImg_path
+        self.path_labelImg=labelImg_path.path
+        self.path_labelImg_predefined_classes_file=os.path.join(os.path.dirname(self.names_path),'predefined_classes.txt')
+        shutil.copy(self.names_path,self.path_labelImg_predefined_classes_file)
+        self.path_labelImg_save_dir=self.path_Yolo
+        self.path_labelImg_image_dir=self.path_Yolo
+        self.PYTHON_PATH="python3"
+        if os.path.exists(self.path_labelImg):
+            self.cmd_i='{} "{}" "{}" "{}" "{}"'.format(self.PYTHON_PATH ,self.path_labelImg,self.path_labelImg_image_dir,self.path_labelImg_predefined_classes_file,self.path_labelImg_save_dir)
+            self.labelImg=Thread(target=self.run_cmd,args=(self.cmd_i,)).start()
+        else:
+            self.popup_text='Please provide a valid labelImg.py path. \n  Current path is: {}'.format(self.path_labelImg)
+
     def train_yolov7(self):
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_mp4_yolov7()
             cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7)
-            self.test_mp4_yolov7_objs_button=Button(self.root,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-            self.test_mp4_yolov7_objs_button.grid(row=10-7,column=10,sticky='se')
-            self.test_mp4_yolov7_objs_button_note=tk.Label(self.root,text='6.a.1 Train Yolov7-tiny',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_mp4_yolov7_objs_button_note.grid(row=11-7,column=10,sticky='ne')
-            self.test_yolov7_mp4()
-            self.test_yolov7_webcam()
-            self.test_yolov7_webcam_RTMP()
-            self.test_yolov7_mAP()
+            self.train_yolov7_objs_button=Button(self.top,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.train_yolov7_objs_button.grid(row=10-7,column=10-7,sticky='se')
+            self.train_yolov7_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.train_yolov7_objs_button_note.grid(row=11-7,column=10-7,sticky='ne')
+            #self.test_yolov7_mp4()
+            #self.test_yolov7_webcam()
+            #self.test_yolov7_webcam_RTMP()
+            #self.test_yolov7_mAP()
 
     def train_yolov7_e6e(self):
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_mp4_yolov7_e6e()
             cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_e6e)
-            self.test_mp4_yolov7_e6e_objs_button=Button(self.root,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-            self.test_mp4_yolov7_e6e_objs_button.grid(row=10-7,column=11,sticky='se')
-            self.test_mp4_yolov7_e6e_objs_button_note=tk.Label(self.root,text='6.a.2 Train Yolov7-E6E',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_mp4_yolov7_e6e_objs_button_note.grid(row=11-7,column=11,sticky='ne')
-            self.test_yolov7_mp4_e6e()
-            self.test_yolov7_webcam_e6e()
-            self.test_yolov7_webcam_e6e_RTMP()
-            self.test_yolov7_mAP_e6e()
+            self.train_yolov7_e6e_objs_button=Button(self.top,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.train_yolov7_e6e_objs_button.grid(row=10-7,column=11-7,sticky='se')
+            self.train_yolov7_e6e_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.train_yolov7_e6e_objs_button_note.grid(row=11-7,column=11-7,sticky='ne')
+            #self.test_yolov7_mp4_e6e()
+            #self.test_yolov7_webcam_e6e()
+            #self.test_yolov7_webcam_e6e_RTMP()
+            #self.test_yolov7_mAP_e6e()
 
     def train_yolov7_re(self):
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_mp4_yolov7_re()
             cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_re)
-            self.test_mp4_yolov7_re_objs_button=Button(self.root,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-            self.test_mp4_yolov7_re_objs_button.grid(row=10-7,column=12,sticky='se')
-            self.test_mp4_yolov7_re_objs_button_note=tk.Label(self.root,text='6.a.3 Train Yolov7',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_mp4_yolov7_re_objs_button_note.grid(row=11-7,column=12,sticky='ne')
-            self.test_yolov7_mp4_re()
-            self.test_yolov7_webcam_re()
-            self.test_yolov7_webcam_re_RTMP()
-            self.test_yolov7_mAP_re()
+            self.test_mp4_yolov7_re_objs_button=Button(self.top,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_mp4_yolov7_re_objs_button.grid(row=10-7,column=12-7,sticky='se')
+            self.test_mp4_yolov7_re_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_mp4_yolov7_re_objs_button_note.grid(row=11-7,column=12-7,sticky='ne')
+            #self.test_yolov7_mp4_re()
+            #self.test_yolov7_webcam_re()
+            #self.test_yolov7_webcam_re_RTMP()
+            #self.test_yolov7_mAP_re()
 
     def test_yolov7_mp4(self):
         if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_mp4_yolov7()
             cmd_i=" bash '{}'".format(self.TEST_MP4_YOLOV7)
-            self.test_mp4_yolov7_objs_button=Button(self.root,image=self.icon_test_mp4,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-            self.test_mp4_yolov7_objs_button.grid(row=14-7,column=10,sticky='se')
-            self.test_mp4_yolov7_objs_button_note=tk.Label(self.root,text='7.b.1 Test Yolov7-tiny \n mp4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_mp4_yolov7_objs_button_note.grid(row=15-7,column=10,sticky='ne')
+            self.test_mp4_yolov7_objs_button=Button(self.top,image=self.icon_test_mp4,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_mp4_yolov7_objs_button.grid(row=14-7,column=10-7,sticky='se')
+            self.test_mp4_yolov7_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_mp4_yolov7_objs_button_note.grid(row=15-7,column=10-7,sticky='ne')
 
     def test_yolov7_mp4_e6e(self):
         if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_mp4_yolov7_e6e()
             cmd_i=" bash '{}'".format(self.TEST_MP4_YOLOV7_e6e)
-            self.test_mp4_yolov7_e6e_objs_button=Button(self.root,image=self.icon_test_mp4,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-            self.test_mp4_yolov7_e6e_objs_button.grid(row=14-7,column=11,sticky='se')
-            self.test_mp4_yolov7_e6e_objs_button_note=tk.Label(self.root,text='7.b.2 Test Yolov7-E6E \n mp4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_mp4_yolov7_e6e_objs_button_note.grid(row=15-7,column=11,sticky='ne')
+            self.test_mp4_yolov7_e6e_objs_button=Button(self.top,image=self.icon_test_mp4,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_mp4_yolov7_e6e_objs_button.grid(row=14-7,column=11-7,sticky='se')
+            self.test_mp4_yolov7_e6e_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_mp4_yolov7_e6e_objs_button_note.grid(row=15-7,column=11-7,sticky='ne')
 
     def test_yolov7_mp4_re(self):
         if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_mp4_yolov7_re()
             cmd_i=" bash '{}'".format(self.TEST_MP4_YOLOV7_re)
-            self.test_mp4_yolov7_re_objs_button=Button(self.root,image=self.icon_test_mp4,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-            self.test_mp4_yolov7_re_objs_button.grid(row=14-7,column=12,sticky='se')
-            self.test_mp4_yolov7_re_objs_button_note=tk.Label(self.root,text='7.b.3 Test Yolov7 \n mp4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_mp4_yolov7_re_objs_button_note.grid(row=15-7,column=12,sticky='ne')
+            self.test_mp4_yolov7_re_objs_button=Button(self.top,image=self.icon_test_mp4,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_mp4_yolov7_re_objs_button.grid(row=14-7,column=12-7,sticky='se')
+            self.test_mp4_yolov7_re_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_mp4_yolov7_re_objs_button_note.grid(row=15-7,column=12-7,sticky='ne')
 
     def test_yolov7_webcam(self):
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_webcam_yolov7()
             cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7)
-            self.test_webcam_yolov7_objs_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-            self.test_webcam_yolov7_objs_button.grid(row=12-7,column=10,sticky='se')
-            self.test_webcam_yolov7_objs_button_note=tk.Label(self.root,text='7.a.1 Test Yolov7-tiny \n webcam',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_webcam_yolov7_objs_button_note.grid(row=13-7,column=10,sticky='ne')
+            self.test_webcam_yolov7_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_webcam_yolov7_objs_button.grid(row=12-7,column=10-7,sticky='se')
+            self.test_webcam_yolov7_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_objs_button_note.grid(row=13-7,column=10-7,sticky='ne')
 
     def test_yolov7_webcam_RTMP(self):
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_webcam_yolov7_RTMP()
             cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_RTMP)
-            self.test_webcam_yolov7_RTMP_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_test_bash_webcam_yolov7_RTMP,bg=self.root_bg,fg=self.root_fg)
-            self.test_webcam_yolov7_RTMP_objs_button.grid(row=12-7,column=10+3,sticky='se')
-            self.test_webcam_yolov7_RTMP_objs_button_note=tk.Label(self.root,text='7.d.1 Test Yolov7-tiny \n webcam RTMP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_webcam_yolov7_RTMP_objs_button_note.grid(row=13-7,column=10+3,sticky='ne')
+            self.test_webcam_yolov7_RTMP_objs_button=Button(self.top,image=self.icon_test,command=self.run_create_test_bash_webcam_yolov7_RTMP,bg=self.root_bg,fg=self.root_fg)
+            self.test_webcam_yolov7_RTMP_objs_button.grid(row=12-7-2,column=10-7,sticky='se')
+            self.test_webcam_yolov7_RTMP_objs_button_note=tk.Label(self.top,text='webcam \n RTMP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_RTMP_objs_button_note.grid(row=13-7-2,column=10-7,sticky='ne')
 
     def run_create_test_bash_webcam_yolov7_RTMP(self):
         self.create_test_bash_webcam_yolov7_RTMP()
@@ -1455,19 +1591,19 @@ class yolo_cfg:
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_webcam_yolov7_e6e()
             cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_e6e)
-            self.test_webcam_yolov7_e6e_objs_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-            self.test_webcam_yolov7_e6e_objs_button.grid(row=12-7,column=11,sticky='se')
-            self.test_webcam_yolov7_e6e_objs_button_note=tk.Label(self.root,text='7.a.2 Test Yolov7-E6E \n webcam',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_webcam_yolov7_e6e_objs_button_note.grid(row=13-7,column=11,sticky='ne')
+            self.test_webcam_yolov7_e6e_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_webcam_yolov7_e6e_objs_button.grid(row=12-7,column=11-7,sticky='se')
+            self.test_webcam_yolov7_e6e_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_e6e_objs_button_note.grid(row=13-7,column=11-7,sticky='ne')
 
     def test_yolov7_webcam_e6e_RTMP(self):
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_webcam_yolov7_e6e_RTMP()
             cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_e6e_RTMP)
-            self.test_webcam_yolov7_e6e_RTMP_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_test_bash_webcam_yolov7_e6e_RTMP,bg=self.root_bg,fg=self.root_fg)
-            self.test_webcam_yolov7_e6e_RTMP_objs_button.grid(row=12-7,column=11+3,sticky='se')
-            self.test_webcam_yolov7_e6e_RTMP_objs_button_note=tk.Label(self.root,text='7.d.2 Test Yolov7-E6E \n webcam RTMP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_webcam_yolov7_e6e_RTMP_objs_button_note.grid(row=13-7,column=11+3,sticky='ne')
+            self.test_webcam_yolov7_e6e_RTMP_objs_button=Button(self.top,image=self.icon_test,command=self.run_create_test_bash_webcam_yolov7_e6e_RTMP,bg=self.root_bg,fg=self.root_fg)
+            self.test_webcam_yolov7_e6e_RTMP_objs_button.grid(row=12-7-2,column=11-7,sticky='se')
+            self.test_webcam_yolov7_e6e_RTMP_objs_button_note=tk.Label(self.top,text='webcam \n RTMP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_e6e_RTMP_objs_button_note.grid(row=13-7-2,column=11-7,sticky='ne')
 
     def run_create_test_bash_webcam_yolov7_e6e_RTMP(self):
         self.create_test_bash_webcam_yolov7_e6e_RTMP()
@@ -1478,10 +1614,10 @@ class yolo_cfg:
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_webcam_yolov7_re()
             cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_re)
-            self.test_webcam_yolov7_re_objs_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
-            self.test_webcam_yolov7_re_objs_button.grid(row=12-7,column=12,sticky='se')
-            self.test_webcam_yolov7_re_objs_button_note=tk.Label(self.root,text='7.a.3 Test Yolov7 \n webcam',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_webcam_yolov7_re_objs_button_note.grid(row=13-7,column=12,sticky='ne')
+            self.test_webcam_yolov7_re_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_webcam_yolov7_re_objs_button.grid(row=12-7,column=12-7,sticky='se')
+            self.test_webcam_yolov7_re_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_re_objs_button_note.grid(row=13-7,column=12-7,sticky='ne')
 
  
 
@@ -1489,10 +1625,10 @@ class yolo_cfg:
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_webcam_yolov7_re_RTMP()
             cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_re_RTMP)
-            self.test_webcam_yolov7_re_RTMP_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_test_bash_webcam_yolov7_re_RTMP,bg=self.root_bg,fg=self.root_fg)
-            self.test_webcam_yolov7_re_RTMP_objs_button.grid(row=12-7,column=12+3,sticky='se')
-            self.test_webcam_yolov7_re_RTMP_objs_button_note=tk.Label(self.root,text='7.d.3 Test Yolov7 \n webcam RTMP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_webcam_yolov7_re_RTMP_objs_button_note.grid(row=13-7,column=12+3,sticky='ne')
+            self.test_webcam_yolov7_re_RTMP_objs_button=Button(self.top,image=self.icon_test,command=self.run_create_test_bash_webcam_yolov7_re_RTMP,bg=self.root_bg,fg=self.root_fg)
+            self.test_webcam_yolov7_re_RTMP_objs_button.grid(row=12-7-2,column=12-7,sticky='se')
+            self.test_webcam_yolov7_re_RTMP_objs_button_note=tk.Label(self.top,text='webcam \n RTMP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_re_RTMP_objs_button_note.grid(row=13-7-2,column=12-7,sticky='ne')
 
     def run_create_test_bash_webcam_yolov7_re_RTMP(self):
         self.create_test_bash_webcam_yolov7_re_RTMP()
@@ -1501,10 +1637,10 @@ class yolo_cfg:
 
     def test_yolov7_mAP(self):
         if os.path.exists('libs/yolov7_path.py'):
-            self.test_predict_MAP_yolov7_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_predict_bash_mAP_yolov7,bg=self.root_bg,fg=self.root_fg)
-            self.test_predict_MAP_yolov7_objs_button.grid(row=16-7,column=10,sticky='se')
-            self.test_predict_MAP_yolov7_objs_button_note=tk.Label(self.root,text='7.c.1 Predict Yolov7-tiny \n mAP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_predict_MAP_yolov7_objs_button_note.grid(row=17-7,column=10,sticky='ne')
+            self.test_predict_MAP_yolov7_objs_button=Button(self.top,image=self.icon_test,command=self.run_create_predict_bash_mAP_yolov7,bg=self.root_bg,fg=self.root_fg)
+            self.test_predict_MAP_yolov7_objs_button.grid(row=16-7,column=10-7,sticky='se')
+            self.test_predict_MAP_yolov7_objs_button_note=tk.Label(self.top,text='mAP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_predict_MAP_yolov7_objs_button_note.grid(row=17-7,column=10-7,sticky='ne')
 
     def run_create_predict_bash_mAP_yolov7(self):
         self.create_predict_bash_mAP_yolov7()
@@ -1513,10 +1649,10 @@ class yolo_cfg:
 
     def test_yolov7_mAP_e6e(self):
         if os.path.exists('libs/yolov7_path.py'):
-            self.test_predict_MAP_yolov7_e6e_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_predict_bash_mAP_yolov7_e6e,bg=self.root_bg,fg=self.root_fg)
-            self.test_predict_MAP_yolov7_e6e_objs_button.grid(row=16-7,column=11,sticky='se')
-            self.test_predict_MAP_yolov7_e6e_objs_button_note=tk.Label(self.root,text='7.c.2 Predict Yolov7-e6e \n mAP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_predict_MAP_yolov7_e6e_objs_button_note.grid(row=17-7,column=11,sticky='ne')
+            self.test_predict_MAP_yolov7_e6e_objs_button=Button(self.top,image=self.icon_test,command=self.run_create_predict_bash_mAP_yolov7_e6e,bg=self.root_bg,fg=self.root_fg)
+            self.test_predict_MAP_yolov7_e6e_objs_button.grid(row=16-7,column=11-7,sticky='se')
+            self.test_predict_MAP_yolov7_e6e_objs_button_note=tk.Label(self.top,text='mAP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_predict_MAP_yolov7_e6e_objs_button_note.grid(row=17-7,column=11-7,sticky='ne')
 
     def run_create_predict_bash_mAP_yolov7_e6e(self):
         self.create_predict_bash_mAP_yolov7_e6e()
@@ -1525,10 +1661,10 @@ class yolo_cfg:
 
     def test_yolov7_mAP_re(self):
         if os.path.exists('libs/yolov7_path.py'):
-            self.test_predict_MAP_yolov7_re_objs_button=Button(self.root,image=self.icon_test,command=self.run_create_predict_bash_mAP_yolov7_re,bg=self.root_bg,fg=self.root_fg)
-            self.test_predict_MAP_yolov7_re_objs_button.grid(row=16-7,column=12,sticky='se')
-            self.test_predict_MAP_yolov7_re_objs_button_note=tk.Label(self.root,text='7.c.3 Predict Yolov7-re \n mAP',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_predict_MAP_yolov7_re_objs_button_note.grid(row=17-7,column=12,sticky='ne')
+            self.test_predict_MAP_yolov7_re_objs_button=Button(self.top,image=self.icon_test,command=self.run_create_predict_bash_mAP_yolov7_re,bg=self.root_bg,fg=self.root_fg)
+            self.test_predict_MAP_yolov7_re_objs_button.grid(row=16-7,column=12-7,sticky='se')
+            self.test_predict_MAP_yolov7_re_objs_button_note=tk.Label(self.top,text='mAP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_predict_MAP_yolov7_re_objs_button_note.grid(row=17-7,column=12-7,sticky='ne')
 
     def run_create_predict_bash_mAP_yolov7_re(self):
         self.create_predict_bash_mAP_yolov7_re()
@@ -1548,6 +1684,38 @@ class yolo_cfg:
                 self.convert_tflite_button_note=tk.Label(self.root,text='Convert Yolov4 to TFLITE',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
                 self.convert_tflite_button_note.grid(row=11-7,column=13,sticky='ne')
 
+    def calculate_epochs_yolov4(self):
+        '''Calculates the number of epochs performed for training'''
+        #self.max_batches
+        #self.subdivisions
+        #self.batch
+        #self.train_list_path
+        f=open(self.save_cfg_path_train,'r')
+        cfg=f.readlines()
+        f.close()
+        self.get_header(cfg)
+        f=open(self.train_list_path,'r')
+        self.dataset=len(f.readlines()) # number of samples in training dataset
+        f.close()
+        self.iterations_per_epoch=self.dataset//int(self.batch.replace('\n','').strip().split('=')[1])
+        self.epochs=int(self.max_batches.replace('\n','').strip().split('=')[1])//self.iterations_per_epoch
+        self.epochs_yolov4_output=os.path.join(os.path.dirname(self.best_weights_path),'EPOCHS_YoloV4.txt')
+        f=open(self.epochs_yolov4_output,'w')
+        f.writelines('self.train_list_path = \n {} \n'.format(self.train_list_path))
+        f.writelines('self.dataset=# Training Samples in self.train_list_path\n')
+        f.writelines('self.dataset={}\n'.format(self.dataset))
+        f.writelines('self.batch & self.max_batches are in the training configuration file: \n {} \n'.format(self.save_cfg_path_train))
+        f.writelines('self.batch = {}\n'.format(int(self.batch.replace('\n','').strip().split('=')[1])))
+        f.writelines('self.max_batches = {}\n'.format(int(self.max_batches.replace('\n','').strip().split('=')[1])))
+        f.writelines('self.iterations_per_epoch=self.dataset//self.batch\n')
+        f.writelines('self.iterations_per_epoch={}//{}\n'.format(self.dataset,int(self.batch.replace('\n','').strip().split('=')[1])))
+        f.writelines('self.iterations_per_epoch={}\n'.format(self.iterations_per_epoch))
+        f.writelines('self.epochs=self.max_batches//self.iterations_per_epoch \n')
+        f.writelines('self.epochs={}//{} \n'.format(int(self.max_batches.replace('\n','').strip().split('=')[1]),self.iterations_per_epoch))
+        f.writelines('self.epochs={}\n'.format(self.epochs))
+        f.close()
+
+
     def run_create_tflite_bash(self):
         self.create_tflite_bash()
         cmd_i=" bash '{}'".format(self.tensorflow_yolov4_tflite_bash_PATH)
@@ -1557,7 +1725,11 @@ class yolo_cfg:
         self.TRAIN_YOLOV7=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7-tiny.sh')
         f=open(self.TRAIN_YOLOV7,'w')
         f.writelines('cd {} \n'.format(self.yolov7_path))
-        f.writelines("python3 train.py --workers 8 --device 0 --batch-size 32 --data {} --img {} {} --cfg {} --weights '' --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.yolov7_path_name,self.yolov7_path_hyp))
+        self.last_weights_path_yolov7=os.path.join(os.path.dirname(self.data_path),'yolov7-tiny/weights/last.pt')
+        if os.path.exists(self.last_weights_path_yolov7)==False:
+            f.writelines("python3 train.py --workers 8 --device 0 --batch-size 32 --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.yolov7_path_name,self.yolov7_path_hyp))
+        else:
+            f.writelines("python3 train.py --workers 8 --device 0 --batch-size 32 --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.last_weights_path_yolov7,self.yolov7_path_name,self.yolov7_path_hyp))           
         f.close()
 
     def create_train_bash_yolov7_e6e(self):
@@ -1565,7 +1737,12 @@ class yolo_cfg:
         self.TRAIN_YOLOV7_e6e=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7-e6e.sh')
         f=open(self.TRAIN_YOLOV7_e6e,'w')
         f.writelines('cd {} \n'.format(self.yolov7_path))
-        f.writelines("python3 train_aux.py --workers 8 --device 0 --batch-size 2 --data {} --img {} {} --cfg {} --weights '' --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6e,self.yolov7_path_name_e6e,self.yolov7_path_hyp_e6e))
+        self.last_weights_path_yolov7_e6e=os.path.join(os.path.dirname(self.data_path),'yolov7-e6e/weights/last.pt')
+        if os.path.exists(self.last_weights_path_yolov7_e6e)==False:
+            f.writelines("python3 train_aux.py --workers 8 --device 0 --batch-size 2 --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6e,self.yolov7_path_name_e6e,self.yolov7_path_hyp_e6e))
+        else:
+            f.writelines("python3 train_aux.py --workers 8 --device 0 --batch-size 2 --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6e,self.last_weights_path_yolov7_e6e,self.yolov7_path_name_e6e,self.yolov7_path_hyp_e6e))           
+
         f.close()
 
     def create_train_bash_yolov7_re(self):
@@ -1573,7 +1750,15 @@ class yolo_cfg:
         self.TRAIN_YOLOV7_re=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7.sh')
         f=open(self.TRAIN_YOLOV7_re,'w')
         f.writelines('cd {} \n'.format(self.yolov7_path))
-        f.writelines("python3 train.py --workers 8 --device 0 --batch-size 8 --data {} --img {} {} --cfg {} --weights '' --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re))
+        self.last_weights_path_yolov7_re=os.path.join(os.path.dirname(self.data_path),'yolov7/weights/last.pt')
+        if max(self.WIDTH_NUM,self.HEIGHT_NUM)>800:
+            batch_size=2
+        else:
+            batch_size=8
+        if os.path.exists(self.last_weights_path_yolov7_re)==False:
+            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs 40\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re))
+        else:
+            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs 40\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.last_weights_path_yolov7_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re))           
         f.close()
 
     def create_test_bash_mp4_yolov7(self):
@@ -2010,7 +2195,6 @@ class yolo_cfg:
         f.writelines('$darknet detector demo $data_path $config_path_test $best_weights -c 0\n')
         f.close()
 
-
     def create_test_bash_mp4(self):
         self.check_backup_path_weights()
         f=open(self.save_cfg_path_test.replace('.cfg','_mp4.sh'),'w')
@@ -2183,6 +2367,8 @@ class yolo_cfg:
             f=open('{}.py'.format(os.path.join(save_root,prefix_save.replace('-','_'))),'w')
             wrote=[f.writelines(w) for w in f_new]
             f.close()
+            self.SAVED_SETTINGS_PATH='{}.py'.format(os.path.join(save_root,prefix_save.replace('-','_')))
+            self.root.title(os.path.basename(self.SAVED_SETTINGS_PATH))
 
     def get_update_background_img(self):
         self.image=Image.open(self.root_background_img)
@@ -2324,7 +2510,8 @@ class yolo_cfg:
                     #self.df.at[i,'path_anno_i']=path_anno_i
                     self.df.at[i,'path_jpeg_dest_i']=path_jpeg_dest_i
                     #self.df.at[i,'path_anno_dest_i']=path_anno_dest_i
-                    Thread(target=self.write_Yolo,args=(xmin,xmax,ymin,ymax,imgSize,self.found_names[label],path_anno_dest_i,)).start()
+                    #Thread(target=self.write_Yolo,args=(xmin,xmax,ymin,ymax,imgSize,self.found_names[label],path_anno_dest_i,)).start()
+                    self.write_Yolo(xmin,xmax,ymin,ymax,imgSize,self.found_names[label],path_anno_dest_i,)
                     # classIndex,xcen,ycen,w,h=self.BndBox2Yolo(xmin,xmax,ymin,ymax,imgSize,self.found_names[label])
                     # yolo_i=" ".join([str(yolo) for yolo in (int(classIndex),xcen,ycen,w,h)])
                     # f=open(path_anno_dest_i,'a')
@@ -2346,6 +2533,71 @@ class yolo_cfg:
             Thread(target=self.copy_files,args=(path_jpeg_i,path_jpeg_dest_i,)).start()
             Thread(target=self.copy_files,args=(path_anno_i,path_anno_dest_xml_i,)).start()
             return i,count
+
+    def popupWindow_TRAIN(self):
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=0,column=0,sticky='se')
+        self.test_yolov4_note=tk.Label(self.top,text='{}'.format(self.var_yolo_choice.get().replace('-','\n-')),bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.test_yolov4_note.grid(row=2,column=2,sticky='s')
+        #TD TRAIN yolov4
+        self.train_yolo()
+
+        self.test_yolov7_note=tk.Label(self.top,text='Yolov7\n-tiny',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.test_yolov7_note.grid(row=2,column=3,sticky='se')
+        #TD TRAIN yolov7 tiny
+        self.train_yolov7()
+
+        self.test_yolov7_re_note=tk.Label(self.top,text='Yolov7\n',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.test_yolov7_re_note.grid(row=2,column=5,sticky='se')
+        #TD TRAIN yolov7 re
+        self.train_yolov7_re()
+
+        self.test_yolov7_E6E_note=tk.Label(self.top,text='Yolov7\n-E6E',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.test_yolov7_E6E_note.grid(row=2,column=4,sticky='se')
+        #TD TRAIN yolov7 E6E
+        self.train_yolov7_e6e()
+
+    def popupWindow_TEST(self):
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=0,column=0,sticky='se')
+        self.test_yolov4_note=tk.Label(self.top,text='{}'.format(self.var_yolo_choice.get().replace('-','\n-')),bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.test_yolov4_note.grid(row=2,column=2,sticky='se')
+        self.test_yolo()
+        self.test_yolo_predict()
+        self.test_yolo_predict_mAP()
+        self.test_yolodnn()
+        self.test_yolodnn_rtmp()
+        self.test_yolo_mp4()
+
+        self.test_yolov7_note=tk.Label(self.top,text='Yolov7\n-tiny',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.test_yolov7_note.grid(row=2,column=3,sticky='se')
+        self.test_yolov7_mp4()
+        self.test_yolov7_webcam()
+        self.test_yolov7_webcam_RTMP()
+        self.test_yolov7_mAP()
+
+        self.test_yolov7_re_note=tk.Label(self.top,text='Yolov7\n',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.test_yolov7_re_note.grid(row=2,column=5,sticky='se')
+        self.test_yolov7_mp4_re()
+        self.test_yolov7_webcam_re()
+        self.test_yolov7_webcam_re_RTMP()
+        self.test_yolov7_mAP_re()
+
+        self.test_yolov7_E6E_note=tk.Label(self.top,text='Yolov7\n-E6E',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.test_yolov7_E6E_note.grid(row=2,column=4,sticky='se')
+        self.test_yolov7_mp4_e6e()
+        self.test_yolov7_webcam_e6e()
+        self.test_yolov7_webcam_e6e_RTMP()
+        self.test_yolov7_mAP_e6e()
+
+    def cleanup(self):
+        self.top.destroy()
     def convert_PascalVOC_to_YOLO(self):
         self.found_names={}
         i=0
@@ -2377,17 +2629,26 @@ class yolo_cfg:
                     self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
                 else:
                     print('READING self.path_Yolo again')
-                    df_pkls=os.listdir(self.path_Yolo)
-                    df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
-                    for pkl_i in tqdm(df_pkls):
-                        self.df_pkl=pd.read_pickle(pkl_i)
-                        names_possible=list(self.df_pkl['label_i'].unique())
-                        for name in names_possible:
-                            if name not in self.found_names.keys():
-                                self.found_names[name]=len(self.found_names.keys())+0
-                    f=open(self.names_path,'w')
-                    f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
-                    f.close()
+                    if os.path.exists(os.path.join(self.path_Yolo,'obj.names')):
+                        print('I exist')
+                        shutil.copy(os.path.join(self.path_Yolo,os.path.basename(self.names_path)),self.names_path)
+                        f=open(self.names_path,'r')
+                        f_read=f.readlines()
+                        f.close()
+                        self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
+                    else:
+                        input('ARE YOU SURE?')
+                        df_pkls=os.listdir(self.path_Yolo)
+                        df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
+                        for pkl_i in tqdm(df_pkls):
+                            self.df_pkl=pd.read_pickle(pkl_i)
+                            names_possible=list(self.df_pkl['label_i'].unique())
+                            for name in names_possible:
+                                if name not in self.found_names.keys():
+                                    self.found_names[name]=len(self.found_names.keys())+0
+                        f=open(self.names_path,'w')
+                        f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
+                        f.close()
                 break
             else:
                 if os.path.exists(self.df_filename) and self.var_overwrite.get()=='Add':
@@ -2402,18 +2663,27 @@ class yolo_cfg:
                         f_read=f.readlines()
                         f.close()
                         self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
+                        if os.path.exists(os.path.join(self.path_Yolo,os.path.basename(self.names_path)))==False:
+                            shutil.copy(self.names_path,self.path_Yolo)
                     else:
-                        df_pkls=os.listdir(self.path_Yolo)
-                        df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
-                        for pkl_i in tqdm(df_pkls):
-                            self.df_pkl=pd.read_pickle(pkl_i)
-                            names_possible=list(self.df_pkl['label_i'].unique())
-                            for name in names_possible:
-                                if name not in self.found_names.keys():
-                                    self.found_names[name]=len(self.found_names.keys())+0
-                        f=open(self.names_path,'w')
-                        f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
-                        f.close()
+                        if os.path.exists(os.path.join(self.path_Yolo,os.path.basename(self.names_path))):
+                            shutil.copy(os.path.join(self.path_Yolo,os.path.basename(self.names_path)),self.names_path)
+                            f=open(self.names_path,'r')
+                            f_read=f.readlines()
+                            f.close()
+                            self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
+                        else:
+                            df_pkls=os.listdir(self.path_Yolo)
+                            df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
+                            for pkl_i in tqdm(df_pkls):
+                                self.df_pkl=pd.read_pickle(pkl_i)
+                                names_possible=list(self.df_pkl['label_i'].unique())
+                                for name in names_possible:
+                                    if name not in self.found_names.keys():
+                                        self.found_names[name]=len(self.found_names.keys())+0
+                            f=open(self.names_path,'w')
+                            f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
+                            f.close()
                     i=len(self.df)
                 else:
                     if i==0:
@@ -2446,6 +2716,7 @@ class yolo_cfg:
         f=open(self.names_path,'w')
         f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
         f.close()
+        shutil.copy(self.names_path,self.path_Yolo)
 
         
         
@@ -2596,18 +2867,17 @@ class yolo_cfg:
             
 
 if __name__=='__main__':
-    # SETTINGS_FILE_LIST=[w.split('.py')[0] for w in os.listdir('libs') if w.find('SETTINGS')!=-1 and w[0]!='.']
-    # pprint(SETTINGS_FILE_LIST)
-    # USER=input('Type Settings File\n')
-    # USER=USER.strip()
-    # SAVED_SETTINGS_PATH=os.path.join('libs/{}'.format(USER))
-    #os.system('sudo ifmetric wlan0 0')
-    root_tk=tk.Tk()
-    main_yolo=main_entry(root_tk)
-    main_yolo.root.mainloop()
-    root_tk=tk.Tk()
-    my_yolo=yolo_cfg(root_tk,SAVED_SETTINGS_PATH)
-    my_yolo.root.mainloop()
+    while return_to_main==True:
+        return_to_main=False
+        root_tk=tk.Tk()
+        main_yolo=main_entry(root_tk)
+        main_yolo.root.mainloop()
+        if PROCEED==True:
+            root_tk=tk.Tk()
+            my_yolo=yolo_cfg(root_tk,SAVED_SETTINGS_PATH)
+            my_yolo.root.mainloop()
+            PROCEED=False
+
 
     
 
