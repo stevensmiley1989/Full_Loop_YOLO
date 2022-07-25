@@ -19,7 +19,9 @@ Change your DEFAULT_SETTINGS path (located at libs/DEFAULT_SETTINGS.py) to point
 
 Change your yolov7 path (located at libs/yolov7_path.py) to point to your installed yolov7 path for use. 
 
-Change your tensorflow-yolov4-tflite path (located at libs/tensorflow_yolov4_tflite_path.py) to point to your installed path for use.
+Change your tensorflow-yolov4-tflite path (located at libs/tensorflow_yolov4_tflite_path.py) to point to your installed path for use.  NOT REQUIRED.
+
+Change your labelImg path (located at libs/labelImg_path.py) to point to your installed path for use.  NOT REQUIRED.
 
 Ensure you put the yolov4-tiny.conv.29 weights in your Darknet path.  You can get these weights from:
 https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
@@ -70,6 +72,17 @@ tensorflow-yolov4-tflite
     git switch smiley_yolov4tiny #
     pip3 install -r requirements_smiley_yolov4_tiny_converter.txt #you might need to adjust things manually    
 ~~~~~~~
+
+~~~~~~~
+labelImg
+.. code:: shell
+    cd ~/
+    git clone https://github.com/stevensmiley1989/labelImg.git
+    cd labelImg
+    git switch #
+    pip3 install -r requirements/requirements-linux-python3.txt #you might need to adjust things manually    
+~~~~~~~
+
 
 Installation
 ------------------
