@@ -267,7 +267,13 @@ def YOUTUBE_STREAM_RESOLUTION(res='720p'):
     else:
         print('DID NOT RECOGNIZE res=={}\n so using res==720p'.format(res))
         return 720,1280,'4000k'
-
+def send_imgs(sender,im0):
+    try:
+        sender.send_image("YOLO OUPUT", im0)
+    except:
+        pass
+def run_cmd(cmd_i):
+    os.system(cmd_i)
 weightsPath1="{}Images/Drone_Images/Yolo/backup_models/custom-yolov4-tiny-detector_VisDrone_best.weights".format(path_prefix)
 labelsPath1="{}Images/Drone_Images/Yolo/obj.names".format(path_prefix)
 configPath1="{}Jetson_Stuff/YOLOv4/darknet/cfg/custom-yolov4-tiny-detector_VisDrone_test.cfg".format(path_prefix)
@@ -292,6 +298,14 @@ ap.add_argument("--video",type=str,default=video,help='0 for webcam etc')
 ap.add_argument("--save",type=str,default=save,help='save annotations')
 ap.add_argument("--YOUTUBE_RTMP",type=str,default="xxxx-xxxx-xxxx-xxxx-xxxx",help="The YOUTUBE STREAM RTMP Key")
 ap.add_argument("--YOUTUBE_STREAM_RES",type=str,default='720p',help="Youtube Stream Height")
+ap.add_argument("--RTSP_PATH",type=str,default="xxxx-xxxx-xxxx-xxxx-xxxx",help="The RTSP Path")
+ap.add_argument("--RTSP_SERVER_PATH",type=str,default="/media/steven/Elements/Full_Loop_YOLO/resources/rtsp_server.py",help="The path to rtsp_server.py")
+ap.add_argument("--fps",default=30,help="fps of incoming images for rtsp_server",type=int)
+ap.add_argument("--width",default=None,help="width of incoming images for rtsp_server",type=int)
+ap.add_argument("--height",default=None,help="height of incoming images for rtsp_server",type=int)
+ap.add_argument("--port",default=8554,help="port for rtsp_server",type=int)
+ap.add_argument("--stream_key",default="/video_stream",help="rtsp image stream uri for rtsp_server")
+global args
 args = vars(ap.parse_args())
 weightsPath=args['weightsPath']
 labelsPath=args['labelsPath']
@@ -318,7 +332,29 @@ if YOUTUBE_STREAM_KEY!='xxxx-xxxx-xxxx-xxxx-xxxx':
     writer=YOUTUBE_RTMP(YOUTUBE_STREAM_KEY)
 else:
     RTMP=False
-
+global running,RTSP
+RTSP_PATH = args['RTSP_PATH']
+RTSP_SERVER_PATH=args['RTSP_SERVER_PATH']
+RTSP=False
+running=False
+if RTSP_PATH != 'xxxx-xxxx-xxxx-xxxx-xxxx' and os.path.exists(RTSP_SERVER_PATH):
+    print(RTSP_SERVER_PATH)
+   
+    if args['width']:
+        WIDTH=args['width']
+    else:
+        WIDTH=imW
+    if args['height']:
+        HEIGHT=args['height']
+    else:
+        HEIGHT=imH
+    import sys
+    from threading import Thread
+    sys.path.append(os.path.dirname(RTSP_SERVER_PATH))
+    #import rtsp_server as rs
+    import imagezmq
+    sender = imagezmq.ImageSender()
+    RTSP=True
     
     
 def create_output_paths(unique_device=UNIQUE_DEVICE,video_device=str(video)):
@@ -454,7 +490,8 @@ videostream = VideoStream(video,resolution=(imW,imH),framerate=30).start()
 window_name='YOLO camera'
 
 def do_stuff():
-    global time_found,target_found,myrtmp_addr
+    global time_found,target_found,myrtmp_addr,running,args,RTSP
+
     th.Thread(target=key_capture_thread,args=(),name='key_capture_thread',daemon=True).start()
     time_last=time.time()
     while keep_going:
@@ -586,8 +623,16 @@ def do_stuff():
                cv2.imshow('YOLO DNN',image)
                if RTMP:
                 YH_i,YW_i,VBR_i=YOUTUBE_STREAM_RESOLUTION(res=YOUTUBE_STREAM_RES)
-                image=cv2.resize(image,(YW_i,YH_i))
-                writer.write(image,VBR_i)
+                image_og=cv2.resize(image,(YW_i,YH_i))
+                writer.write(image_og,VBR_i)
+               if running and RTSP:
+                running=True
+               elif RTSP:
+                cmd_i='python3 {} --fps={} --width={} --height={} --port={} --stream_key={}'.format(RTSP_SERVER_PATH, args['fps'],image.shape[1],image.shape[0],args['port'],args['stream_key'])
+                RunMe=Thread(target=run_cmd,args=(cmd_i,)).start()
+                running=True
+               if RTSP:
+                    Thread(target=send_imgs,args=(sender,image,)).start()
                if cv2.waitKey(1) == ord('q'):
                    break
                #cv2.waitKey(0)
