@@ -77,6 +77,7 @@ ENCODE_METHOD = DEFAULT_ENCODING
 from resources import switch_basepath
 from resources import create_img_list
 from resources import create_imgs_from_video
+import socket
 global return_to_main
 return_to_main=True
 
@@ -440,6 +441,28 @@ class yolo_cfg:
         self.XML_EXT=DEFAULT_SETTINGS.XML_EXT
         self.JPG_EXT=DEFAULT_SETTINGS.JPG_EXT
         self.COLOR=DEFAULT_SETTINGS.COLOR
+        if os.path.exists('resources/rtsp_server.py'):
+            self.RTSP_SERVER_PATH=os.path.abspath('resources/rtsp_server.py')
+            self.RTSP_SERVER=True 
+            
+            try:
+                s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8",80))
+                self.IP_ADDRESS=s.getsockname()[0]
+            except:
+                self.IP_ADDRESS="127.0.0.1"
+            self.PORT=8554
+            self.PORT_VAR=None
+            self.FPS=30
+            self.FPS_VAR=None
+            self.W_RTSP=self.WIDTH_NUM
+            self.H_RTSP=self.HEIGHT_NUM
+            self.STREAM_KEY="/video_stream"
+            self.STREAM_KEY_VAR=None
+            self.USE_RTSP_VAR=None
+            self.RTSP_FULL_PATH_VAR=None
+        else:
+            self.RTSP_SERVER=False
         if os.path.exists('YOUTUBE_KEY.txt'):
             f=open('YOUTUBE_KEY.txt')
             f_read=f.readlines()
@@ -1248,8 +1271,10 @@ class yolo_cfg:
             self.var_overwrite.set('Add')
 
     def create_yolo_files(self):
+        self.RTSP()
         self.create_obj_data()
         self.create_train_bash()
+
         self.create_test_bash()
         self.create_test_bash_mp4()
         self.create_test_bash_mp4_record()
@@ -1257,6 +1282,7 @@ class yolo_cfg:
         self.create_test_bash_images_with_predictions_mAP()
         self.create_test_bash_dnn()
         self.YOUTUBE_RTMP()
+
         self.create_test_bash_dnn_rtmp()
         self.remaining_buttons()
         self.labelImg_buttons()
@@ -1381,7 +1407,52 @@ class yolo_cfg:
         self.train_yolo_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.train_yolo_objs_button_note.grid(row=4,column=2,sticky='ne')
         
-    
+    def RTSP(self):
+        spacer=5
+          
+        if self.RTSP_SERVER and self.PORT_VAR==None:
+            self.PORT_VAR=tk.StringVar()
+            self.PORT_VAR.set(self.PORT)
+            self.PORT_entry=tk.Entry(self.root,textvariable=self.PORT_VAR)
+            self.PORT_entry.grid(row=13+spacer,column=2,sticky='sw')
+            self.PORT_label=tk.Label(self.root,text='RTSP PORT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.PORT_label.grid(row=14+spacer,column=2,sticky='nw')  
+        if self.RTSP_SERVER and self.FPS_VAR==None:
+            self.FPS_VAR=tk.StringVar()
+            self.FPS_VAR.set(self.FPS)
+            self.FPS_entry=tk.Entry(self.root,textvariable=self.FPS_VAR)
+            self.FPS_entry.grid(row=15+spacer,column=2,sticky='sw')
+            self.FPS_label=tk.Label(self.root,text='RTSP FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.FPS_label.grid(row=16+spacer,column=2,sticky='nw')  
+        if self.RTSP_SERVER and self.STREAM_KEY_VAR==None:
+            self.STREAM_KEY_VAR=tk.StringVar()
+            self.STREAM_KEY_VAR.set(self.STREAM_KEY)
+            self.STREAM_KEY_entry=tk.Entry(self.root,textvariable=self.STREAM_KEY_VAR)
+            self.STREAM_KEY_entry.grid(row=17+spacer,column=2,sticky='sw')
+            self.STREAM_KEY_label=tk.Label(self.root,text='RTSP STREAM KEY',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.STREAM_KEY_label.grid(row=18+spacer,column=2,sticky='nw')  
+        if self.RTSP_SERVER and self.RTSP_FULL_PATH_VAR==None:
+            self.RTSP_FULL_PATH_VAR=tk.StringVar()
+            self.get_full_path_rtsp()
+            self.RTSP_FULL_PATH_label=tk.Label(self.root,textvariable=self.RTSP_FULL_PATH_VAR,bg=self.root_fg,fg=self.root_bg,font=('Arial',10))
+            self.RTSP_FULL_PATH_label.grid(row=14+spacer-2,column=2,sticky='nw')  
+        if self.RTSP_SERVER and self.USE_RTSP_VAR==None:
+            self.USE_RTSP_VAR=tk.StringVar()
+            self.USE_RTSP_options=['Yes','No']
+            self.USE_RTSP_VAR.set('No')
+            self.USE_RTSP_dropdown=tk.OptionMenu(self.root,self.USE_RTSP_VAR,*self.USE_RTSP_options,command=self.get_full_path_rtsp())
+            self.USE_RTSP_dropdown.grid(row=13+spacer-2,column=3,sticky='sw')
+            self.USE_RTSP_label=tk.Label(self.root,text='Use RTSP?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+            self.USE_RTSP_label.grid(row=14+spacer-2,column=3,sticky='nw')   
+    def get_full_path_rtsp(self):
+        try:
+            s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8",80))
+            self.IP_ADDRESS=s.getsockname()[0]
+        except:
+            self.IP_ADDRESS="127.0.0.1"
+        self.RTSP_FULL_PATH="rtsp://"+self.IP_ADDRESS+":"+str(self.PORT_VAR.get())+self.STREAM_KEY_VAR.get()
+        self.RTSP_FULL_PATH_VAR.set(self.RTSP_FULL_PATH)
     def YOUTUBE_RTMP(self):
         if self.YOUTUBE_KEY_VAR==None:
             self.YOUTUBE_KEY_VAR=tk.StringVar()
@@ -1765,14 +1836,26 @@ class yolo_cfg:
         self.TEST_MP4_YOLOV7=os.path.join(os.path.dirname(self.data_path),'test_MP4_custom_Yolov7-tiny.sh')
         f=open(self.TEST_MP4_YOLOV7,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
-        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            else:
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny))
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny))
         f.close()
 
     def create_test_bash_mp4_yolov7_e6e(self):
         self.TEST_MP4_YOLOV7_e6e=os.path.join(os.path.dirname(self.data_path),'test_MP4_custom_Yolov7-e6e.sh')
         f=open(self.TEST_MP4_YOLOV7_e6e,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
-        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            else:
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e))
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e))
         f.close()
 
 
@@ -1781,7 +1864,13 @@ class yolo_cfg:
         self.TEST_MP4_YOLOV7_re=os.path.join(os.path.dirname(self.data_path),'test_MP4_custom_Yolov7.sh')
         f=open(self.TEST_MP4_YOLOV7_re,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
-        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            else:
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re))
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re))
         f.close()
 
 
@@ -1790,7 +1879,13 @@ class yolo_cfg:
         self.TEST_WEBCAM_YOLOV7=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7-tiny.sh')
         f=open(self.TEST_WEBCAM_YOLOV7,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
-        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            else:
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
         f.close()
 
     def create_test_bash_webcam_yolov7_RTMP(self):
@@ -1803,14 +1898,26 @@ class yolo_cfg:
         f.writelines('YOUTUBE_RTMP={}\n'.format(self.YOUTUBE_KEY))
         f.writelines('YOUTUBE_STREAM_RES={}\n'.format(self.USER_SELECTION_yt.get()))
         f.writelines('cd {}\n'.format(self.yolov7_path))
-        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            else:
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
         f.close()
 
     def create_test_bash_webcam_yolov7_e6e(self):
         self.TEST_WEBCAM_YOLOV7_e6e=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7-e6e.sh')
         f=open(self.TEST_WEBCAM_YOLOV7_e6e,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
-        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            else:
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
         f.close()
 
     def create_test_bash_webcam_yolov7_e6e_RTMP(self):
@@ -1823,14 +1930,26 @@ class yolo_cfg:
         f.writelines('YOUTUBE_RTMP={}\n'.format(self.YOUTUBE_KEY))
         f.writelines('YOUTUBE_STREAM_RES={}\n'.format(self.USER_SELECTION_yt.get()))
         f.writelines('cd {}\n'.format(self.yolov7_path))
-        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            else:
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
         f.close()
 
     def create_test_bash_webcam_yolov7_re(self):
         self.TEST_WEBCAM_YOLOV7_re=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7.sh')
         f=open(self.TEST_WEBCAM_YOLOV7_re,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
-        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            else:
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
         f.close()
 
     def create_test_bash_webcam_yolov7_re_RTMP(self):
@@ -1843,7 +1962,13 @@ class yolo_cfg:
         f.writelines('YOUTUBE_RTMP={}\n'.format(self.YOUTUBE_KEY))
         f.writelines('YOUTUBE_STREAM_RES={}\n'.format(self.USER_SELECTION_yt.get()))
         f.writelines('cd {}\n'.format(self.yolov7_path))
-        f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            else:
+                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
         f.close()
 
     def create_predict_bash_mAP_yolov7(self):
@@ -2109,7 +2234,13 @@ class yolo_cfg:
         f.writelines('imW='+str(self.WIDTH_NUM)+'\n')
         f.writelines('imH='+str(self.HEIGHT_NUM)+'\n')
         f.writelines('cd {}\n'.format(self.DNN_PATH.replace('yolo_dnn_multi_drone_hdmi.py','')))
-        f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            else:
+                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
+        else:
+            f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
         f.close()
 
     def TMP_create_test_dnn_bash(self):
@@ -2122,7 +2253,13 @@ class yolo_cfg:
         [f.writelines(line) for line in self.cli_path_test_lines]
         f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
         f.writelines('cd {}\n'.format(self.darknet_path))
-        f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH={} --fps={} --port={} --stream_key={}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))              
+            else:
+                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+        else:
+            f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
         f.close()
 
     def create_test_bash_dnn_rtmp(self):
@@ -2143,7 +2280,13 @@ class yolo_cfg:
         f.writelines('YOUTUBE_RTMP={}\n'.format(self.YOUTUBE_KEY))
         f.writelines('YOUTUBE_STREAM_RES={}\n'.format(self.USER_SELECTION_yt.get()))
         f.writelines('cd {}\n'.format(self.DNN_PATH.replace('yolo_dnn_multi_drone_hdmi.py','')))
-        f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH={} --fps={} --port={} --stream_key={}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))   
+            else:
+                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+        else:
+            f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
         f.close()
 
     def TMP_create_test_dnn_rtmp_bash(self):
@@ -2162,7 +2305,13 @@ class yolo_cfg:
         f.writelines('YOUTUBE_STREAM_RES={}\n'.format(self.USER_SELECTION_yt.get()))
         f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
         f.writelines('cd {}\n'.format(self.darknet_path))
-        f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH={} --fps={} --port={} --stream_key={}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))   
+            else:
+                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+        else:
+            f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
         f.close()
 
     def create_test_bash(self):
