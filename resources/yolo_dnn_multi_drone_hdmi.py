@@ -486,6 +486,10 @@ def key_capture_thread():
         if my_answer.find('q')!=-1:
             keep_going=False
 #videostream = VideoStream(video,resolution=(640,480),framerate=30).start()
+aspect=640./480.
+if imW==imH:
+    imH=int(imW/aspect)
+
 videostream = VideoStream(video,resolution=(imW,imH),framerate=30).start()
 window_name='YOLO camera'
 
