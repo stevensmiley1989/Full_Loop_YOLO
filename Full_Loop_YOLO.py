@@ -453,7 +453,7 @@ class yolo_cfg:
                 self.IP_ADDRESS="127.0.0.1"
             self.PORT=8554
             self.PORT_VAR=None
-            self.FPS=30
+            self.FPS=10 #RTSP can be kind of slow
             self.FPS_VAR=None
             self.W_RTSP=self.WIDTH_NUM
             self.H_RTSP=self.HEIGHT_NUM
@@ -2632,6 +2632,8 @@ class yolo_cfg:
                     print('count=',count)
                     self.df=self.df.drop_duplicates(keep='last').reset_index().drop('index',axis=1)
                     self.df.to_pickle(self.df_filename,protocol=2)
+                    self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
+                    self.df.to_csv(self.df_filename_csv,index=None)
                     count_str=self.pad(count)
                     self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
                     #self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
@@ -2672,6 +2674,8 @@ class yolo_cfg:
                         print('count=',count)
                         self.df=self.df.drop_duplicates(keep='last').reset_index().drop('index',axis=1)
                         self.df.to_pickle(self.df_filename,protocol=2)
+                        self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
+                        self.df.to_csv(self.df_filename_csv,index=None)
                         count_str=self.pad(count)
                         self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
                         #self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
@@ -2760,13 +2764,30 @@ class yolo_cfg:
             if count==self.counts:
                 count_str=self.pad(count)
                 self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
-                #print(self.df_filename,'of {}'.format(self.total_annos))
+                self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
+                print(self.df_filename,'of {}'.format(self.total_annos))
                 
             if os.path.exists(self.df_filename) and self.var_overwrite.get()=='No':
                 print(self.df_filename)
                 print('found')
                 keep_columns=list(self.df.columns)
-                self.df=pd.read_pickle(self.df_filename)
+                df_pkls=os.listdir(self.path_Yolo)
+                df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
+                for pkl_i in tqdm(df_pkls):
+                    self.df_filename_csv=pkl_i.replace('.pkl','.csv')
+                    if os.path.exists(self.df_filename_csv)==False:
+                        print('Creating: \n {}'.format(self.df_filename_csv))
+                        try:
+                            self.df_pkl=pd.read_pickle(pkl_i)
+                            self.df_pkl.to_csv(self.df_filename_csv,index=None)
+                        except:
+                            self.df_pkl=pd.read_csv(self.df_filename_csv,index_col=None)
+                self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
+                try:
+                    self.df=pd.read_pickle(self.df_filename)
+                    self.df.to_csv(self.df_filename_csv,index=None)
+                except:
+                    self.df=pd.read_csv(self.df_filename_csv,index_col=None)
                 drop_columns=[col for col in self.df.columns if col not in keep_columns]
                 if len(drop_columns)>0:
                     self.df.drop(drop_columns,axis=1,inplace=True)
@@ -2790,7 +2811,14 @@ class yolo_cfg:
                         df_pkls=os.listdir(self.path_Yolo)
                         df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
                         for pkl_i in tqdm(df_pkls):
-                            self.df_pkl=pd.read_pickle(pkl_i)
+                            self.df_filename_csv=pkl_i.replace('.pkl','.csv')
+                            try:
+                                self.df_pkl=pd.read_pickle(pkl_i)
+                                self.df_pkl.to_csv(self.df_filename_csv,index=None)
+                            except:
+                                self.df_pkl=pd.read_csv(self.df_filename_csv,index_col=None)
+
+                            #self.df_pkl=pd.read_pickle(pkl_i)
                             names_possible=list(self.df_pkl['label_i'].unique())
                             for name in names_possible:
                                 if name not in self.found_names.keys():
@@ -2802,7 +2830,13 @@ class yolo_cfg:
             else:
                 if os.path.exists(self.df_filename) and self.var_overwrite.get()=='Add':
                     keep_columns=list(self.df.columns)
-                    self.df=pd.read_pickle(self.df_filename)
+                    self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
+                    try:
+                        self.df=pd.read_pickle(self.df_filename)
+                        self.df.to_csv(self.df_filename_csv,index=None)
+                    except:
+                        self.df=pd.read_csv(self.df_filename_csv,index_col=None)
+                    #self.df=pd.read_pickle(self.df_filename)
                     drop_columns=[col for col in self.df.columns if col not in keep_columns]
                     if len(drop_columns)>0:
                         self.df.drop(drop_columns,axis=1,inplace=True)
@@ -2825,7 +2859,13 @@ class yolo_cfg:
                             df_pkls=os.listdir(self.path_Yolo)
                             df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
                             for pkl_i in tqdm(df_pkls):
-                                self.df_pkl=pd.read_pickle(pkl_i)
+                                self.df_filename_csv=pkl_i.replace('.pkl','.csv')
+                                try:
+                                    self.df_pkl=pd.read_pickle(pkl_i)
+                                    self.df_pkl.to_csv(self.df_filename_csv,index=None)
+                                except:
+                                    self.df_pkl=pd.read_csv(self.df_filename_csv,index_col=None)
+                                #self.df_pkl=pd.read_pickle(pkl_i)
                                 names_possible=list(self.df_pkl['label_i'].unique())
                                 for name in names_possible:
                                     if name not in self.found_names.keys():
@@ -2852,6 +2892,8 @@ class yolo_cfg:
         if len(self.df)>0:
             self.df=self.df.drop_duplicates(keep='last').reset_index().drop('index',axis=1)
             self.df.to_pickle(self.df_filename,protocol=2)  
+            self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
+            self.df.to_csv(self.df_filename_csv,index=None)
         if self.num_classes!=len(self.found_names.items()):
             self.num_classes=len(self.found_names.items())
             self.num_classes_VAR.set(self.num_classes)
@@ -2902,12 +2944,17 @@ class yolo_cfg:
             unique_label_count_train=0
             unique_label_count_val=0
             for yolo_file_i in tqdm(self.yolo_files):
-                self.df=pd.read_pickle(yolo_file_i)
+                try:
+                    self.df=pd.read_pickle(yolo_file_i)
+                    self.df.to_csv(yolo_file_i.replace('.pkl','.csv'),index=None)
+                except:
+                    self.df=pd.read_csv(yolo_file_i.replace('.pkl','.csv'),index_col=None)
                 self.df=self.df.reset_index().drop('index',axis=1)
                 #pprint(self.df)
                 self.df_i=self.df[self.df['label_i']==unique_label].copy()
                 self.df_i=self.df_i.drop_duplicates().reset_index().drop('index',axis=1)
-                self.df_i=self.df_i.sample(frac=1,random_state=42) #shuffle all rows 
+                if len(self.df_i)>0:
+                    self.df_i=self.df_i.sample(frac=1,random_state=42) #shuffle all rows 
                 self.df_i=self.df_i.sort_values(by='path_jpeg_dest_i')
                 total_list_i=list(self.df_i['path_jpeg_dest_i'])
                 train_list_i=total_list_i[:int(self.TRAIN_SPLIT*len(self.df_i)/100.)]
