@@ -4,6 +4,8 @@ import time
 from resources.create_img_list import create_img_list
 def create_imgs_from_video(path_movie=None,fps='1/2'):
     '''path_change should be the MOV or mp4 path '''
+    print('\npath_movie = {} \n'.format(path_movie))
+    print('\nfps={}\n'.format(fps))
     time_i=str(time.time())
     time_i=time_i.split('.')[0]
     if str(type(fps)).find('str')==-1:
@@ -15,22 +17,26 @@ def create_imgs_from_video(path_movie=None,fps='1/2'):
         os.chdir(basepath)
         print(basepath)
         movie_i_name=path_movie.split('/')[-1].split('.')[0]
+        basepath=os.path.join(basepath,'FPS_{}'.format(fps.replace("/","d")))
+        if os.path.exists(basepath)==False:
+            os.makedirs(basepath)
         folders_in_basepath=os.listdir(basepath)
         folders_in_basepath=[w for w in folders_in_basepath if os.path.isdir(os.path.join(basepath,w))]
         JPEGImages_path=os.path.join(basepath,'JPEGImages')
         Annotations_path=os.path.join(basepath,'Annotations')
-        if 'Annotations' not in folders_in_basepath:
-            os.makedirs(Annotations_path)
-        else:
-            #os.system('mv {} {}'.format(Annotations_path,Annotations_path+'_backup_{}'.format(time_i)))
-            Annotations_path=Annotations_path+'_'+time_i
-            os.makedirs(Annotations_path)
         if 'JPEGImages' not in folders_in_basepath:
             os.makedirs(JPEGImages_path)  
         else:
             #os.system('mv {} {}'.format(JPEGImages_path,JPEGImages_path+'_backup_{}'.format(time_i)))
             JPEGImages_path=JPEGImages_path+'_'+time_i
             os.makedirs(JPEGImages_path)
+        if 'Annotations' not in folders_in_basepath:
+            os.makedirs(Annotations_path)
+        else:
+            #os.system('mv {} {}'.format(Annotations_path,Annotations_path+'_backup_{}'.format(time_i)))
+            Annotations_path=Annotations_path+'_'+time_i
+            os.makedirs(Annotations_path)
+
 
 
         os.system('ffmpeg -i {} -qscale:v 2 -vf fps={} {}/{}_fps{}_%08d.jpg'.format(path_movie,fps,JPEGImages_path,movie_i_name,fps.replace('/','d').replace('.','p')))
