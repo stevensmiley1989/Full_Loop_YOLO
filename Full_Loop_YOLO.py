@@ -1369,17 +1369,30 @@ class yolo_cfg:
         self.open_MOVMP4_button.grid(row=5,column=8,sticky='sw')
         self.open_MOVMP4_note=tk.Label(self.root,text="MOV/MP4 File to \n Create JPEGImages of",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_MOVMP4_note.grid(row=6,column=7,columnspan=3,sticky='n')
+        self.fps_MOVMP4_VAR=tk.StringVar()
+        self.fps_MOVMP4_options=['1/10','1/5','1/4','1/2','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40']
+        self.fps_MOVMP4_VAR.set('1/2')
+
+
         #cmd_i=open_cmd+" '{}'".format(self.open_MOVMP4_label_var.get())
         #self.open_MOVMP4_label=Button(self.root,textvariable=self.open_MOVMP4_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         #self.open_MOVMP4_label.grid(row=5,column=9,columnspan=50,sticky='sw') 
         self.MOVMP4_selected=True 
         self.create_MOVMP4_JPEGImages()
+        self.fps_MOVMP4_dropdown=tk.OptionMenu(self.root,self.fps_MOVMP4_VAR,*self.fps_MOVMP4_options)
+        self.fps_MOVMP4_dropdown.grid(row=5,column=9,sticky='nw')
+        self.fps_MOVMP4_dropdown_label=tk.Label(self.root,text='FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
+        self.fps_MOVMP4_dropdown_label.grid(row=4,column=9,sticky='sw')   
 
     def create_MOVMP4_JPEGImages(self):
-        self.create_MOVMP4_button=Button(self.root,image=self.icon_create,command=partial(create_imgs_from_video.create_imgs_from_video,self.path_MOVMP4),bg=self.root_bg,fg=self.root_fg)
+        self.create_MOVMP4_button=Button(self.root,image=self.icon_create,command=self.check_fps,bg=self.root_bg,fg=self.root_fg)
         self.create_MOVMP4_button.grid(row=5,column=7,sticky='se')
         #self.create_MOVMP4_button_note=tk.Label(self.root,text='Create JPEGImages \n from MOV/MP4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         #self.create_MOVMP4_button_note.grid(row=6,column=6,columnspan=3,sticky='ne')
+
+    def check_fps(self):
+        create_imgs_from_video.create_imgs_from_video(self.path_MOVMP4,self.fps_MOVMP4_VAR.get())
+
 
 
     def dropdowntest_menu(self):
