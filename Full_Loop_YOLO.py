@@ -441,6 +441,30 @@ class yolo_cfg:
         self.XML_EXT=DEFAULT_SETTINGS.XML_EXT
         self.JPG_EXT=DEFAULT_SETTINGS.JPG_EXT
         self.COLOR=DEFAULT_SETTINGS.COLOR
+        try:
+            self.ITERATION_NUM=DEFAULT_SETTINGS.ITERATION_NUM
+        except:
+            self.ITERATION_NUM=2000
+        try:
+            self.epochs_yolov7=DEFAULT_SETTINGS.epochs_yolov7
+        except:
+            self.epochs_yolov7=40
+        try:
+            self.epochs_yolov7_re=DEFAULT_SETTINGS.epochs_yolov7_re
+        except:
+            self.epochs_yolov7_re=40
+        try:
+            self.epochs_yolov7_e6e=DEFAULT_SETTINGS.epochs_yolov7_e6e
+        except:
+            self.epochs_yolov7_e6e=40
+        self.epochs_yolov7_e6e_VAR=tk.StringVar()
+        self.epochs_yolov7_e6e_VAR.set(self.epochs_yolov7_e6e)
+        
+        self.epochs_yolov7_VAR=tk.StringVar()
+        self.epochs_yolov7_VAR.set(self.epochs_yolov7)
+
+        self.epochs_yolov7_re_VAR=tk.StringVar()
+        self.epochs_yolov7_re_VAR.set(self.epochs_yolov7_re)
         if os.path.exists('resources/rtsp_server.py'):
             self.RTSP_SERVER_PATH=os.path.abspath('resources/rtsp_server.py')
             self.RTSP_SERVER=True 
@@ -614,6 +638,13 @@ class yolo_cfg:
         self.random_dropdown.grid(row=17,column=0,sticky='se')       
         self.random_label=tk.Label(self.root,text='random',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.random_label.grid(row=18,column=0,sticky='ne')
+
+        self.ITERATION_NUM_VAR=tk.StringVar()
+        self.ITERATION_NUM_VAR.set(self.ITERATION_NUM)
+        self.ITERATION_entry=tk.Entry(self.root,textvariable=self.ITERATION_NUM_VAR)
+        self.ITERATION_entry.grid(row=19,column=0,sticky='se')
+        self.ITERATION_label=tk.Label(self.root,text='max_batches',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.ITERATION_label.grid(row=20,column=0,sticky='ne')
 
         self.generate_cfg_button=Button(self.root,image=self.icon_config,command=self.generate_cfg,bg=self.root_bg,fg=self.root_fg)
         self.generate_cfg_button.grid(row=3,column=0,sticky='s')
@@ -855,10 +886,12 @@ class yolo_cfg:
         self.num_div=int(self.num_div_VAR.get().strip())
         self.num_classes=int(self.num_classes_VAR.get().strip())
         self.random=self.random_VAR.get()
+        self.ITERATION_NUM=self.ITERATION_NUM_VAR.get()
         if generate:
             self.update_height(self.HEIGHT_NUM)
             self.update_width(self.WIDTH_NUM)
             self.divide_filters_by(self.num_div)
+            self.update_max_batches(self.ITERATION_NUM)
             self.update_classes()
         mp4_video_path='TBD' #testing video
         try:
@@ -965,6 +998,8 @@ class yolo_cfg:
         self.height=self.height.split('=')[0]+'='+str(height)+'\n'
     def update_width(self,width):
         self.width=self.width.split('=')[0]+'='+str(width)+'\n'
+    def update_max_batches(self,max_batches):
+        self.max_batches=self.max_batches.split('=')[0]+'='+str(max_batches)+'\n'
     def load_cfg(self):
         self.update_paths(False)
         self.save_cfg_path_train=self.save_cfg_path.replace('.cfg','_train.cfg')
@@ -1414,11 +1449,42 @@ class yolo_cfg:
         # self.dropdowntests_label.grid(row=8,column=7,sticky='sw')
 
     def train_yolo(self):
-        cmd_i=" bash '{}'".format(self.save_cfg_path_train.replace('.cfg','.sh'))
-        self.train_yolo_objs_button=Button(self.top,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        #cmd_i=" bash '{}'".format(self.save_cfg_path_train.replace('.cfg','.sh'))
+        self.train_yolo_objs_button=Button(self.top,image=self.icon_train,command=self.train_yolov4,bg=self.root_bg,fg=self.root_fg)
         self.train_yolo_objs_button.grid(row=3,column=2,sticky='se')
         self.train_yolo_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.train_yolo_objs_button_note.grid(row=4,column=2,sticky='ne')
+
+        try:
+            self.EPOCH_entry.destroy()
+            self.EPOCH_label.destroy()
+        except:
+            self.epochs_VAR=tk.StringVar()
+            self.epochs_VAR.set(self.epochs)
+            self.epochs_entry=tk.Entry(self.root,textvariable=self.epochs_VAR)
+            self.epochs_entry.grid(row=21,column=0,sticky='se')
+            self.epochs_label=tk.Label(self.root,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.epochs_label.grid(row=22,column=0,sticky='ne')
+        self.epochs_yolov_entry=tk.Entry(self.top,textvariable=self.epochs_VAR)
+        self.epochs_yolov_entry.grid(row=5,column=2,sticky='sw')
+        self.epochs_yolov_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.epochs_yolov_label.grid(row=6,column=2,sticky='nw')
+
+    def train_yolov4(self):
+        if self.epochs_VAR.get()!=self.epochs:
+            #self.epochs=int(self.max_batches.replace('\n','').strip().split('=')[1])//self.iterations_per_epoch
+            try:
+                self.max_batches=int(self.epochs_VAR.get())*int(self.iterations_per_epoch)
+                self.ITERATION_NUM=self.max_batches
+                self.ITERATION_NUM_VAR.set(self.ITERATION_NUM)
+            except:
+                print('Could not convert epochs desired to cfg')
+            self.generate_cfg()
+            self.remaining_buttons()
+            
+        cmd_i=" bash '{}'".format(self.save_cfg_path_train.replace('.cfg','.sh'))
+        self.run_cmd(cmd_i)
+        
         
     def RTSP(self):
         spacer=5
@@ -1584,42 +1650,73 @@ class yolo_cfg:
 
     def train_yolov7(self):
         if os.path.exists('libs/yolov7_path.py'):
-            self.create_test_bash_mp4_yolov7()
-            cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7)
-            self.train_yolov7_objs_button=Button(self.top,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.train_yolov7_objs_button=Button(self.top,image=self.icon_train,command=self.train_yolov7_cmd,bg=self.root_bg,fg=self.root_fg)
             self.train_yolov7_objs_button.grid(row=10-7,column=10-7,sticky='se')
             self.train_yolov7_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.train_yolov7_objs_button_note.grid(row=11-7,column=10-7,sticky='ne')
+
+
+
+            self.epochs_yolov7_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_VAR)
+            self.epochs_yolov7_entry.grid(row=12-7,column=10-7,sticky='sw')
+            self.epochs_yolov7_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.epochs_yolov7_label.grid(row=13-7,column=10-7,sticky='nw')
             #self.test_yolov7_mp4()
             #self.test_yolov7_webcam()
             #self.test_yolov7_webcam_RTMP()
             #self.test_yolov7_mAP()
+    def train_yolov7_cmd(self):
+        self.create_test_bash_mp4_yolov7()
+        self.create_train_bash_yolov7()
+        cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7)
+        self.run_cmd(cmd_i)
 
     def train_yolov7_e6e(self):
         if os.path.exists('libs/yolov7_path.py'):
-            self.create_test_bash_mp4_yolov7_e6e()
-            cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_e6e)
-            self.train_yolov7_e6e_objs_button=Button(self.top,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.train_yolov7_e6e_objs_button=Button(self.top,image=self.icon_train,command=self.train_yolov7_e6e_cmd,bg=self.root_bg,fg=self.root_fg)
             self.train_yolov7_e6e_objs_button.grid(row=10-7,column=11-7,sticky='se')
             self.train_yolov7_e6e_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.train_yolov7_e6e_objs_button_note.grid(row=11-7,column=11-7,sticky='ne')
+
+
+           
+
+            self.epochs_yolov7_e6e_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_e6e_VAR)
+            self.epochs_yolov7_e6e_entry.grid(row=12-7,column=11-7,sticky='sw')
+            self.epochs_yolov7_e6e_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.epochs_yolov7_e6e_label.grid(row=13-7,column=11-7,sticky='nw')
             #self.test_yolov7_mp4_e6e()
             #self.test_yolov7_webcam_e6e()
             #self.test_yolov7_webcam_e6e_RTMP()
             #self.test_yolov7_mAP_e6e()
+    def train_yolov7_e6e_cmd(self):
+        self.create_test_bash_mp4_yolov7_e6e()
+        self.create_train_bash_yolov7_e6e()
+        cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_e6e)
+        self.run_cmd(cmd_i)
 
     def train_yolov7_re(self):
         if os.path.exists('libs/yolov7_path.py'):
-            self.create_test_bash_mp4_yolov7_re()
-            cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_re)
-            self.test_mp4_yolov7_re_objs_button=Button(self.top,image=self.icon_train,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_mp4_yolov7_re_objs_button=Button(self.top,image=self.icon_train,command=self.train_yolov7_re_cmd,bg=self.root_bg,fg=self.root_fg)
             self.test_mp4_yolov7_re_objs_button.grid(row=10-7,column=12-7,sticky='se')
             self.test_mp4_yolov7_re_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolov7_re_objs_button_note.grid(row=11-7,column=12-7,sticky='ne')
+
+
+            self.epochs_yolov7_re_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_re_VAR)
+            self.epochs_yolov7_re_entry.grid(row=12-7,column=12-7,sticky='sw')
+            self.epochs_yolov7_re_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.epochs_yolov7_re_label.grid(row=13-7,column=12-7,sticky='nw')
             #self.test_yolov7_mp4_re()
             #self.test_yolov7_webcam_re()
             #self.test_yolov7_webcam_re_RTMP()
             #self.test_yolov7_mAP_re()
+    def train_yolov7_re_cmd(self):
+        self.create_test_bash_mp4_yolov7_re()
+        self.create_train_bash_yolov7_re()
+        cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_re)
+        self.run_cmd(cmd_i)
+
 
     def test_yolov7_mp4(self):
         if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
@@ -1798,6 +1895,17 @@ class yolo_cfg:
         f.writelines('self.epochs={}//{} \n'.format(int(self.max_batches.replace('\n','').strip().split('=')[1]),self.iterations_per_epoch))
         f.writelines('self.epochs={}\n'.format(self.epochs))
         f.close()
+        try:
+            self.EPOCH_entry.destroy()
+            self.EPOCH_label.destroy()
+        except:
+            self.epochs_VAR=tk.StringVar()
+            self.epochs_VAR.set(self.epochs)
+            self.epochs_entry=tk.Entry(self.root,textvariable=self.epochs_VAR)
+            self.epochs_entry.grid(row=21,column=0,sticky='se')
+            self.epochs_label=tk.Label(self.root,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.epochs_label.grid(row=22,column=0,sticky='ne')
+
 
 
     def run_create_tflite_bash(self):
@@ -1806,31 +1914,34 @@ class yolo_cfg:
         self.run_cmd(cmd_i)
 
     def create_train_bash_yolov7(self):
+        self.epochs_yolov7=self.epochs_yolov7_VAR.get()
         self.TRAIN_YOLOV7=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7-tiny.sh')
         f=open(self.TRAIN_YOLOV7,'w')
         f.writelines('cd {} \n'.format(self.yolov7_path))
         self.last_weights_path_yolov7=os.path.join(os.path.dirname(self.data_path),'yolov7-tiny/weights/last.pt')
         if os.path.exists(self.last_weights_path_yolov7)==False:
-            f.writelines("python3 train.py --workers 8 --device 0 --batch-size 32 --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.yolov7_path_name,self.yolov7_path_hyp))
+            f.writelines("python3 train.py --workers 8 --device 0 --batch-size 32 --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.yolov7_path_name,self.yolov7_path_hyp,self.epochs_yolov7))
         else:
-            f.writelines("python3 train.py --workers 8 --device 0 --batch-size 32 --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.last_weights_path_yolov7,self.yolov7_path_name,self.yolov7_path_hyp))           
+            f.writelines("python3 train.py --workers 8 --device 0 --batch-size 32 --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.last_weights_path_yolov7,self.yolov7_path_name,self.yolov7_path_hyp,self.epochs_yolov7))           
         f.close()
 
     def create_train_bash_yolov7_e6e(self):
+        self.epochs_yolov7_e6e=self.epochs_yolov7_e6e_VAR.get()
         #python train_aux.py --workers 8 --device 0 --batch-size 16 --data data/coco.yaml --img 1280 1280 --cfg cfg/training/yolov7-w6.yaml --weights '' --name yolov7-w6 --hyp data/hyp.scratch.p6.yaml
         self.TRAIN_YOLOV7_e6e=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7-e6e.sh')
         f=open(self.TRAIN_YOLOV7_e6e,'w')
         f.writelines('cd {} \n'.format(self.yolov7_path))
         self.last_weights_path_yolov7_e6e=os.path.join(os.path.dirname(self.data_path),'yolov7-e6e/weights/last.pt')
         if os.path.exists(self.last_weights_path_yolov7_e6e)==False:
-            f.writelines("python3 train_aux.py --workers 8 --device 0 --batch-size 2 --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6e,self.yolov7_path_name_e6e,self.yolov7_path_hyp_e6e))
+            f.writelines("python3 train_aux.py --workers 8 --device 0 --batch-size 2 --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6e,self.yolov7_path_name_e6e,self.yolov7_path_hyp_e6e,self.epochs_yolov7_e6e))
         else:
-            f.writelines("python3 train_aux.py --workers 8 --device 0 --batch-size 2 --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs 40\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6e,self.last_weights_path_yolov7_e6e,self.yolov7_path_name_e6e,self.yolov7_path_hyp_e6e))           
+            f.writelines("python3 train_aux.py --workers 8 --device 0 --batch-size 2 --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6e,self.last_weights_path_yolov7_e6e,self.yolov7_path_name_e6e,self.yolov7_path_hyp_e6e,self.epochs_yolov7_e6e))           
 
         f.close()
 
     def create_train_bash_yolov7_re(self):
         #python train_aux.py --workers 8 --device 0 --batch-size 16 --data data/coco.yaml --img 1280 1280 --cfg cfg/training/yolov7-w6.yaml --weights '' --name yolov7-w6 --hyp data/hyp.scratch.p6.yaml
+        self.epochs_yolov7_re=self.epochs_yolov7_re_VAR.get()
         self.TRAIN_YOLOV7_re=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7.sh')
         f=open(self.TRAIN_YOLOV7_re,'w')
         f.writelines('cd {} \n'.format(self.yolov7_path))
@@ -1840,9 +1951,9 @@ class yolo_cfg:
         else:
             batch_size=8
         if os.path.exists(self.last_weights_path_yolov7_re)==False:
-            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs 40\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re))
+            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re,self.epochs_yolov7_re))
         else:
-            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs 40\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.last_weights_path_yolov7_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re))           
+            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.last_weights_path_yolov7_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re,self.epochs_yolov7_re))           
         f.close()
 
     def create_test_bash_mp4_yolov7(self):
@@ -2526,6 +2637,26 @@ class yolo_cfg:
                 f_new.append(prefix_i+"="+str(prefix_i_value)+'\n')               
             prefix_save=_platform+'_'+self.prefix_foldername+'_SAVED_SETTINGS'
             f_new.append('YOLO_MODEL_PATH=r"{}"\n'.format(os.path.join(self.base_path_OG,self.prefix_foldername)))
+            # try:
+            #     self.ITERATION_NUM=DEFAULT_SETTINGS.ITERATION_NUM
+            # except:
+            #     self.ITERATION_NUM=2000
+            # try:
+            #     self.epochs_yolov7=DEFAULT_SETTINGS.epochs_yolov7
+            # except:
+            #     self.epochs_yolov7=40
+            # try:
+            #     self.epochs_yolov7_re=DEFAULT_SETTINGS.epochs_yolov7_re
+            # except:
+            #     self.epochs_yolov7_re=40
+            # try:
+            #     self.epochs_yolov7_e6e=DEFAULT_SETTINGS.epochs_yolov7_e6e
+            # except:
+            #     self.epochs_yolov7_e6e=40
+            f_new.append('ITERATION_NUM={}\n'.format(self.ITERATION_NUM_VAR.get()))
+            f_new.append('epochs_yolov7={}\n'.format(self.epochs_yolov7_VAR.get()))
+            f_new.append('epochs_yolov7_re={}\n'.format(self.epochs_yolov7_re_VAR.get()))        
+            f_new.append('epochs_yolov7_e6e={}\n'.format(self.epochs_yolov7_e6e_VAR.get()))   
             f=open('{}.py'.format(os.path.join(save_root,prefix_save.replace('-','_'))),'w')
             wrote=[f.writelines(w) for w in f_new]
             f.close()
@@ -2600,6 +2731,7 @@ class yolo_cfg:
     def read_XML(self,anno,i,count):
         #print('LENGTH OF DF: ',len(self.df))
         #for anno in tqdm(os.listdir(self.path_Annotations)):
+        label='None'
         if anno[0]!='.' and anno.find('.xml')!=-1:
             img_i_name=anno.split('.xml')[0]
             path_anno_i=os.path.join(self.path_Annotations,img_i_name+'.xml')
@@ -2700,7 +2832,13 @@ class yolo_cfg:
             Thread(target=self.copy_files,args=(path_anno_i,path_anno_dest_xml_i,)).start()
             return i,count
 
+
+
     def popupWindow_TRAIN(self):
+        try:
+            self.top.destroy()
+        except:
+            pass
         self.top=tk.Toplevel(self.root)
         self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
         self.top.configure(background = 'black')
@@ -2727,6 +2865,10 @@ class yolo_cfg:
         self.train_yolov7_e6e()
 
     def popupWindow_TEST(self):
+        try:
+            self.top.destroy()
+        except:
+            pass
         self.top=tk.Toplevel(self.root)
         self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
         self.top.configure(background = 'black')
@@ -2763,6 +2905,10 @@ class yolo_cfg:
         self.test_yolov7_mAP_e6e()
 
     def cleanup(self):
+        self.ITERATION_NUM_VAR.get()
+        self.epochs_yolov7_VAR.get()
+        self.epochs_yolov7_re_VAR.get()      
+        self.epochs_yolov7_e6e_VAR.get()
         self.top.destroy()
     def convert_PascalVOC_to_YOLO(self):
         self.found_names={}
