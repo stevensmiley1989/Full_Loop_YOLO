@@ -17,11 +17,13 @@ tensorflow-yolov4-tflite installed from (https://github.com/stevensmiley1989/ten
 
 Change your DEFAULT_SETTINGS path (located at libs/DEFAULT_SETTINGS.py) to point to your installed Darknet path for use.  
 
-Change your yolov7 path (located at libs/yolov7_path.py) to point to your installed yolov7 path for use. 
+Change your yolov7 path (located at libs/yolov7_path.py) to point to your installed yolov7 path for use.  NOT REQUIRED.
 
 Change your tensorflow-yolov4-tflite path (located at libs/tensorflow_yolov4_tflite_path.py) to point to your installed path for use.  NOT REQUIRED.
 
 Change your labelImg path (located at libs/labelImg_path.py) to point to your installed path for use.  NOT REQUIRED.
+
+Change your MOSAIC_Chip_Sorter path (located at libs/MOSAIC_Chip_Sorter_path.py) to point to your installed MOSAIC_Chip_Sorter path for use. NOT REQUIRED.
 
 Ensure you put the yolov4-tiny.conv.29 weights in your Darknet path.  You can get these weights from:
 https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
@@ -64,6 +66,16 @@ Yolov7
 
 ~~~~~~~
 
+MOSAIC_Chip_Sorter
+.. code:: shell
+    cd ~/
+    git clone https://github.com/stevensmiley1989/MOSAIC_Chip_Sorter.git
+    cd MOSAIC_Chip_Sorter
+    pip3 install -r requirements.txt #you might need to adjust things manually, see repo of MOSAIC_Chip_Sorter for more info 
+~~~~~~~
+
+~~~~~~~
+
 tensorflow-yolov4-tflite
 .. code:: shell
     cd ~/
@@ -97,7 +109,10 @@ Python 3 + Tkinter
     cd ~/Full_Loop_YOLO
     pip3 install -r requirements.txt
     nano libs/DEFAULT_SETTINGS.py #edit the path for darknet to your installed path above
+    nano libs/tensorflow_yolov4_tflite_path.py #edit the path for your installed path above
     nano libs/yolov7_path.py #edit the path for yolov7 to your installed path above
+    nano libs/labelImg_path.py #edit the path for labelImg to your installed path above
+    nano libs/MOSAIC_Chip_Sorter_path.py #edit the path for MOSAIC_Chip_Sorter path above
     python3 Full_Loop_YOLO.py
 ~~~~~~~
 
