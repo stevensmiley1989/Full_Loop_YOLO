@@ -1669,16 +1669,18 @@ class yolo_cfg:
 
     def open_MOSAIC(self):
         from libs import MOSAIC_Chip_Sorter_path
+        from multiprocessing import Process
         self.path_MOSAIC=MOSAIC_Chip_Sorter_path.path
         self.PYTHON_PATH="python3"
         if os.path.exists(self.path_MOSAIC):
             self.cmd_i='cd {};{} "{}" --path_Annotations "{}" --path_JPEGImages "{}"'.format(os.path.dirname(self.path_MOSAIC),self.PYTHON_PATH ,self.path_MOSAIC,self.path_Annotations,self.path_JPEGImages)
-            self.MOSAIC=Thread(target=self.run_cmd,args=(self.cmd_i,)).start()
+            self.MOSAIC=Process(target=self.run_cmd,args=(self.cmd_i,)).start()
         else:
             self.popup_text='Please provide a valid MOSAIC_Chip_Sorter.py path. \n  Current path is: {}'.format(self.path_MOSAIC)
 
     def open_labelImg(self):
         from libs import labelImg_path
+        from multiprocessing import Process
         self.path_labelImg=labelImg_path.path
         self.path_labelImg_predefined_classes_file=os.path.join(os.path.dirname(self.names_path),'predefined_classes.txt')
         shutil.copy(self.names_path,self.path_labelImg_predefined_classes_file)
@@ -1687,7 +1689,7 @@ class yolo_cfg:
         self.PYTHON_PATH="python3"
         if os.path.exists(self.path_labelImg):
             self.cmd_i='{} "{}" "{}" "{}" "{}"'.format(self.PYTHON_PATH ,self.path_labelImg,self.path_labelImg_image_dir,self.path_labelImg_predefined_classes_file,self.path_labelImg_save_dir)
-            self.labelImg=Thread(target=self.run_cmd,args=(self.cmd_i,)).start()
+            self.labelImg=Process(target=self.run_cmd,args=(self.cmd_i,)).start()
         else:
             self.popup_text='Please provide a valid labelImg.py path. \n  Current path is: {}'.format(self.path_labelImg)
 
