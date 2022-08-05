@@ -41,6 +41,7 @@ Python 3 + Tkinter + Darknet YOLO
     python3 Full_Loop_YOLO.py
 ~~~~~~~
 '''
+from pandastable import Table, TableModel
 import os
 from pprint import pprint
 import sys
@@ -80,6 +81,14 @@ from resources import create_imgs_from_video
 import socket
 global return_to_main
 return_to_main=True
+class TestApp(tk.Frame):
+    def __init__(self, parent, filepath):
+        super().__init__(parent)
+        self.table = Table(self, showtoolbar=True, showstatusbar=True)
+        self.table.importCSV(filepath)
+        #self.table.load(filepath)
+        #self.table.resetIndex()
+        self.table.show()
 
 #switch_basepath.switch_scripts()
 def get_default_settings(SAVED_SETTINGS='SAVED_SETTINGS'):
@@ -138,6 +147,7 @@ class main_entry:
         self.icon_test_mp4=ImageTk.PhotoImage(Image.open('resources/icons/test_mp4.png'))
         self.icon_test_images=ImageTk.PhotoImage(Image.open('resources/icons/test_images.png'))
         self.icon_test=ImageTk.PhotoImage(Image.open('resources/icons/test.png'))
+        self.icon_MOSAIC=ImageTk.PhotoImage(Image.open('resources/icons/appM_icon.png'))
         self.list_script_path='resources/list_of_scripts/list_of_scripts.txt'
         self.style4=ttk.Style()
         self.style4.configure('Normal.TCheckbutton',
@@ -441,22 +451,27 @@ class yolo_cfg:
         self.XML_EXT=DEFAULT_SETTINGS.XML_EXT
         self.JPG_EXT=DEFAULT_SETTINGS.JPG_EXT
         self.COLOR=DEFAULT_SETTINGS.COLOR
+        print('SAVED SETTINGS PATH: \n',SAVED_SETTINGS_PATH)
         try:
             self.ITERATION_NUM=DEFAULT_SETTINGS.ITERATION_NUM
         except:
             self.ITERATION_NUM=2000
+        print('ITERATION_NUM={}\n'.format(self.ITERATION_NUM))
         try:
             self.epochs_yolov7=DEFAULT_SETTINGS.epochs_yolov7
         except:
             self.epochs_yolov7=40
+        print('epochs_yolov7={}\n'.format(self.epochs_yolov7))
         try:
             self.epochs_yolov7_re=DEFAULT_SETTINGS.epochs_yolov7_re
         except:
             self.epochs_yolov7_re=40
+        print('epochs_yolov7_re={}\n'.format(self.epochs_yolov7_re))
         try:
             self.epochs_yolov7_e6e=DEFAULT_SETTINGS.epochs_yolov7_e6e
         except:
             self.epochs_yolov7_e6e=40
+        print('epochs_yolov7_e6e={}\n'.format(self.epochs_yolov7_e6e))
         self.epochs_yolov7_e6e_VAR=tk.StringVar()
         self.epochs_yolov7_e6e_VAR.set(self.epochs_yolov7_e6e)
         
@@ -528,6 +543,7 @@ class yolo_cfg:
         self.icon_test_mp4=ImageTk.PhotoImage(Image.open('resources/icons/test_mp4.png'))
         self.icon_test_images=ImageTk.PhotoImage(Image.open('resources/icons/test_images.png'))
         self.icon_test=ImageTk.PhotoImage(Image.open('resources/icons/test.png'))
+        self.icon_MOSAIC=ImageTk.PhotoImage(Image.open('resources/icons/appM_icon.png'))
 
         self.root_H=int(self.root.winfo_screenheight()*0.95)
         self.root_W=int(self.root.winfo_screenwidth()*0.95)
@@ -694,6 +710,10 @@ class yolo_cfg:
     def TRAIN_BUTTONS(self):
         self.popup_TRAIN_button=Button(self.root,text='TRAIN Script Buttons',command=self.popupWindow_TRAIN,bg=self.root_fg,fg=self.root_bg)
         self.popup_TRAIN_button.grid(row=12,column=2,sticky='sw')
+
+    def SHOWTABLE_BUTTONS(self):
+        self.popup_SHOWTABLE_button=Button(self.root,text='Show df',command=self.popupWindow_showtable,bg=self.root_fg,fg=self.root_bg)
+        self.popup_SHOWTABLE_button.grid(row=14,column=2,sticky='sw')
 
     def return_to_main(self):
         global return_to_main
@@ -1321,6 +1341,7 @@ class yolo_cfg:
         self.create_test_bash_dnn_rtmp()
         self.remaining_buttons()
         self.labelImg_buttons()
+        self.MOSAIC_buttons()
 
 
     def remaining_buttons(self):
@@ -1352,6 +1373,7 @@ class yolo_cfg:
         self.remaining_buttons_clicked=True
         self.TRAIN_BUTTONS()
         self.TEST_BUTTONS()
+        self.SHOWTABLE_BUTTONS()
         #self.test_yolo()
         #self.test_yolo_predict()
         #self.test_yolo_predict_mAP()
@@ -1484,7 +1506,10 @@ class yolo_cfg:
             
         cmd_i=" bash '{}'".format(self.save_cfg_path_train.replace('.cfg','.sh'))
         self.run_cmd(cmd_i)
-        
+
+    def show_table(self):
+        self.app = TestApp(self.top, self.df_filename_csv)
+        self.app.pack(fill=tk.BOTH, expand=1)
         
     def RTSP(self):
         spacer=5
@@ -1632,15 +1657,33 @@ class yolo_cfg:
             self.labelImg_button=Button(self.root,image=self.icon_labelImg,command=self.open_labelImg,bg=self.root_bg,fg=self.root_fg)
             self.labelImg_button.grid(row=9,column=4,sticky='se')
             self.labelImg_button_note=tk.Label(self.root,text='LabelImg',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.labelImg_button_note.grid(row=10,column=4,sticky='ne')           
+            self.labelImg_button_note.grid(row=10,column=4,sticky='ne')    
+
+    def MOSAIC_buttons(self):
+        if os.path.exists('libs/MOSAIC_Chip_Sorter_path.py'):
+
+            self.MOSAIC_button=Button(self.root,image=self.icon_MOSAIC,command=self.open_MOSAIC,bg=self.root_bg,fg=self.root_fg)
+            self.MOSAIC_button.grid(row=9,column=5,sticky='se')
+            self.MOSAIC_button_note=tk.Label(self.root,text='MOSAIC Chip Sorter',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.MOSAIC_button_note.grid(row=10,column=5,sticky='ne')         
+
+    def open_MOSAIC(self):
+        from libs import MOSAIC_Chip_Sorter_path
+        self.path_MOSAIC=MOSAIC_Chip_Sorter_path.path
+        self.PYTHON_PATH="python3"
+        if os.path.exists(self.path_MOSAIC):
+            self.cmd_i='cd {};{} "{}" --path_Annotations "{}" --path_JPEGImages "{}"'.format(os.path.dirname(self.path_MOSAIC),self.PYTHON_PATH ,self.path_MOSAIC,self.path_Annotations,self.path_JPEGImages)
+            self.MOSAIC=Thread(target=self.run_cmd,args=(self.cmd_i,)).start()
+        else:
+            self.popup_text='Please provide a valid MOSAIC_Chip_Sorter.py path. \n  Current path is: {}'.format(self.path_MOSAIC)
 
     def open_labelImg(self):
         from libs import labelImg_path
         self.path_labelImg=labelImg_path.path
         self.path_labelImg_predefined_classes_file=os.path.join(os.path.dirname(self.names_path),'predefined_classes.txt')
         shutil.copy(self.names_path,self.path_labelImg_predefined_classes_file)
-        self.path_labelImg_save_dir=self.path_Yolo
-        self.path_labelImg_image_dir=self.path_Yolo
+        self.path_labelImg_save_dir=self.path_Annotations
+        self.path_labelImg_image_dir=self.path_JPEGImages
         self.PYTHON_PATH="python3"
         if os.path.exists(self.path_labelImg):
             self.cmd_i='{} "{}" "{}" "{}" "{}"'.format(self.PYTHON_PATH ,self.path_labelImg,self.path_labelImg_image_dir,self.path_labelImg_predefined_classes_file,self.path_labelImg_save_dir)
@@ -2864,6 +2907,31 @@ class yolo_cfg:
         #TD TRAIN yolov7 E6E
         self.train_yolov7_e6e()
 
+        
+    
+    def popupWindow_showtable(self):
+        try:
+            self.top.destroy()
+        except:
+            pass
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup_show,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.pack()
+        self.show_table()
+    def cleanup_show(self):
+        self.app.table.saveAs(self.df_filename_csv)
+        print('self.df_filename')
+        print(self.df_filename_csv)
+        df_i=pd.read_csv(self.df_filename_csv,index_col=None)
+        columns=df_i.columns
+        drop_columns=[w for w in columns if w.find('Unnamed')!=-1]
+        df_i.drop(drop_columns,axis=1,inplace=True)
+        df_i.to_pickle(self.df_filename,protocol=2)
+        df_i.to_csv(self.df_filename_csv,index=None)
+        self.top.destroy()
+        
     def popupWindow_TEST(self):
         try:
             self.top.destroy()
@@ -3227,11 +3295,13 @@ if __name__=='__main__':
         root_tk=tk.Tk()
         main_yolo=main_entry(root_tk)
         main_yolo.root.mainloop()
+        del main_yolo
         if PROCEED==True:
             root_tk=tk.Tk()
             my_yolo=yolo_cfg(root_tk,SAVED_SETTINGS_PATH)
             my_yolo.root.mainloop()
             PROCEED=False
+            del my_yolo
 
 
     
