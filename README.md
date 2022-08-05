@@ -101,7 +101,7 @@ Python 3 + Tkinter
     python3 Full_Loop_YOLO.py
 ~~~~~~~
 
-## [YouTube Tutorial](https://youtu.be/3cNyFcDw4ks)
+## [YouTube Tutorial (needs updating for new features 8/5/2022) ](https://youtu.be/3cNyFcDw4ks)
 
 Optional
 ------------------
