@@ -3,11 +3,29 @@ Full_Loop_Yolo
 ========
 Created by Steven Smiley 3/20/2022
 
-Full_Loop_YOLO.py is a wrapper for creating custom darknet YoloV4 tiny & regular sized models on your custom datasets. 
+Full_Loop_YOLO.py is a wrapper for creating custom darknet YoloV4-tiny &amp; regular sized models on your custom datasets.
+Furthermore, you can train and test Yolov7-tiny as of 7/20/2020.  You may also convert your Yolov4-tiny weights to TFLITE with the click of a button.
 
-Darknet should be installed from (https://github.com/AlexeyAB/darknet).
+It is written in Python and uses Tkinter for its graphical interface.
 
-Change your DEFAULT_SETTINGS path to point to your installed Darknet path for use.  
+Prerequisites
+------------------
+
+Darknet (Yolov4) should be installed from (https://github.com/AlexeyAB/darknet).  A version controlled fork is shown in these instructions below.
+
+Yolov7 should be installed from (https://github.com/WongKinYiu/yolov7).  A version controlled fork is shown in these instructions below.
+
+tensorflow-yolov4-tflite installed from (https://github.com/stevensmiley1989/tensorflow-yolov4-tflite) and switched to the smiley_yolov4tiny branch.
+
+Change your DEFAULT_SETTINGS path (located at libs/DEFAULT_SETTINGS.py) to point to your installed Darknet path for use.  
+
+Change your yolov7 path (located at libs/yolov7_path.py) to point to your installed yolov7 path for use.  NOT REQUIRED.
+
+Change your tensorflow-yolov4-tflite path (located at libs/tensorflow_yolov4_tflite_path.py) to point to your installed path for use.  NOT REQUIRED.
+
+Change your labelImg path (located at libs/labelImg_path.py) to point to your installed path for use.  NOT REQUIRED.
+
+Change your MOSAIC_Chip_Sorter path (located at libs/MOSAIC_Chip_Sorter_path.py) to point to your installed MOSAIC_Chip_Sorter path for use. NOT REQUIRED.
 
 Ensure you put the yolov4-tiny.conv.29 weights in your Darknet path.  You can get these weights from:
 https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
@@ -15,29 +33,88 @@ https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4
 Ensure you put the yolov4.conv.137 weights in your Darknet path.  You can get these weights from:
 https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.conv.137
 
+~~~~~~~
 
-It is written in Python and uses Tkinter for its graphical interface.
+Darknet Yolov4
+.. code:: shell
+    cd ~/
+    #git clone https://github.com/AlexeyAB/darknet
+    git clone https://github.com/stevensmiley1989/darknet.git
+    cd darknet
+    git switch smiley #if using smiley branch, this is a version control method
+    make #modify MakeFile before to use cuda
+    wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
+    wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.conv.137
+    
+    #also add to your bashrc file at ~/.bashrc, add the following lines with your cuda paths
+    export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
+    export LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+
+    
+~~~~~~~
+
+
+~~~~~~~
+
+Yolov7
+.. code:: shell
+    cd ~/
+    #git clone https://github.com/WongKinYiu/yolov7.git
+    git clone https://github.com/stevensmiley1989/yolov7.git
+    cd yolov7
+    git switch smiley #if using smiley branch, this is a version control method
+    pip3 install -r requirements.txt #you might need to adjust things manually here for versions of PyTorch    
+~~~~~~~
+
+~~~~~~~
+
+MOSAIC_Chip_Sorter
+.. code:: shell
+    cd ~/
+    git clone https://github.com/stevensmiley1989/MOSAIC_Chip_Sorter.git
+    cd MOSAIC_Chip_Sorter
+    pip3 install -r requirements.txt #you might need to adjust things manually, see repo of MOSAIC_Chip_Sorter for more info 
+~~~~~~~
+
+~~~~~~~
+
+tensorflow-yolov4-tflite
+.. code:: shell
+    cd ~/
+    git clone https://github.com/stevensmiley1989/tensorflow-yolov4-tflite.git
+    cd tensorflow-yolov4-tflite
+    git switch smiley_yolov4tiny #
+    pip3 install -r requirements_smiley_yolov4_tiny_converter.txt #you might need to adjust things manually    
+~~~~~~~
+
+~~~~~~~
+labelImg
+.. code:: shell
+    cd ~/
+    git clone https://github.com/stevensmiley1989/labelImg.git
+    cd labelImg
+    git switch smiley
+    pip3 install -r requirements/requirements-linux-python3.txt #you might need to adjust things manually    
+~~~~~~~
 
 
 Installation
 ------------------
-
-Ubuntu Linux
 ~~~~~~~
 
-Python 3 + Tkinter + Darknet YOLO
-
+Python 3 + Tkinter
 .. code:: shell
     cd ~/
-    git clone https://github.com/AlexeyAB/darknet
-    cd darknet
-    make #modify MakeFile before to use cuda
-    wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
-    wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.conv.137
-
-    cd ../Full_Loop_YOLO
-    sudo pip3 install -r requirements.txt
+    python3 -m venv venv_Full_Loop_YOLO
+    source venv_Full_Loop_YOLO/bin/activate
+    
+    cd ~/Full_Loop_YOLO
+    pip3 install -r requirements.txt
     nano libs/DEFAULT_SETTINGS.py #edit the path for darknet to your installed path above
+    nano libs/tensorflow_yolov4_tflite_path.py #edit the path for your installed path above
+    nano libs/yolov7_path.py #edit the path for yolov7 to your installed path above
+    nano libs/labelImg_path.py #edit the path for labelImg to your installed path above
+    nano libs/MOSAIC_Chip_Sorter_path.py #edit the path for MOSAIC_Chip_Sorter path above
     python3 Full_Loop_YOLO.py
 ~~~~~~~
 '''
