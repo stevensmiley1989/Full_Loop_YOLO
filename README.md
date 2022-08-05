@@ -79,7 +79,7 @@ labelImg
     cd ~/
     git clone https://github.com/stevensmiley1989/labelImg.git
     cd labelImg
-    git switch #
+    git switch smiley
     pip3 install -r requirements/requirements-linux-python3.txt #you might need to adjust things manually    
 ~~~~~~~
 
