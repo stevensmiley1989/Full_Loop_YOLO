@@ -225,6 +225,7 @@ class main_entry:
         self.icon_test_images=ImageTk.PhotoImage(Image.open('resources/icons/test_images.png'))
         self.icon_test=ImageTk.PhotoImage(Image.open('resources/icons/test.png'))
         self.icon_MOSAIC=ImageTk.PhotoImage(Image.open('resources/icons/appM_icon.png'))
+        self.icon_IMGAUG=ImageTk.PhotoImage(Image.open('resources/icons/appI_icon.png'))
         self.list_script_path='resources/list_of_scripts/list_of_scripts.txt'
         self.style4=ttk.Style()
         self.style4.configure('Normal.TCheckbutton',
@@ -621,6 +622,7 @@ class yolo_cfg:
         self.icon_test_images=ImageTk.PhotoImage(Image.open('resources/icons/test_images.png'))
         self.icon_test=ImageTk.PhotoImage(Image.open('resources/icons/test.png'))
         self.icon_MOSAIC=ImageTk.PhotoImage(Image.open('resources/icons/appM_icon.png'))
+        self.icon_IMGAUG=ImageTk.PhotoImage(Image.open('resources/icons/appI_icon.png'))    
 
         self.root_H=int(self.root.winfo_screenheight()*0.95)
         self.root_W=int(self.root.winfo_screenwidth()*0.95)
@@ -957,6 +959,7 @@ class yolo_cfg:
                         self.img_list_path=os.path.join(self.path_predJPEGImages,'img_list.txt')
                     else:
                         print('no img_list.txt here')
+                    self.convert_PascalVOC_to_YOLO_VALID()
 
 
                 if var_i==self.open_yolo_label_var:
@@ -1419,6 +1422,7 @@ class yolo_cfg:
         self.remaining_buttons()
         self.labelImg_buttons()
         self.MOSAIC_buttons()
+        self.IMGAUG_buttons()
 
 
     def remaining_buttons(self):
@@ -1580,7 +1584,7 @@ class yolo_cfg:
                 print('Could not convert epochs desired to cfg')
             self.generate_cfg()
             self.remaining_buttons()
-            
+        self.save_settings()
         cmd_i=" bash '{}'".format(self.save_cfg_path_train.replace('.cfg','.sh'))
         self.run_cmd(cmd_i)
 
@@ -1743,6 +1747,13 @@ class yolo_cfg:
             self.MOSAIC_button.grid(row=9,column=5,sticky='se')
             self.MOSAIC_button_note=tk.Label(self.root,text='MOSAIC Chip Sorter',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.MOSAIC_button_note.grid(row=10,column=5,sticky='ne')         
+    def IMGAUG_buttons(self):
+        if os.path.exists('libs/IMAGE_AUG_GUI_path.py'):
+
+            self.IMGAUG_button=Button(self.root,image=self.icon_IMGAUG,command=self.open_IMGAUG,bg=self.root_bg,fg=self.root_fg)
+            self.IMGAUG_button.grid(row=9,column=6,sticky='se')
+            self.IMGAUG_button_note=tk.Label(self.root,text='IMAGE AUG GUI',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.IMGAUG_button_note.grid(row=10,column=6,sticky='ne') 
 
     def open_MOSAIC(self):
         from libs import MOSAIC_Chip_Sorter_path
@@ -1754,6 +1765,17 @@ class yolo_cfg:
             self.MOSAIC=Process(target=self.run_cmd,args=(self.cmd_i,)).start()
         else:
             self.popup_text='Please provide a valid MOSAIC_Chip_Sorter.py path. \n  Current path is: {}'.format(self.path_MOSAIC)
+
+    def open_IMGAUG(self):
+        from libs import IMAGE_AUG_GUI_path
+        from multiprocessing import Process
+        self.path_IMGAUG=IMAGE_AUG_GUI_path.path
+        self.PYTHON_PATH="python3"
+        if os.path.exists(self.path_IMGAUG):
+            self.cmd_i='cd {};{} "{}" --path_Annotations "{}" --path_JPEGImages "{}"'.format(os.path.dirname(self.path_IMGAUG),self.PYTHON_PATH ,self.path_IMGAUG,self.path_Annotations,self.path_JPEGImages)
+            self.IMGAUG=Process(target=self.run_cmd,args=(self.cmd_i,)).start()
+        else:
+            self.popup_text='Please provide a valid IMAGE_AUG_GUI.py path. \n  Current path is: {}'.format(self.path_IMGAUG)
 
     def open_labelImg(self):
         from libs import labelImg_path
@@ -1790,6 +1812,7 @@ class yolo_cfg:
     def train_yolov7_cmd(self):
         self.create_test_bash_mp4_yolov7()
         self.create_train_bash_yolov7()
+        self.save_settings()
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7)
         self.run_cmd(cmd_i)
 
@@ -1814,6 +1837,7 @@ class yolo_cfg:
     def train_yolov7_e6e_cmd(self):
         self.create_test_bash_mp4_yolov7_e6e()
         self.create_train_bash_yolov7_e6e()
+        self.save_settings()
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_e6e)
         self.run_cmd(cmd_i)
 
@@ -1836,6 +1860,7 @@ class yolo_cfg:
     def train_yolov7_re_cmd(self):
         self.create_test_bash_mp4_yolov7_re()
         self.create_train_bash_yolov7_re()
+        self.save_settings()
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_re)
         self.run_cmd(cmd_i)
 
@@ -2954,6 +2979,57 @@ class yolo_cfg:
             Thread(target=self.copy_files,args=(path_anno_i,path_anno_dest_xml_i,)).start()
             return i,count
 
+    def read_XML_VALID(self,anno):
+        label='None'
+        if anno[0]!='.' and anno.find('.xml')!=-1:
+            img_i_name=os.path.basename(anno).split('.xml')[0]
+            path_anno_i=os.path.join(self.path_predAnnotations,img_i_name+'.xml')
+            path_jpeg_i=os.path.join(self.path_predJPEGImages,img_i_name+'.jpg')
+            if os.path.exists(path_anno_i) and os.path.exists(path_jpeg_i):
+                path_anno_dest_xml_i=os.path.join(self.path_predYolo,img_i_name+'.xml')
+                path_anno_dest_i=os.path.join(self.path_predYolo,img_i_name+'.txt')
+                path_jpeg_dest_i=os.path.join(self.path_predYolo,img_i_name+'.jpg')
+                f=open(path_anno_i,'r')
+                f_read=f.readlines()
+                f.close()
+                f=open(path_anno_dest_i,'w')
+                f.close()
+
+                parser = etree.XMLParser(encoding=ENCODE_METHOD)
+                xmltree = ElementTree.parse(path_anno_i, parser=parser).getroot()
+                filename = xmltree.find('filename').text
+                for size_iter in xmltree.findall('size'):
+                    width_i=int(size_iter.find('width').text)
+                    height_i=int(size_iter.find('height').text)
+                    depth_i=int(size_iter.find('depth').text)
+                    imgSize=tuple([height_i,width_i,depth_i])
+                num_objs=[w for w in f_read if w.find('object')!=-1]
+                num_objs=len(num_objs)
+                if num_objs==0:
+                    print('No objects found')
+                else:
+                    for object_iter in xmltree.findall('object'):
+                        bndbox = object_iter.find("bndbox")
+                        label = object_iter.find('name').text
+                        if label not in self.found_names.keys():
+                            print('Did not see this label {}\n'.format(label))
+                            if label.replace('augmentation_','') in self.found_names.keys():
+                                print('Removing the augmentation_ from the label found')
+                                label=label.replace('augmentation_','')
+                            else:
+                                print('ERROR FOUND WITH LABEL')
+                                self.ERROR_FOUND=True
+                            
+                        xmin = int(float(bndbox.find('xmin').text))
+                        ymin = int(float(bndbox.find('ymin').text))
+                        xmax = int(float(bndbox.find('xmax').text))
+                        ymax = int(float(bndbox.find('ymax').text))
+                        if self.ERROR_FOUND==False:
+                            self.write_Yolo(xmin,xmax,ymin,ymax,imgSize,self.found_names[label],path_anno_dest_i,)
+
+                    
+                Thread(target=self.copy_files,args=(path_jpeg_i,path_jpeg_dest_i,)).start()
+                Thread(target=self.copy_files,args=(path_anno_i,path_anno_dest_xml_i,)).start()
 
 
     def popupWindow_TRAIN(self):
@@ -3057,6 +3133,40 @@ class yolo_cfg:
         self.epochs_yolov7_re_VAR.get()      
         self.epochs_yolov7_e6e_VAR.get()
         self.top.destroy()
+    def convert_PascalVOC_to_YOLO_VALID(self):
+        self.ERROR_FOUND=False
+        if os.path.exists(str(self.path_predJPEGImages)):
+            self.path_predAnnotations=self.path_predJPEGImages.replace('JPEGImages','Annotations')
+            if os.path.exists(self.path_predAnnotations):
+                print('FOUND PREDICTION ANNOTATIONS DIRECTORY')
+                self.path_predYolo=os.path.join(os.path.dirname(self.path_predAnnotations),'Yolo_Objs')
+                if os.path.exists(self.path_predYolo)==False:
+                    os.makedirs(self.path_predYolo)
+                #self.Yolo_pred_stuff=os.listdir(self.path_Yolo_pred)
+                self.predAnnos=os.listdir(self.path_predAnnotations)
+                self.predAnnos=[os.path.join(self.path_predAnnotations,w) for w in self.predAnnos]
+                self.predJPEGs=os.listdir(self.path_predJPEGImages)
+                self.predJPEGs=[os.path.join(self.path_predJPEGImages,w) for w in self.predJPEGs]
+                #tmp=[shutil.copy(os.path.join(self.path_predAnnotations,w),self.path_predYolo) for w in self.predAnnos]
+                #tmp=[shutil.copy(os.path.join(self.path_predJPEGImages,w),self.path_predYolo) for w in self.predJPEGs]
+                #self.found_names
+                for anno in tqdm(self.predAnnos):
+                    self.read_XML_VALID(anno)
+                    if self.ERROR_FOUND==True:
+                        break
+                if self.ERROR_FOUND==False:                
+                    self.predYolo=os.listdir(self.path_predYolo)
+                    self.VAL_LIST=[os.path.join(self.path_predYolo,w) for w in self.predYolo if w.find('.jpg')!=-1]
+                    f=open(self.valid_list_path,'w')
+                    done=[f.writelines(line+'\n') for line in self.VAL_LIST]
+                    f.close()
+                    self.img_list_path=self.valid_list_path
+                else:
+                    print('ERROR was found with given label in annotation, you can only predict off the images without metrics')
+            else:
+                print('No Annotations directory found with JPEGImages directory')
+        else:
+            print('ERROR, JPEGImages directory does NOT exist')
     def convert_PascalVOC_to_YOLO(self):
         self.found_names={}
         i=0
