@@ -25,6 +25,8 @@ Change your labelImg path (located at libs/labelImg_path.py) to point to your in
 
 Change your MOSAIC_Chip_Sorter path (located at libs/MOSAIC_Chip_Sorter_path.py) to point to your installed MOSAIC_Chip_Sorter path for use. NOT REQUIRED.
 
+Change your IMAGE_AUG_GUI path (located at libs/IMAGE_AUG_GUI_path.py) to point to your installed IMAGE_AUG_GUI path for use. NOT REQUIRED.
+
 Ensure you put the yolov4-tiny.conv.29 weights in your Darknet path.  You can get these weights from:
 https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
 
@@ -95,6 +97,14 @@ labelImg
     pip3 install -r requirements/requirements-linux-python3.txt #you might need to adjust things manually    
 ~~~~~~~
 
+~~~~~~~
+IMAGE_AUG_GUI
+.. code:: shell
+    cd ~/
+    git clone https://github.com/stevensmiley1989/IMAGE_AUG_GUI.git
+    cd IMAGE_AUG_GUI
+    pip3 install -r requirements.txt #you might need to adjust things manually
+~~~~~~~
 
 Installation
 ------------------
@@ -113,6 +123,7 @@ Python 3 + Tkinter
     nano libs/yolov7_path.py #edit the path for yolov7 to your installed path above
     nano libs/labelImg_path.py #edit the path for labelImg to your installed path above
     nano libs/MOSAIC_Chip_Sorter_path.py #edit the path for MOSAIC_Chip_Sorter path above
+    nano libs/IMAGE_AUG_GUI_path.py #edit the path for IMAGE_AUG_GUI path above
     python3 Full_Loop_YOLO.py
 ~~~~~~~
 
