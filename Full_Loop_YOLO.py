@@ -1100,6 +1100,10 @@ class yolo_cfg:
         self.width=self.width.split('=')[0]+'='+str(width)+'\n'
     def update_max_batches(self,max_batches):
         self.max_batches=self.max_batches.split('=')[0]+'='+str(max_batches)+'\n'
+        try:
+            self.epochs=int(self.max_batches.replace('\n','').strip().split('=')[1])//self.iterations_per_epoch
+        except:
+            self.epochs=40
     def load_cfg(self):
         self.update_paths(False)
         self.save_cfg_path_train=self.save_cfg_path.replace('.cfg','_train.cfg')
@@ -2025,7 +2029,11 @@ class yolo_cfg:
         f=open(self.train_list_path,'r')
         self.dataset=len(f.readlines()) # number of samples in training dataset
         f.close()
+        print('number of training examples = {}'.format(self.dataset))
         self.iterations_per_epoch=self.dataset//int(self.batch.replace('\n','').strip().split('=')[1])
+        self.iterations_per_epoch=max(1,self.iterations_per_epoch)
+        print('number of iterations_per_epoch = {}'.format(self.iterations_per_epoch))
+        print('self.max_batches={}'.format(self.max_batches))
         self.epochs=int(self.max_batches.replace('\n','').strip().split('=')[1])//self.iterations_per_epoch
         self.epochs_yolov4_output=os.path.join(os.path.dirname(self.best_weights_path),'EPOCHS_YoloV4.txt')
         f=open(self.epochs_yolov4_output,'w')
@@ -2728,13 +2736,15 @@ class yolo_cfg:
             sample_fo_read=sample_fo.readlines()
             sample_fo.close()
 
-            self.result_list_path=os.path.join(self.base_path,'obj'+os.path.dirname(os.path.dirname(sample_fo_read[0].replace('\n','').strip())).replace('/','_').rstrip('/').lstrip('/')+'_THRESH{}__IOU{}__POINTS{}_results.txt'.format(str(self.THRESH).replace('.','p'),str(self.IOU_THRESH).replace('.','p'),str(self.POINTS).replace('.','p')))
+
         else:
             f.writelines('path_test_list_txt='+str(self.img_list_path)+'\n')
+            print('self.img_list_path',self.img_list_path)
             sample_fo=open(self.img_list_path,'r')
             sample_fo_read=sample_fo.readlines()
             sample_fo.close()
-            self.result_list_path=os.path.join(self.base_path,'obj'+os.path.dirname(os.path.dirname(sample_fo_read[0].replace('\n','').strip())).replace('/','_').rstrip('/').lstrip('/')+'_THRESH{}__IOU{}__POINTS{}_results.txt'.format(str(self.THRESH).replace('.','p'),str(self.IOU_THRESH).replace('.','p'),str(self.POINTS).replace('.','p')))
+        print("sample_fo_read[0]",sample_fo_read[0])
+        self.result_list_path=os.path.join(self.base_path,'obj'+os.path.basename(sample_fo_read[0].split('.')[0].replace('\n','').strip())).replace('/','_').rstrip('/').lstrip('/')+'_THRESH{}__IOU{}__POINTS{}_results.txt'.format(str(self.THRESH).replace('.','p'),str(self.IOU_THRESH).replace('.','p'),str(self.POINTS).replace('.','p'))
         f.writelines('path_result_list_txt='+str(self.result_list_path)+'\n')
         f.writelines('thresh='+str(self.THRESH)+'\n')
         f.writelines('iou_thresh='+str(self.IOU_THRESH)+'\n')
@@ -3027,8 +3037,8 @@ class yolo_cfg:
                         if self.ERROR_FOUND==False:
                             self.write_Yolo(xmin,xmax,ymin,ymax,imgSize,self.found_names[label],path_anno_dest_i,)
 
-                    
-                Thread(target=self.copy_files,args=(path_jpeg_i,path_jpeg_dest_i,)).start()
+                if os.path.exists(path_jpeg_dest_i)==False:
+                    Thread(target=self.copy_files,args=(path_jpeg_i,path_jpeg_dest_i,)).start()
                 Thread(target=self.copy_files,args=(path_anno_i,path_anno_dest_xml_i,)).start()
 
 
@@ -3150,12 +3160,16 @@ class yolo_cfg:
                 #tmp=[shutil.copy(os.path.join(self.path_predAnnotations,w),self.path_predYolo) for w in self.predAnnos]
                 #tmp=[shutil.copy(os.path.join(self.path_predJPEGImages,w),self.path_predYolo) for w in self.predJPEGs]
                 #self.found_names
+                for jpg_i in tqdm(self.predJPEGs):
+                    shutil.copy(jpg_i,self.path_predYolo)
                 for anno in tqdm(self.predAnnos):
                     self.read_XML_VALID(anno)
                     if self.ERROR_FOUND==True:
                         break
+
                 if self.ERROR_FOUND==False:                
                     self.predYolo=os.listdir(self.path_predYolo)
+
                     self.VAL_LIST=[os.path.join(self.path_predYolo,w) for w in self.predYolo if w.find('.jpg')!=-1]
                     f=open(self.valid_list_path,'w')
                     done=[f.writelines(line+'\n') for line in self.VAL_LIST]
