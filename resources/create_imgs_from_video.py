@@ -63,8 +63,8 @@ def create_imgs_from_video(path_movie=None,fps='1/2'):
             os.makedirs(Annotations_path_desired)
         else:
             #os.system('mv {} {}'.format(Annotations_path,Annotations_path+'_backup_{}'.format(time_i)))
-            Annotations_path=Annotations_path+'_'+time_i
-            os.makedirs(Annotations_path)
+            Annotations_path_desired=Annotations_path_desired+'_'+time_i
+            os.makedirs(Annotations_path_desired)
 
 
         #os.system('ffmpeg -i {} -qscale:v 2 -vf fps={} {}/{}_fps{}_%08d.jpg'.format(path_movie,fps,JPEGImages_path,movie_i_name,fps.replace('/','d').replace('.','p')))
@@ -76,12 +76,14 @@ def create_imgs_from_video(path_movie=None,fps='1/2'):
             frame_count_i=int(frame.split('frame')[1].split('.jpg')[0])
             actual_frames_dic[frame_count_i]=frame
         od = collections.OrderedDict(sorted(actual_frames_dic.items()))
-        counter=0
+        counter=0.0
         desired_frames=[]
         last_frame=max(od.keys())
+        frames_every=float(actual_video_fps)/eval(fps)
         for frame, frame_path in tqdm(od.items()):
-            if (60*frame-counter)>=60/eval(fps):
-                counter+=60*frame
+            counter+=1
+            if counter>frames_every:
+                counter=0
                 desired_frames.append(frame_path)
                 shutil.move(frame_path,JPEGImages_path_desired)
             elif frame==1 or frame==last_frame:
