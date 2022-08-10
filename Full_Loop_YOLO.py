@@ -529,6 +529,22 @@ class yolo_cfg:
         self.XML_EXT=DEFAULT_SETTINGS.XML_EXT
         self.JPG_EXT=DEFAULT_SETTINGS.JPG_EXT
         self.COLOR=DEFAULT_SETTINGS.COLOR
+        self.destination_list_file="destination_list.txt"
+        self.PHONE_VAR=tk.StringVar()
+        self.sec=tk.StringVar()
+        self.sec.set('n')
+        if os.path.exists(self.destination_list_file):
+            f=open(self.destination_list_file,'r')
+            f_read=f.readlines()
+            f.close()
+            self.destination_list=[w.replace('\n','') for w in f_read]
+        else:
+            self.destination_list=["XXXYYYZZZZ@mms.att.net"]
+            f=open(self.destination_list_file,'w')
+            tmp=[f.writelines(w+'\n') for w in self.destination_list]
+            f.close()
+        self.phone_dic_trigger={}
+        self.phone_dic_trigger_var={}
         print('SAVED SETTINGS PATH: \n',SAVED_SETTINGS_PATH)
         try:
             self.ITERATION_NUM=DEFAULT_SETTINGS.ITERATION_NUM
@@ -1228,6 +1244,46 @@ class yolo_cfg:
         print('generated cfg files for test: \n {}'.format(self.save_cfg_path_test))
         self.initial_buttons()
 
+    def show_numbers(self):
+        print(self.destination_list)
+        self.popupWindow_phones()
+    def cleanup_phones(self):
+        try:
+            self.top.destroy()
+        except:
+            pass
+    def popupWindow_phones(self):
+        self.cleanup_phones()
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry("{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)))
+        self.top.title('Phone Numbers to Send')
+        self.top.configure(background='black')
+        self.b=tk.Button(self.top,text='Close',command=self.cleanup,bg='green',fg='black')
+        self.b.grid(row=0,column=0,stick='se')
+        self.ADD_PHONE_entry=tk.Entry(self.top,textvariable=self.PHONE_VAR)
+        self.ADD_PHONE_entry.grid(row=1,column=2,sticky='sw')
+        self.ADD_PHONE_label=tk.Label(self.top,text='Add Phone Number for Alerts',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.ADD_PHONE_label.grid(row=2,column=2,sticky='nw')
+        self.ADD_PHONE_Button=tk.Button(self.top,text='Add',command=self.submit_number,bg=self.root_bg,fg=self.root_fg)
+        self.ADD_PHONE_Button.grid(row=3,column=2,sticky='nw')
+        self.label_note=tk.Label(self.top,text='{}'.format("Phone Numbers"),bg='black',fg='green',font=("Arial 20 underline"))
+        self.label_note.grid(row=1,column=1,sticky='s')
+        self.phone_dic_trigger={}
+        self.phone_dic_trigger_var={}
+        for i,phone_i in enumerate(self.destination_list):
+            self.phone_dic_trigger_var[i]=tk.StringVar()
+            self.phone_dic_trigger_var[i].set(phone_i)
+            self.phone_dic_trigger[i]=tk.Checkbutton(self.top,text='{}'.format(phone_i),variable=self.phone_dic_trigger_var[i],onvalue=phone_i,offvalue='None',bg=self.root_bg,fg='blue')
+            self.phone_dic_trigger[i].grid(row=i+2,column=1,sticky='n')
+    def submit_number(self):
+        new_phone=self.PHONE_VAR.get()
+        if new_phone not in self.destination_list:
+            self.destination_list.append(new_phone)
+        f=open(self.destination_list_file,'w')
+        tmp=[f.writelines(w+'\n') for w in self.destination_list]
+        f.close()
+        self.popupWindow_phones()
+
     def initial_buttons(self):
         if self.basepath_now_selected==True:
             self.open_basepath_now_note.destroy()
@@ -1400,7 +1456,9 @@ class yolo_cfg:
         self.open_anno_label.grid(row=11,column=5,columnspan=50,sticky='sw')
         self.open_anno_selected=True
 
-
+    def send_text_buttons(self):
+        self.ck2=tk.Checkbutton(self.root,text='Send Text Message Alerts',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
+        self.ck2.grid(row=14,column=3,sticky='n')
     def select_yes_no(self,selected):
         if str(selected)=='Yes':
             self.var_overwrite.set('Yes')
@@ -1427,6 +1485,7 @@ class yolo_cfg:
         self.labelImg_buttons()
         self.MOSAIC_buttons()
         self.IMGAUG_buttons()
+        self.send_text_buttons()
 
 
     def remaining_buttons(self):
@@ -2117,9 +2176,31 @@ class yolo_cfg:
         f.writelines('cd {}\n'.format(self.yolov7_path))
         if self.RTSP_SERVER:
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            #else:
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
             else:
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny)
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i)   
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i)
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny))
         f.close()
@@ -2129,10 +2210,33 @@ class yolo_cfg:
         f=open(self.TEST_MP4_YOLOV7_e6e,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
         if self.RTSP_SERVER:
+            #if self.USE_RTSP_VAR.get()=="Yes":
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            #else:
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e))
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
             else:
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e)
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i) 
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i)
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e))
         f.close()
@@ -2144,10 +2248,34 @@ class yolo_cfg:
         f=open(self.TEST_MP4_YOLOV7_re,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
         if self.RTSP_SERVER:
+            #if self.USE_RTSP_VAR.get()=="Yes":
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            #else:
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re))
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
             else:
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re)
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i) 
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i)
+        
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re))
         f.close()
@@ -2158,11 +2286,35 @@ class yolo_cfg:
         self.TEST_WEBCAM_YOLOV7=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7-tiny.sh')
         f=open(self.TEST_WEBCAM_YOLOV7,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
+
         if self.RTSP_SERVER:
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
             else:
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
+                #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny)
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i)
+
+
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i)
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
         f.close()
@@ -2191,10 +2343,33 @@ class yolo_cfg:
         f=open(self.TEST_WEBCAM_YOLOV7_e6e,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
         if self.RTSP_SERVER:
+            #if self.USE_RTSP_VAR.get()=="Yes":
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            #else:
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
             else:
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e)
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i)         
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i)
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
         f.close()
@@ -2223,10 +2398,33 @@ class yolo_cfg:
         f=open(self.TEST_WEBCAM_YOLOV7_re,'w')
         f.writelines('cd {}\n'.format(self.yolov7_path))
         if self.RTSP_SERVER:
+            #if self.USE_RTSP_VAR.get()=="Yes":
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            #else:
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
             else:
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re)
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i) 
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            f.writelines(cmd_i)
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
         f.close()
