@@ -543,6 +543,8 @@ class yolo_cfg:
             f.close()
         self.phone_dic_trigger={}
         self.phone_dic_trigger_var={}
+        self.sleep_time_chips_VAR=tk.StringVar()
+        self.sleep_time_chips_VAR.set('30')
         print('SAVED SETTINGS PATH: \n',SAVED_SETTINGS_PATH)
         try:
             self.ITERATION_NUM=DEFAULT_SETTINGS.ITERATION_NUM
@@ -995,9 +997,37 @@ class yolo_cfg:
         elif yolov4_choice.find('regular')!=-1:
             self.PREFIX=self.PREFIX.replace('tiny','regular')
         self.PREFIX_VAR.set(self.PREFIX)
-        self.WIDTH_NUM=int(self.WIDTH_NUM_VAR.get().strip())
-        self.HEIGHT_NUM=int(self.HEIGHT_NUM_VAR.get().strip())
-        self.num_div=int(self.num_div_VAR.get().strip())
+        try:
+            self.WIDTH_NUM=int(self.WIDTH_NUM_VAR.get().strip())
+        except:
+            print('Sorry but this is an unacceptable value for WIDTH_NUM = {}'.format(self.WIDTH_NUM_VAR.get()))
+            self.WIDTH_NUM_VAR.set(self.WIDTH_NUM)
+        try:
+            self.HEIGHT_NUM=int(self.HEIGHT_NUM_VAR.get().strip())
+        except:
+            print('Sorry but this is an unacceptable value for HEIGHT_NUM = {}'.format(self.HEIGHT_NUM_VAR.get()))
+            self.HEIGHT_NUM_VAR.set(self.HEIGHT_NUM)
+        if self.WIDTH_NUM%32!=0:
+            print('Sorry but {} is not divisible by 32'.format(self.WIDTH_NUM))
+            self.WIDTH_NUM=self.WIDTH_NUM-self.WIDTH_NUM%32 #YOLO must have divisible by 32 for Width and Height 
+            print('Reduced value to {}'.format(self.WIDTH_NUM))
+            self.WIDTH_NUM_VAR.set(self.WIDTH_NUM)
+        if self.HEIGHT_NUM%32!=0:
+            print('Sorry but {} is not divisible by 32'.format(self.HEIGHT_NUM))
+            self.HEIGHT_NUM=self.HEIGHT_NUM-self.HEIGHT_NUM%32 #YOLO must have divisible by 32 for Width and Height 
+            print('Reduced value to {}'.format(self.HEIGHT_NUM))
+            self.HEIGHT_NUM_VAR.set(self.HEIGHT_NUM)
+        try:
+            self.num_div=int(self.num_div_VAR.get().strip())
+        except:
+            print('Sorry but this is an unacceptable value for num_div = {}'.format(self.num_div_VAR.get()))
+            self.num_div_VAR.set(self.num_div)     
+
+        if self.num_div>4:
+            print('Sorry but this is an unacceptable value for num_div = {}'.format(self.num_div_VAR.get()))
+            self.num_div_VAR.set('4')
+            self.num_div=self.num_div_VAR.get()
+      
         self.num_classes=int(self.num_classes_VAR.get().strip())
         self.random=self.random_VAR.get()
         self.ITERATION_NUM=self.ITERATION_NUM_VAR.get()
@@ -1248,6 +1278,12 @@ class yolo_cfg:
         self.popupWindow_phones()
     def cleanup_phones(self):
         try:
+            sleep_time_i=self.sleep_time_chips_VAR.get()
+            float(sleep_time_i) #prove it is able to be floating point
+        except:
+            print('Invalid sleep time of {}\n should be int/float'.format(sleep_time_i))
+            self.sleep_time_chips_VAR.set('30')
+        try:
             self.top.destroy()
         except:
             pass
@@ -1290,6 +1326,12 @@ class yolo_cfg:
             self.sender_label_note.grid(row=1,column=7,sticky='s')
             self.sender_From_Add=tk.Label(self.top,text=self.From_Add,bg='white',fg='blue',font=('Arial 10 bold'))
             self.sender_From_Add.grid(row=2,column=7,columnspan=3,stick='ne')
+        self.sleep_time_entry=tk.Entry(self.top,textvariable=self.sleep_time_chips_VAR)
+        self.sleep_time_entry.grid(row=7,column=2,sticky='sw')
+        self.sleep_time_label=tk.Label(self.top,text='Time Between Alerts (seconds)',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.sleep_time_label.grid(row=8,column=2,sticky='sw')
+        self.update_sleep_Button=tk.Button(self.top,text='Update Sleep Time',command=self.sleep_time_chips_VAR.set(self.sleep_time_chips_VAR.get()),bg=self.root_bg,fg=self.root_fg)
+        self.update_sleep_Button.grid(row=9,column=2,sticky='nw')
 
     def load_sender_credentials(self):
         self.sender_list_file='resources/EMAIL_INFO.py'
@@ -2159,12 +2201,30 @@ class yolo_cfg:
             self.epochs_label=tk.Label(self.root,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_label.grid(row=22,column=0,sticky='ne')
 
+    def popupWindow_ERROR(self,message):
+        try:
+            self.top.destroy()
+        except:
+            pass
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+        self.top.title('ERROR')
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=0,column=0,sticky='se')
+        self.label_Error=tk.Label(self.top,text=message,bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.label_Error.grid(row=1,column=1,sticky='s')
 
 
     def run_create_tflite_bash(self):
-        self.create_tflite_bash()
-        cmd_i=" bash '{}'".format(self.tensorflow_yolov4_tflite_bash_PATH)
-        self.run_cmd(cmd_i)
+        if self.WIDTH_NUM!=self.HEIGHT_NUM:
+            error_msg='WIDTH_NUM != HEIGHT_NUM.  THEY ARE REQUIRED TO BE EQUAL FOR THE CONVERSION.' 
+            print(error_msg)
+            self.popupWindow_ERROR(error_msg)
+        else:
+            self.create_tflite_bash()
+            cmd_i=" bash '{}'".format(self.tensorflow_yolov4_tflite_bash_PATH)
+            self.run_cmd(cmd_i)
 
     def create_train_bash_yolov7(self):
         self.epochs_yolov7=self.epochs_yolov7_VAR.get()
@@ -2228,7 +2288,7 @@ class yolo_cfg:
                     if var_i!='None':
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
-                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i)   
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2238,7 +2298,7 @@ class yolo_cfg:
                     self.destination_list_final=self.destination_list_final+";"+var_i
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny)
-            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i)
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny))
@@ -2264,7 +2324,7 @@ class yolo_cfg:
                     if var_i!='None':
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
-                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i) 
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2274,7 +2334,7 @@ class yolo_cfg:
                     self.destination_list_final=self.destination_list_final+";"+var_i
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e)
-            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i)
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e))
@@ -2302,7 +2362,7 @@ class yolo_cfg:
                     if var_i!='None':
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
-                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i) 
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2312,7 +2372,7 @@ class yolo_cfg:
                     self.destination_list_final=self.destination_list_final+";"+var_i
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re)
-            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i)
         
         else:
@@ -2340,7 +2400,7 @@ class yolo_cfg:
                     if var_i!='None':
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
-                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i)
 
 
@@ -2352,7 +2412,7 @@ class yolo_cfg:
                     self.destination_list_final=self.destination_list_final+";"+var_i
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny)
-            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i)
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
@@ -2397,7 +2457,7 @@ class yolo_cfg:
                     if var_i!='None':
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
-                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i)         
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2407,7 +2467,7 @@ class yolo_cfg:
                     self.destination_list_final=self.destination_list_final+";"+var_i
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e)
-            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i)
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
@@ -2452,7 +2512,7 @@ class yolo_cfg:
                     if var_i!='None':
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
-                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i) 
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2462,7 +2522,7 @@ class yolo_cfg:
                     self.destination_list_final=self.destination_list_final+";"+var_i
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re)
-            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --send_image_to_cell \n'.format(self.destination_list_final)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             f.writelines(cmd_i)
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
@@ -3380,6 +3440,12 @@ class yolo_cfg:
         self.epochs_yolov7_re_VAR.get()      
         self.epochs_yolov7_e6e_VAR.get()
         self.top.destroy()
+        try:
+            sleep_time_i=self.sleep_time_chips_VAR.get()
+            float(sleep_time_i) #prove it is able to be floating point
+        except:
+            print('Invalid sleep time of {}\n should be int/float'.format(sleep_time_i))
+            self.sleep_time_chips_VAR.set('30')
     def convert_PascalVOC_to_YOLO_VALID(self):
         self.ERROR_FOUND=False
         if os.path.exists(str(self.path_predJPEGImages)):
