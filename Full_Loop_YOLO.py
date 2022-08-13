@@ -1253,8 +1253,9 @@ class yolo_cfg:
             pass
     def popupWindow_phones(self):
         self.cleanup_phones()
+        self.load_sender_credentials()
         self.top=tk.Toplevel(self.root)
-        self.top.geometry("{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)))
+        self.top.geometry("{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1),int(self.root.winfo_screenheight()*0.95//1)))
         self.top.title('Phone Numbers/Emails to Send')
         self.top.configure(background='black')
         self.b=tk.Button(self.top,text='Close',command=self.cleanup,bg='green',fg='black')
@@ -1272,13 +1273,41 @@ class yolo_cfg:
         for i,phone_i in enumerate(self.destination_list):
             self.phone_dic_trigger_var[i]=tk.StringVar()
             self.phone_dic_trigger_var[i].set(phone_i)
-            self.phone_dic_trigger[i]=tk.Checkbutton(self.top,text='{}'.format(phone_i),variable=self.phone_dic_trigger_var[i],onvalue=phone_i,offvalue='None',bg=self.root_bg,fg='blue')
+            self.phone_dic_trigger[i]=tk.Checkbutton(self.top,text='{}'.format(phone_i),variable=self.phone_dic_trigger_var[i],onvalue=phone_i,offvalue='None',bg='white',fg='blue')
             self.phone_dic_trigger[i].grid(row=i+2,column=1,sticky='n')
         cmd_i=open_cmd+" '{}'".format(self.destination_list_file)
         self.open_phone=tk.Button(self.top,text='Open Phone/Email List',command=partial(self.run_cmd,cmd_i),bg='green',fg='black')
         self.open_phone.grid(row=1,column=3,stick='se')
         self.load_phone=tk.Button(self.top,text='Load Phone/Email List',command=self.show_numbers,bg='green',fg='black')
         self.load_phone.grid(row=1,column=4,stick='se')
+        if os.path.exists(self.sender_list_file):
+            cmd_i=open_cmd+" '{}'".format(self.sender_list_file)
+            self.open_sender=tk.Button(self.top,text='Open Sender Credentials',command=partial(self.run_cmd,cmd_i),bg='green',fg='black')
+            self.open_sender.grid(row=1,column=5,stick='se')
+            self.load_sender=tk.Button(self.top,text='Load Sender Credentials',command=self.show_numbers,bg='green',fg='black')
+            self.load_sender.grid(row=1,column=6,stick='se')
+            self.sender_label_note=tk.Label(self.top,text='{}'.format("Sender"),bg='black',fg='green',font=("Arial 20 underline"))
+            self.sender_label_note.grid(row=1,column=7,sticky='s')
+            self.sender_From_Add=tk.Label(self.top,text=self.From_Add,bg='white',fg='blue',font=('Arial 10 bold'))
+            self.sender_From_Add.grid(row=2,column=7,columnspan=3,stick='ne')
+
+    def load_sender_credentials(self):
+        self.sender_list_file='resources/EMAIL_INFO.py'
+        self.From_Add='None'
+        self.UserName='None'
+        self.UserPassword='None'
+        if os.path.exists(self.sender_list_file):
+            f=open(self.sender_list_file,'r')
+            f_read=f.readlines()
+            f.close()
+            for line in f_read:
+                if line.find('From_Add')!=-1:
+                    self.From_Add=line.split('=')[1].replace('\n','')
+                if line.find('UserName')!=-1:
+                    self.UserName=line.split('=')[1].replace('\n','')
+                if line.find('UserPassword')!=-1:
+                    self.UserPassword=line.split('=')[1].replace('\n','')
+
     def load_destination_list(self):
         f=open(self.destination_list_file,'r')
         f_read=f.readlines()
