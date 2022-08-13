@@ -16,7 +16,7 @@ target_of_interest='car'
 target_found=False
 path_prefix_elements=r'/media/steven/Elements/'
 path_prefix_mount_mac=r'/media/pi/Elements/'
-path_prefix_volumes_one=r'/Volumes/One Touch/'
+path_prefix_volumes_one=os.getcwd()
 if os.path.exists(path_prefix_elements):
     path_prefix=path_prefix_elements
 elif os.path.exists(path_prefix_mount_mac):
@@ -544,22 +544,26 @@ def do_stuff():
         save_path_jpg="{}/JPEGImages".format(path_save)
         save_path_anno="{}/Annotations".format(path_save)
         save_path_jpg_todo="{}/JPEGImages_todo".format(path_save)
-        try:
-            os.makedirs(save_path)
-        except:
-            pass
-        try:
-            os.makedirs(save_path_jpg)
-        except:
-            pass
-        try:
-            os.makedirs(save_path_jpg_todo)
-        except:
-            pass
-        try:
-            os.makedirs(save_path_anno)
-        except:
-            pass
+        if os.path.exists(save_path)==False:
+            try:
+                os.makedirs(save_path)
+            except:
+                pass
+        if os.path.exists(save_path_jpg)==False:
+            try:
+                os.makedirs(save_path_jpg)
+            except:
+                pass
+        if os.path.exists(save_path_jpg_todo)==False:
+            try:
+                os.makedirs(save_path_jpg_todo)
+            except:
+                pass
+        if os.path.exists(save_path_anno)==False:
+            try:
+                os.makedirs(save_path_anno)
+            except:
+                pass
         try:
                image = videostream.read()
                (H, W) = image.shape[:2]
