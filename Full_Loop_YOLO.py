@@ -2812,9 +2812,30 @@ class yolo_cfg:
         f.writelines('cd {}\n'.format(self.DNN_PATH.replace('yolo_dnn_multi_drone_hdmi.py','')))
         if self.RTSP_SERVER:
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                #f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
             else:
-                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
+                #f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n'
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)  
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n'
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)        
         else:
             f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
         f.close()
@@ -2831,11 +2852,32 @@ class yolo_cfg:
         f.writelines('cd {}\n'.format(self.darknet_path))
         if self.RTSP_SERVER:
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH={} --fps={} --port={} --stream_key={}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))              
+                #f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
             else:
-                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+                #f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n'
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)  
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n'
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)        
         else:
-            f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+            f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
         f.close()
 
     def create_test_bash_dnn_rtmp(self):
@@ -2858,9 +2900,28 @@ class yolo_cfg:
         f.writelines('cd {}\n'.format(self.DNN_PATH.replace('yolo_dnn_multi_drone_hdmi.py','')))
         if self.RTSP_SERVER:
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH={} --fps={} --port={} --stream_key={}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))   
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH={} --fps={} --port={} --stream_key={}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
             else:
-                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No'
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i) 
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No'
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)     
         else:
             f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
         f.close()
@@ -2883,9 +2944,28 @@ class yolo_cfg:
         f.writelines('cd {}\n'.format(self.darknet_path))
         if self.RTSP_SERVER:
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH={} --fps={} --port={} --stream_key={}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))   
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH={} --fps={} --port={} --stream_key={}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
             else:
-                f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No'
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i) 
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No'
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)     
         else:
             f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No')
         f.close()
@@ -2899,8 +2979,9 @@ class yolo_cfg:
         if self.best_weights_path==None:
             self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path_test.replace('_test.cfg',''))+'_train_best.weights')
         f.writelines('best_weights='+str(self.best_weights_path)+'\n')
+        f.writelines('threshold={}\n'.format(self.THRESH_VAR.get()))
         f.writelines('cd {}\n'.format(self.darknet_path))
-        f.writelines('$darknet detector demo $data_path $config_path_test $best_weights -c 0\n')
+        f.writelines('$darknet detector demo $data_path $config_path_test $best_weights -c 0 -thresh $threshold\n')
         f.close()
         #os.system('sudo chmod 777 "{}"'.format(self.save_cfg_path_test.replace('.cfg','.sh')))
 
@@ -2917,7 +2998,7 @@ class yolo_cfg:
         #f.writelines('best_weights='+str(self.best_weights_path)+'\n')
         f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
         f.writelines('cd {}\n'.format(self.darknet_path))
-        f.writelines('$darknet detector demo $data_path $config_path_test $best_weights -c 0\n')
+        f.writelines('$darknet detector demo $data_path $config_path_test $best_weights -c 0 -thresh $threshold\n')
         f.close()
 
     def create_test_bash_mp4(self):
