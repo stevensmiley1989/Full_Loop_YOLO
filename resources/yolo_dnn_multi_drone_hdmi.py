@@ -305,7 +305,14 @@ ap.add_argument("--width",default=None,help="width of incoming images for rtsp_s
 ap.add_argument("--height",default=None,help="height of incoming images for rtsp_server",type=int)
 ap.add_argument("--port",default=8554,help="port for rtsp_server",type=int)
 ap.add_argument("--stream_key",default="/video_stream",help="rtsp image stream uri for rtsp_server")
+ap.add_argument("--send_image_to_cell",action='store_true',help='Should send text messages with chips?')
+ap.add_argument("--send_image_to_cell_path",default="/media/steven/Elements/Full_Loop_YOLO/resources/send_image_to_cell.py",help="Send text message images of chips to cell")
+ap.add_argument("--destinations",type=str,default='XXXYYYZZZZ@mms.att.net',help='phone numbers to send text message updates to')
+ap.add_argument("--basepath_chips",type=str,default="/media/steven/Elements/chips",help="path for chips stored")
+ap.add_argument("--sleep_time_chips",type=float,default=30,help="Seconds to sleep between sending chips")
+ap.add_argument("--using_JETSON_NANO",action='store_true', help='If using Jetson NANO, issues with RET, so want to have this flag to handle it')
 global args
+global send_image_to_cell,send_image_to_cell_path,destinations,basepath_chips,sleep_time_chips
 args = vars(ap.parse_args())
 weightsPath=args['weightsPath']
 labelsPath=args['labelsPath']
@@ -314,6 +321,11 @@ video=args['video']
 imW=args['imW']
 imH=args['imH']
 save=args['save']
+send_image_to_cell=args['send_image_to_cell']
+send_image_to_cell_path=args['send_image_to_cell_path']
+destinations=args['destinations']
+basepath_chips=args['basepath_chips']
+sleep_time_chips=args['sleep_time_chips']
 YOUTUBE_STREAM_KEY = args['YOUTUBE_RTMP']
 YOUTUBE_STREAM_RES = args['YOUTUBE_STREAM_RES']
 imW, imH = int(imW), int(imH)
@@ -434,10 +446,12 @@ class VideoStream:
         else:
             self.stream=cv2.VideoCapture(video)
         #self.stream.set(cv2.CAP_PROP_BUFFERSIZE,3)
-        ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+        if args['using_JETSON_NANO']==False:
+            ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) #if JETSON NANO, Comment out line
         self.stream.set(cv2.CAP_PROP_BUFFERSIZE,3)
-        ret = self.stream.set(3,resolution[0])
-        ret = self.stream.set(4,resolution[1])
+        if args['using_JETSON_NANO']==False:
+            ret = self.stream.set(3,resolution[0]) #if JETSON NANO, Comment out line
+            ret = self.stream.set(4,resolution[1]) #if JETSON NANO, Comment out line
 
         self.resolution=resolution
         self.output_file_path=output_file_path
@@ -495,12 +509,34 @@ window_name='YOLO camera'
 
 def do_stuff():
     global time_found,target_found,myrtmp_addr,running,args,RTSP
-
+    global send_image_to_cell,send_image_to_cell_path,destinations,basepath_chips,sleep_time_chips
+    global total_fps, total_fps_count
+    total_fps=0
+    total_fps_count=0
     th.Thread(target=key_capture_thread,args=(),name='key_capture_thread',daemon=True).start()
     time_last=time.time()
+    #Sending images to cell phone via text/email
+    #send_image_to_cell=opt.send_image_to_cell
+    #send_image_to_cell_path=opt.send_image_to_cell_path
+    #destinations=opt.destinations
+    #basepath_chips=opt.basepath_chips
+    send_allowed=True
+    start_time=time.time()
+    date_i=str(datetime.datetime.now()).replace(' ','_').replace('.','p').replace(':',"c").replace('-','_')
+    if os.path.exists(basepath_chips)==False and send_image_to_cell:
+        if os.path.exists(os.path.dirname(basepath_chips)):
+            os.makedirs(basepath_chips)
+            basepath_chips=os.path.join(basepath_chips,date_i)
+            if os.path.exists(basepath_chips)==False:
+                os.makedirs(basepath_chips)
+        else:
+            send_image_to_cell=False
+            print('You have a bad path to save chips.  Not sending images to cell')
+    elif send_image_to_cell:
+        basepath_chips=os.path.join(basepath_chips,date_i)
+        if os.path.exists(basepath_chips)==False:
+            os.makedirs(basepath_chips)
     while keep_going:
-        
-
         time_start=time.time()
         # load our input image and grab its spatial dimensions
         #image_path="/run/user/1000/gvfs/afc:host=7566645a7797611a80d631cdedfd746643ecb130,port=3/com.holystone.Ophelia-GO/Photo"
@@ -527,8 +563,8 @@ def do_stuff():
         try:
                image = videostream.read()
                (H, W) = image.shape[:2]
-               print('H=',H)
-               print('W=',W)
+               #print('H=',H)
+               #print('W=',W)
                #image=cv2.resize(image,(imW,imH))
                #H=imH
                #W=imW
@@ -537,6 +573,19 @@ def do_stuff():
                # construct a blob from the input image and then perform a forward
                # pass of the YOLO object detector, giving us our bounding boxes and
                # associated probabilities
+
+
+               #Check send chips
+               time_now=time_start
+               if time_now-start_time>sleep_time_chips:
+                send_allowed=True
+                start_time=time_now
+               else:
+                send_allowed=False
+                img_list={}
+                label_list={}
+
+
                blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (imH, imW),
                swapRB=True, crop=False)
                net.setInput(blob)
@@ -545,7 +594,8 @@ def do_stuff():
                end = time.time()
                image_i=str(start).split('.')[0]+'.jpg'
                # show timing information on YOLO
-               print("[INFO] YOLO took {:.6f} seconds".format(end - start))
+               #print("[INFO] YOLO took {:.6f} seconds".format(end - start))
+               
                # initialize our lists of detected bounding boxes, confidences, and
                # class IDs, respectively
                boxes = []
@@ -590,6 +640,12 @@ def do_stuff():
                if len(idxs) > 0:
                    # loop over the indexes we are keeping
                    for i in idxs.flatten():
+                       detection_time_i=str(time_start).replace('.','point')
+                       detection_path_i=os.path.join(basepath_chips,detection_time_i)
+                       detection_path_i_text=os.path.join(detection_path_i,'message_content.txt')
+                       datetime_i=str(datetime.datetime.now())
+                       detection_path_i_full=os.path.join(detection_path_i,'FULL')
+                       im0_og=image.copy()
                        # extract the bounding box coordinates
                        (x, y) = (boxes[i][0], boxes[i][1])
                        (w, h) = (boxes[i][2], boxes[i][3])
@@ -609,6 +665,42 @@ def do_stuff():
                        score_i=confidences[i]
                        bndboxes.append([xmin,ymin,xmax,ymax,score_i])
                        labels_found.append(LABELS[classIDs[i]])
+                       if send_image_to_cell and os.path.exists(send_image_to_cell_path) and send_allowed:
+                        if os.path.exists(detection_path_i)==False:
+                            os.makedirs(detection_path_i)
+                        label = LABELS[classIDs[i]]+" Confidence="+str(score_i)
+                        label_og=label
+                        
+                        label=label.replace(' ','_').replace('.','p').replace(':',"c").replace('-','_')
+                        chip_i=label+".jpg"
+                        chip_i=os.path.join(detection_path_i,chip_i)
+                        label_list[chip_i]=label_og
+                        MARGIN=5
+                        print(im0_og.shape)
+                        xmin=max(xmin-MARGIN,0)
+                        xmax=min(xmax+MARGIN,im0_og.shape[1])
+                        ymin=max(ymin-MARGIN,0)
+                        ymax=min(ymax+MARGIN,im0_og.shape[0])
+                        print('xmin,xmax,ymin,ymax')
+                        print(xmin,xmax,ymin,ymax)
+                        if len(list(im0_og.shape))==3:
+                            img_list[chip_i]=im0_og[ymin:ymax,xmin:xmax,:]
+                            cv2.imwrite(chip_i,im0_og[ymin:ymax,xmin:xmax,:])
+                        elif len(list(im0_og.shape))==2:
+                            img_list[chip_i]=im0_og[ymin:ymax,xmin:xmax]
+                            cv2.imwrite(chip_i,im0_og[ymin:ymax,xmin:xmax])
+                   if send_image_to_cell and os.path.exists(send_image_to_cell_path) and send_allowed and len(img_list)>0:
+                    if os.path.exists(detection_path_i_full)==False:
+                        os.makedirs(detection_path_i_full)
+                    main_message="Targets FOUND"
+                    with open(detection_path_i_text,'w') as f:
+                        f.writelines('Time found == {};\n'.format(datetime_i))
+                    cmd_i='python3 {} --destinations={} --main_message="{}"  --img_path="{}" '.format(send_image_to_cell_path,destinations,main_message,detection_path_i)
+                    print(cmd_i)
+                    Thread(target=run_cmd,args=(cmd_i,)).start()
+                    cv2.imwrite(os.path.join(detection_path_i_full,'Full_Detected.jpg'),image)
+                    cv2.imwrite(os.path.join(detection_path_i_full,'Full_OG.jpg'),im0_og)
+                    send_allowed=False
                else:
                    pass
                if save:
@@ -644,5 +736,11 @@ def do_stuff():
             print('exception found')
             print(traceback.print_exc())
             pass
-        print('LOOP TIME = {} seconds\n'.format(np.round(time.time()-time_start,2)))
+        #print('LOOP TIME = {} seconds\n'.format(np.round(time.time()-time_start,2)))
+        total_time=time.time() - time_start
+        fps_i=(1.0/total_time)
+        total_fps+=fps_i
+        total_fps_count+=1
+        avg_fps=total_fps/total_fps_count
+        print("[INFO] FPS {:.6f}; AVG_FPS {:.6F}".format(fps_i,avg_fps))
 do_stuff()
