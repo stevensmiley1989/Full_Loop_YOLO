@@ -533,11 +533,9 @@ class yolo_cfg:
         self.PHONE_VAR=tk.StringVar()
         self.sec=tk.StringVar()
         self.sec.set('n')
+
         if os.path.exists(self.destination_list_file):
-            f=open(self.destination_list_file,'r')
-            f_read=f.readlines()
-            f.close()
-            self.destination_list=[w.replace('\n','') for w in f_read]
+            self.load_destination_list()
         else:
             self.destination_list=["XXXYYYZZZZ@mms.att.net"]
             f=open(self.destination_list_file,'w')
@@ -797,7 +795,7 @@ class yolo_cfg:
         self.button_yolo_tiny.grid(row=5,column=0,stick='se')
         self.button_yolo_regular=ttk.Radiobutton(text='Yolov4',style='Normal.TRadiobutton',variable=self.var_yolo_choice,value='Yolov4')
         self.button_yolo_regular.grid(row=6,column=0,stick='ne')
-    
+
     def TEST_BUTTONS(self):
         self.popup_TEST_button=Button(self.root,text='TEST Script Buttons',command=self.popupWindow_TEST,bg=self.root_fg,fg=self.root_bg)
         self.popup_TEST_button.grid(row=13,column=2,sticky='sw')
@@ -1245,6 +1243,7 @@ class yolo_cfg:
         self.initial_buttons()
 
     def show_numbers(self):
+        self.load_destination_list()
         print(self.destination_list)
         self.popupWindow_phones()
     def cleanup_phones(self):
@@ -1256,7 +1255,7 @@ class yolo_cfg:
         self.cleanup_phones()
         self.top=tk.Toplevel(self.root)
         self.top.geometry("{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)))
-        self.top.title('Phone Numbers to Send')
+        self.top.title('Phone Numbers/Emails to Send')
         self.top.configure(background='black')
         self.b=tk.Button(self.top,text='Close',command=self.cleanup,bg='green',fg='black')
         self.b.grid(row=0,column=0,stick='se')
@@ -1266,7 +1265,7 @@ class yolo_cfg:
         self.ADD_PHONE_label.grid(row=2,column=2,sticky='nw')
         self.ADD_PHONE_Button=tk.Button(self.top,text='Add',command=self.submit_number,bg=self.root_bg,fg=self.root_fg)
         self.ADD_PHONE_Button.grid(row=3,column=2,sticky='nw')
-        self.label_note=tk.Label(self.top,text='{}'.format("Phone Numbers"),bg='black',fg='green',font=("Arial 20 underline"))
+        self.label_note=tk.Label(self.top,text='{}'.format("Phone Numbers/Emails"),bg='black',fg='green',font=("Arial 20 underline"))
         self.label_note.grid(row=1,column=1,sticky='s')
         self.phone_dic_trigger={}
         self.phone_dic_trigger_var={}
@@ -1275,6 +1274,17 @@ class yolo_cfg:
             self.phone_dic_trigger_var[i].set(phone_i)
             self.phone_dic_trigger[i]=tk.Checkbutton(self.top,text='{}'.format(phone_i),variable=self.phone_dic_trigger_var[i],onvalue=phone_i,offvalue='None',bg=self.root_bg,fg='blue')
             self.phone_dic_trigger[i].grid(row=i+2,column=1,sticky='n')
+        cmd_i=open_cmd+" '{}'".format(self.destination_list_file)
+        self.open_phone=tk.Button(self.top,text='Open Phone/Email List',command=partial(self.run_cmd,cmd_i),bg='green',fg='black')
+        self.open_phone.grid(row=1,column=3,stick='se')
+        self.load_phone=tk.Button(self.top,text='Load Phone/Email List',command=self.show_numbers,bg='green',fg='black')
+        self.load_phone.grid(row=1,column=4,stick='se')
+    def load_destination_list(self):
+        f=open(self.destination_list_file,'r')
+        f_read=f.readlines()
+        f.close()
+        self.destination_list=[w.replace('\n','') for w in f_read]   
+
     def submit_number(self):
         new_phone=self.PHONE_VAR.get()
         if new_phone not in self.destination_list:
@@ -1457,7 +1467,7 @@ class yolo_cfg:
         self.open_anno_selected=True
 
     def send_text_buttons(self):
-        self.ck2=tk.Checkbutton(self.root,text='Send Text Message Alerts',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
+        self.ck2=tk.Checkbutton(self.root,text='Send Text Message/Email Alerts',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
         self.ck2.grid(row=14,column=3,sticky='n')
     def select_yes_no(self,selected):
         if str(selected)=='Yes':
