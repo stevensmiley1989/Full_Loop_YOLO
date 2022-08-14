@@ -314,6 +314,7 @@ ap.add_argument("--using_JETSON_NANO",action='store_true', help='If using Jetson
 global args
 global send_image_to_cell,send_image_to_cell_path,destinations,basepath_chips,sleep_time_chips
 args = vars(ap.parse_args())
+print(args)
 weightsPath=args['weightsPath']
 labelsPath=args['labelsPath']
 configPath=args['configPath']
@@ -334,6 +335,7 @@ if video=='0':
     video=0
 elif video=='1':
     video=1
+print('video is {}'.format(video))
 if save=='No':
     save=False
 else:
@@ -435,21 +437,31 @@ for i in net.getUnconnectedOutLayers():
 # ln = [ln[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 # pprint(ln)
 #pprint(yolo_layers)
+if str(video).find('rtsp')!=-1:
+    os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"]="rtsp_transport;udp" #edit sjs 8/4/2021
 class VideoStream:
     """Camera object that controls video streaming from the Picamera"""
     def __init__(self,video,resolution=(300,300),framerate=40,output_file_path=OUTPUT_FILE): #edit 8/4/2021 sjs, includes 640x640 default with video parameter defined for rtsp arg.
         # Initialize the PiCamera and the camera image stream
         #self.stream = cv2.VideoCapture(video) #edit 8/4/2021 sjs, includes the cv2.CAP_FFMPEG for the os.env set earlier for better feed.
-        if str(video)!='0' and str(video)!='1':
+        print('video is set to {}'.format(video))
+        if str(video)!='0' and str(video)!='1' and str(video).find('rtsp')==-1:
+            print('using path 1')
             #self.stream = cv2.VideoCapture(video,cv2.CAP_FFMPEG) #ed
             self.stream=cv2.VideoCapture(video,cv2.CAP_DSHOW)
+        elif str(video).find('rtsp')!=-1:
+            print('using path 2')
+            print('using rtsp cam {}'.format(str(video)))
+            self.stream=cv2.VideoCapture(video)
         else:
+            print('using path 3')
             self.stream=cv2.VideoCapture(video)
         #self.stream.set(cv2.CAP_PROP_BUFFERSIZE,3)
-        if args['using_JETSON_NANO']==False:
+        if args['using_JETSON_NANO']==False and str(video).find('rtsp')==-1:
             ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) #if JETSON NANO, Comment out line
-        self.stream.set(cv2.CAP_PROP_BUFFERSIZE,3)
-        if args['using_JETSON_NANO']==False:
+        if str(video).find('rtsp')==-1:
+            self.stream.set(cv2.CAP_PROP_BUFFERSIZE,3)
+        if args['using_JETSON_NANO']==False and str(video).find('rtsp')==-1:
             ret = self.stream.set(3,resolution[0]) #if JETSON NANO, Comment out line
             ret = self.stream.set(4,resolution[1]) #if JETSON NANO, Comment out line
 
@@ -747,4 +759,7 @@ def do_stuff():
         total_fps_count+=1
         avg_fps=total_fps/total_fps_count
         print("[INFO] FPS {:.6f}; AVG_FPS {:.6F}".format(fps_i,avg_fps))
+        if fps_i>500:
+            print('Slowing down to debug error\n')
+            time.sleep(1)
 do_stuff()
