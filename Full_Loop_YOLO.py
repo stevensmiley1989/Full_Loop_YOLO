@@ -145,7 +145,7 @@ from PIL import Image, ImageTk
 from PIL import ImageDraw
 from PIL import ImageFont
 import tkinter as tk
-from tkinter import ttk
+from tkinter import N, ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import NO, showinfo
 from tkinter.tix import Balloon
@@ -574,6 +574,8 @@ class yolo_cfg:
 
         self.epochs_yolov7_re_VAR=tk.StringVar()
         self.epochs_yolov7_re_VAR.set(self.epochs_yolov7_re)
+        self.RTSP_CLIENT=True
+        self.USE_RTSP_CLIENT_VAR=None
         if os.path.exists('resources/rtsp_server.py'):
             self.RTSP_SERVER_PATH=os.path.abspath('resources/rtsp_server.py')
             self.RTSP_SERVER=True 
@@ -1771,8 +1773,59 @@ class yolo_cfg:
             self.USE_RTSP_VAR.set('No')
             self.USE_RTSP_dropdown=tk.OptionMenu(self.root,self.USE_RTSP_VAR,*self.USE_RTSP_options,command=self.get_full_path_rtsp())
             self.USE_RTSP_dropdown.grid(row=13+spacer-2,column=3,sticky='sw')
-            self.USE_RTSP_label=tk.Label(self.root,text='Use RTSP?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+            self.USE_RTSP_label=tk.Label(self.root,text='RTSP Server?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
             self.USE_RTSP_label.grid(row=14+spacer-2,column=3,sticky='nw')   
+        if self.RTSP_CLIENT and self.USE_RTSP_CLIENT_VAR==None:   
+            self.load_RTSP_clients(spacer)
+            self.USE_RTSP_CLIENT_label=tk.Label(self.root,text='RTSP Client?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+            self.USE_RTSP_CLIENT_label.grid(row=16+spacer-2,column=3,sticky='nw')
+            self.OPEN_RTSP_CLIENT_Button=tk.Button(self.root,text='OPEN RTSP CLIENTS',command=self.open_RTSP_CLIENT_List,bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+            self.OPEN_RTSP_CLIENT_Button.grid(row=17+spacer-2,column=3,sticky='sw')
+            self.LOAD_RTSP_CLIENT_Button=tk.Button(self.root,text='LOAD RTSP CLIENTS',command=partial(self.load_RTSP_clients,spacer),bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+            self.LOAD_RTSP_CLIENT_Button.grid(row=18+spacer-2,column=3,sticky='sw')
+
+
+    def load_RTSP_clients(self,spacer):
+        try:
+            del self.USE_RTSP_CLIENT_dropdown
+        except:
+            pass
+        self.USE_RTSP_CLIENT_VAR=tk.StringVar()
+        self.load_RTSP_CLIENT_list()
+        if len(self.RTSP_CLIENTS)>0:
+            pass
+        else:
+            self.RTSP_CLIENTS=['NO RTSP OPTIONS AVAILABLE']
+        self.USE_RTSP_CLIENT_VAR.set(self.RTSP_CLIENTS[0])
+        self.USE_RTSP_CLIENT_dropdown=tk.OptionMenu(self.root,self.USE_RTSP_CLIENT_VAR,*self.RTSP_CLIENTS,command=self.return_RTSP_CLIENT)
+        self.USE_RTSP_CLIENT_dropdown.grid(row=15+spacer-2,column=3,sticky='sw')
+
+
+    def open_RTSP_CLIENT_List(self):
+        cmd_i=open_cmd+" '{}'".format(self.RTSP_CLIENT_LIST)
+        self.run_cmd(cmd_i)
+    
+
+    def return_RTSP_CLIENT(self):
+        print(self.USE_RTSP_CLIENT_VAR.get())
+    def load_RTSP_CLIENT_list(self):
+        self.RTSP_CLIENT_LIST='libs/RTSP_CLIENT_LIST.txt'
+        if os.path.exists(self.RTSP_CLIENT_LIST):
+            f=open(self.RTSP_CLIENT_LIST,'r')
+            f_read=f.readlines()
+            f.close()
+            self.RTSP_CLIENTS=[w.replace(' ','').replace('\n','') for w in f_read if w.find('rtsp')!=-1]
+        else:
+            f=open(self.RTSP_CLIENT_LIST,'w')
+            f.writelines('NO RTSP OPTIONS AVAILABLE\n')
+            f.close()
+            f=open(self.RTSP_CLIENT_LIST,'r')
+            f_read=f.readlines()
+            f.close()
+            self.RTSP_CLIENTS=[w.replace(' ','').replace('\n','') for w in f_read if w.find('rtsp')!=-1]
+
+
+
     def get_full_path_rtsp(self):
         try:
             s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -2045,6 +2098,15 @@ class yolo_cfg:
             self.test_webcam_yolov7_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_objs_button_note.grid(row=13-7,column=10-7,sticky='ne')
 
+    def test_yolov7_rtsp(self):
+        if os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_rtsp_yolov7()
+            cmd_i=" bash '{}'".format(self.TEST_RTSP_YOLOV7)
+            self.test_rtsp_yolov7_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_rtsp_yolov7_objs_button.grid(row=12-7+10,column=10-7,sticky='se')
+            self.test_rtsp_yolov7_objs_button_note=tk.Label(self.top,text='rtsp \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_rtsp_yolov7_objs_button_note.grid(row=13-7+10,column=10-7,sticky='ne')
+
     def test_yolov7_webcam_RTMP(self):
         if os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_webcam_yolov7_RTMP()
@@ -2090,6 +2152,15 @@ class yolo_cfg:
             self.test_webcam_yolov7_re_objs_button.grid(row=12-7,column=12-7,sticky='se')
             self.test_webcam_yolov7_re_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_re_objs_button_note.grid(row=13-7,column=12-7,sticky='ne')
+
+    def test_yolov7_rtsp_re(self):
+        if os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_rtsp_yolov7_re()
+            cmd_i=" bash '{}'".format(self.TEST_RTSP_YOLOV7_re)
+            self.test_rtsp_yolov7_re_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_rtsp_yolov7_re_objs_button.grid(row=12-7+10,column=12-7,sticky='se')
+            self.test_rtsp_yolov7_re_objs_button_note=tk.Label(self.top,text='rtsp \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_rtsp_yolov7_re_objs_button_note.grid(row=13-7+10,column=12-7,sticky='ne')
 
  
 
@@ -2418,6 +2489,43 @@ class yolo_cfg:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
         f.close()
 
+    def create_test_bash_rtsp_yolov7(self):
+        self.TEST_RTSP_YOLOV7=os.path.join(os.path.dirname(self.data_path),'test_rtsp_custom_Yolov7-tiny.sh')
+        f=open(self.TEST_RTSP_YOLOV7,'w')
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {} --source {} \n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get(),self.USE_RTSP_CLIENT_VAR.get())
+            else:
+                #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.USE_RTSP_CLIENT_VAR.get())
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)
+
+
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.USE_RTSP_CLIENT_VAR.get())
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.USE_RTSP_CLIENT_VAR.get()))
+        f.close()
+
     def create_test_bash_webcam_yolov7_RTMP(self):
         self.TEST_WEBCAM_YOLOV7_RTMP=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7-tiny_RTMP.sh')
         f=open(self.TEST_WEBCAM_YOLOV7_RTMP,'w')
@@ -2526,6 +2634,43 @@ class yolo_cfg:
             f.writelines(cmd_i)
         else:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
+        f.close()
+
+
+    def create_test_bash_rtsp_yolov7_re(self):
+        self.TEST_RTSP_YOLOV7_re=os.path.join(os.path.dirname(self.data_path),'test_rtsp_custom_Yolov7.sh')
+        f=open(self.TEST_RTSP_YOLOV7_re,'w')
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        if self.RTSP_SERVER:
+            #if self.USE_RTSP_VAR.get()=="Yes":
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            #else:
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
+            if self.USE_RTSP_VAR.get()=="Yes":
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok  --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {} --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get(),self.USE_RTSP_CLIENT_VAR.get())
+            else:
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.USE_RTSP_CLIENT_VAR.get())
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i) 
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.USE_RTSP_CLIENT_VAR.get())
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.USE_RTSP_CLIENT_VAR.get()))
         f.close()
 
     def create_test_bash_webcam_yolov7_re_RTMP(self):
@@ -2713,6 +2858,9 @@ class yolo_cfg:
         self.create_test_bash_mp4_yolov7_e6e()
         self.create_test_bash_webcam_yolov7_re()
         self.create_test_bash_mp4_yolov7_re()
+
+        self.create_test_bash_rtsp_yolov7()
+        self.create_test_bash_rtsp_yolov7_re()
 
 
 
@@ -3500,6 +3648,7 @@ class yolo_cfg:
         self.test_yolov7_webcam()
         self.test_yolov7_webcam_RTMP()
         self.test_yolov7_mAP()
+        self.test_yolov7_rtsp()
 
         self.test_yolov7_re_note=tk.Label(self.top,text='Yolov7\n',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
         self.test_yolov7_re_note.grid(row=2,column=5,sticky='se')
@@ -3507,6 +3656,7 @@ class yolo_cfg:
         self.test_yolov7_webcam_re()
         self.test_yolov7_webcam_re_RTMP()
         self.test_yolov7_mAP_re()
+        self.test_yolov7_rtsp_re()
 
         self.test_yolov7_E6E_note=tk.Label(self.top,text='Yolov7\n-E6E',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
         self.test_yolov7_E6E_note.grid(row=2,column=4,sticky='se')
