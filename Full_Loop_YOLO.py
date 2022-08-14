@@ -1561,6 +1561,7 @@ class yolo_cfg:
         self.create_test_bash_images_with_predictions()
         self.create_test_bash_images_with_predictions_mAP()
         self.create_test_bash_dnn()
+        self.create_test_bash_dnn_rtsp()
         self.YOUTUBE_RTMP()
 
         self.create_test_bash_dnn_rtmp()
@@ -1880,6 +1881,15 @@ class yolo_cfg:
         self.test_yolo_objsdnn_button_note=tk.Label(self.top,text='DNN \n webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.test_yolo_objsdnn_button_note.grid(row=14,column=2,sticky='ne')
 
+    def test_yolodnn_rtsp(self):
+        self.TMP_create_test_dnn_bash_rtsp()
+        cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','dnn_rtsp.sh'))
+        #cmd_i=" bash '{}'".format(self.tmp_test_path)
+        self.test_yolo_objsdnn_button_rtsp=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.test_yolo_objsdnn_button_rtsp.grid(row=13+2,column=2,sticky='se')
+        self.test_yolo_objsdnn_button_note_rtsp=tk.Label(self.top,text='DNN \n rtsp \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.test_yolo_objsdnn_button_note_rtsp.grid(row=14+2,column=2,sticky='ne')
+
     def test_yolodnn_rtmp(self):
         self.test_yolo_objsdnn_rtmp_button=Button(self.top,image=self.icon_test,command=self.run_cmd_rtmp,bg=self.root_bg,fg=self.root_fg)
         self.test_yolo_objsdnn_rtmp_button.grid(row=3,column=2,sticky='se')
@@ -2127,8 +2137,17 @@ class yolo_cfg:
             cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_e6e)
             self.test_webcam_yolov7_e6e_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
             self.test_webcam_yolov7_e6e_objs_button.grid(row=12-7,column=11-7,sticky='se')
-            self.test_webcam_yolov7_e6e_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_e6e_objs_button_note=tk.Label(self.top,text='rtsp \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_e6e_objs_button_note.grid(row=13-7,column=11-7,sticky='ne')
+
+    def test_yolov7_rtsp_e6e(self):
+        if os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_rtsp_yolov7_e6e()
+            cmd_i=" bash '{}'".format(self.TEST_RTSP_YOLOV7_e6e)
+            self.test_rtsp_yolov7_e6e_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_rtsp_yolov7_e6e_objs_button.grid(row=12-7+10,column=11-7,sticky='se')
+            self.test_rtsp_yolov7_e6e_objs_button_note=tk.Label(self.top,text='rtsp \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_rtsp_yolov7_e6e_objs_button_note.grid(row=13-7+10,column=11-7,sticky='ne')
 
     def test_yolov7_webcam_e6e_RTMP(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -2581,6 +2600,42 @@ class yolo_cfg:
             f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
         f.close()
 
+    def create_test_bash_rtsp_yolov7_e6e(self):
+        self.TEST_RTSP_YOLOV7_e6e=os.path.join(os.path.dirname(self.data_path),'test_rtsp_custom_Yolov7-e6e.sh')
+        f=open(self.TEST_RTSP_YOLOV7_e6e,'w')
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        if self.RTSP_SERVER:
+            #if self.USE_RTSP_VAR.get()=="Yes":
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            #else:
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
+            if self.USE_RTSP_VAR.get()=="Yes":
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {} --source {} \n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get(),self.USE_RTSP_CLIENT_VAR.get())
+            else:
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.USE_RTSP_CLIENT_VAR.get())
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)         
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.USE_RTSP_CLIENT_VAR.get())
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)
+        else:
+            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.USE_RTSP_CLIENT_VAR.get()))
+        f.close()
+
     def create_test_bash_webcam_yolov7_e6e_RTMP(self):
         self.TEST_WEBCAM_YOLOV7_e6e_RTMP=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7-e6e_RTMP.sh')
         f=open(self.TEST_WEBCAM_YOLOV7_e6e_RTMP,'w')
@@ -2988,6 +3043,47 @@ class yolo_cfg:
             f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
         f.close()
 
+    def create_test_bash_dnn_rtsp(self):
+        self.check_backup_path_weights()
+        f=open(self.save_cfg_path_test.replace('.cfg','dnn_rtsp.sh'),'w')
+        f.writelines('config_path_test='+str(self.save_cfg_path_test)+'\n')
+        f.writelines('obj_path='+str(self.names_path)+'\n')
+        if self.best_weights_path==None:
+            self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path_test.replace('_test.cfg',''))+'_train_best.weights')
+        f.writelines('best_weights='+str(self.best_weights_path)+'\n')
+        f.writelines('imW='+str(self.WIDTH_NUM)+'\n')
+        f.writelines('imH='+str(self.HEIGHT_NUM)+'\n')
+        f.writelines('cd {}\n'.format(self.DNN_PATH.replace('yolo_dnn_multi_drone_hdmi.py','')))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                #f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {} --video={}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get(),self.USE_RTSP_CLIENT_VAR.get())
+            else:
+                #f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --save=No --video={}\n'.format(self.USE_RTSP_CLIENT_VAR.get())
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)  
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video={} --save=No \n'.format(self.USE_RTSP_CLIENT_VAR.get())
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)        
+        else:
+            f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video={} --save=No \n'.format(self.USE_RTSP_CLIENT_VAR.get()))
+        f.close()
+
     def TMP_create_test_dnn_bash(self):
         self.check_backup_path_weights()
         self.create_model_test()
@@ -3026,6 +3122,46 @@ class yolo_cfg:
             f.writelines(cmd_i)        
         else:
             f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
+        f.close()
+
+    def TMP_create_test_dnn_bash_rtsp(self):
+        self.check_backup_path_weights()
+        self.create_model_test()
+        self.read_model_test()
+        tmp_path=os.path.join(self.base_path_OG,'temp')
+        self.tmp_test_path=os.path.join(tmp_path,'dnn_rtsp.sh')
+        f=open(self.tmp_test_path,'w')
+        [f.writelines(line) for line in self.cli_path_test_lines]
+        f.writelines('darknet='+str(os.path.join(self.darknet_path,'darknet'))+'\n')
+        f.writelines('cd {}\n'.format(self.darknet_path))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                #f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --save=No --RTSP_PATH=Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {} --video={}\n'.format(self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get(),self.USE_RTSP_CLIENT_VAR.get())
+            else:
+                #f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
+                cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --save=No --video={}\n'.format(self.USE_RTSP_CLIENT_VAR.get())
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)  
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i='python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video={} --save=No \n'.format(self.use_RTSP_CLIENT_VAR.get())
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            f.writelines(cmd_i)        
+        else:
+            f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video={} --save=No \n'.format(self.use_RTSP_CLIENT_VAR.get()))
         f.close()
 
     def create_test_bash_dnn_rtmp(self):
@@ -3641,6 +3777,7 @@ class yolo_cfg:
         self.test_yolodnn()
         self.test_yolodnn_rtmp()
         self.test_yolo_mp4()
+        self.test_yolodnn_rtsp()
 
         self.test_yolov7_note=tk.Label(self.top,text='Yolov7\n-tiny',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
         self.test_yolov7_note.grid(row=2,column=3,sticky='se')
@@ -3664,6 +3801,7 @@ class yolo_cfg:
         self.test_yolov7_webcam_e6e()
         self.test_yolov7_webcam_e6e_RTMP()
         self.test_yolov7_mAP_e6e()
+        self.test_yolov7_rtsp_e6e()
 
     def cleanup(self):
         self.ITERATION_NUM_VAR.get()
