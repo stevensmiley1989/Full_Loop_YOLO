@@ -800,9 +800,15 @@ class yolo_cfg:
         self.button_yolo_regular=ttk.Radiobutton(text='Yolov4',style='Normal.TRadiobutton',variable=self.var_yolo_choice,value='Yolov4')
         self.button_yolo_regular.grid(row=6,column=0,stick='ne')
 
+        self.RECORDRAW_BUTTONS()
+
     def TEST_BUTTONS(self):
         self.popup_TEST_button=Button(self.root,text='TEST Script Buttons',command=self.popupWindow_TEST,bg=self.root_fg,fg=self.root_bg)
         self.popup_TEST_button.grid(row=13,column=2,sticky='sw')
+
+    def RECORDRAW_BUTTONS(self):
+        self.popup_RECORDRAW_button=Button(self.root,text='RECORD RAW VIDEO Buttons',command=self.popupWindow_RECORD_RAW,bg=self.root_fg,fg=self.root_bg)
+        self.popup_RECORDRAW_button.grid(row=0,column=2,sticky='sw')
 
     def TRAIN_BUTTONS(self):
         self.popup_TRAIN_button=Button(self.root,text='TRAIN Script Buttons',command=self.popupWindow_TRAIN,bg=self.root_fg,fg=self.root_bg)
@@ -871,7 +877,7 @@ class yolo_cfg:
     def select_file_MOVMP4(self,file_i):
         filetypes=(('MOV','*.MOV'),('MP4','*.MP4'),('mp4','*.mp4'),('All files','*.*'))
         if os.path.exists(self.path_MOVMP4):
-            initialdir_i=self.path_MOVMP4
+            initialdir_i=os.path.dirname(self.path_MOVMP4)
         else:
             initialdir_i=os.getcwd()
         self.filename=fd.askopenfilename(title='Open a file',
@@ -2290,6 +2296,178 @@ class yolo_cfg:
             self.epochs_entry.grid(row=21,column=0,sticky='se')
             self.epochs_label=tk.Label(self.root,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_label.grid(row=22,column=0,sticky='ne')
+
+    def popupWindow_RECORD_RAW(self):
+        try:
+            self.top.destroy()
+        except:
+            pass
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+        self.top.title('Record Raw Video to File')
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=0,column=0,sticky='se')
+
+        self.submit_RAW_VIDEO=Button(self.top,text='RECORD VIDEO',command=self.RECORD_RAW_VIDEO,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.submit_RAW_VIDEO.grid(row=0,column=1,sticky='se')
+
+
+        # RAW VIDEO PATHS
+        
+        self.LOAD_RAW_VIDEO_PATHS()
+
+
+        self.OPEN_RAW_VIDEO_Button=Button(self.top,text='OPEN RAW VIDEO PATHS',command=self.OPEN_RAW_VIDEO_PATHS,bg=DEFAULT_SETTINGS.root_fg,fg=DEFAULT_SETTINGS.root_bg)
+        self.OPEN_RAW_VIDEO_Button.grid(row=1,column=3,sticky='sw')
+
+
+        self.LOAD_RAW_VIDEO_Button=Button(self.top,text='LOAD RAW VIDEO PATHS',command=self.LOAD_RAW_VIDEO_PATHS,bg=DEFAULT_SETTINGS.root_fg,fg=DEFAULT_SETTINGS.root_bg)
+        self.LOAD_RAW_VIDEO_Button.grid(row=1,column=4,sticky='sw')
+
+        # imW
+        self.RAW_VIDEO_imW_VAR=tk.StringVar()
+        self.RAW_VIDEO_imW_VAR.set('1920')
+        self.RAW_VIDEO_imW_entry=tk.Entry(self.top,textvariable=self.RAW_VIDEO_imW_VAR)
+        self.RAW_VIDEO_imW_entry.grid(row=2,column=2,sticky='sw')
+        self.RAW_VIDEO_imW_note=tk.Label(self.top,text='--imW',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.RAW_VIDEO_imW_note.grid(row=2,column=1,sticky='se')
+
+        # imH
+        self.RAW_VIDEO_imH_VAR=tk.StringVar()
+        self.RAW_VIDEO_imH_VAR.set('1080')
+        self.RAW_VIDEO_imH_entry=tk.Entry(self.top,textvariable=self.RAW_VIDEO_imH_VAR)
+        self.RAW_VIDEO_imH_entry.grid(row=3,column=2,sticky='sw')
+        self.RAW_VIDEO_imH_note=tk.Label(self.top,text='--imH',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.RAW_VIDEO_imH_note.grid(row=3,column=1,sticky='se')
+
+        # fps
+        self.RAW_VIDEO_fps_VAR=tk.StringVar()
+        self.RAW_VIDEO_fps_VAR.set('30')
+        self.RAW_VIDEO_fps_entry=tk.Entry(self.top,textvariable=self.RAW_VIDEO_fps_VAR)
+        self.RAW_VIDEO_fps_entry.grid(row=4,column=2,sticky='sw')
+        self.RAW_VIDEO_fps_note=tk.Label(self.top,text='--fps',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.RAW_VIDEO_fps_note.grid(row=4,column=1,sticky='se')
+
+        # UNIQUE DEVICE
+        self.RAW_VIDEO_UNIQUE_DEVICE_VAR=tk.StringVar()
+        self.RAW_VIDEO_UNIQUE_DEVICE_VAR.set('Jetson')
+        self.RAW_VIDEO_UNIQUE_DEVICE_entry=tk.Entry(self.top,textvariable=self.RAW_VIDEO_UNIQUE_DEVICE_VAR)
+        self.RAW_VIDEO_UNIQUE_DEVICE_entry.grid(row=5,column=2,columnspan=20,sticky='we')
+        self.RAW_VIDEO_UNIQUE_DEVICE_note=tk.Label(self.top,text='--UNIQUE_DEVICE',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.RAW_VIDEO_UNIQUE_DEVICE_note.grid(row=5,column=1,sticky='se')
+
+        # UNIQUE PREFIX
+        self.RAW_VIDEO_UNIQUE_PREFIX_VAR=tk.StringVar()
+        self.RAW_VIDEO_UNIQUE_PREFIX_VAR.set('')
+        self.RAW_VIDEO_UNIQUE_PREFIX_entry=tk.Entry(self.top,textvariable=self.RAW_VIDEO_UNIQUE_PREFIX_VAR)
+        self.RAW_VIDEO_UNIQUE_PREFIX_entry.grid(row=6,column=2,columnspan=20,sticky='we')
+        self.RAW_VIDEO_UNIQUE_PREFIX_note=tk.Label(self.top,text='--UNIQUE_PREFIX',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.RAW_VIDEO_UNIQUE_PREFIX_note.grid(row=6,column=1,sticky='se')
+
+        # main_path
+        self.RAW_VIDEO_main_path_VAR=tk.StringVar()
+        self.RAW_VIDEO_main_path_VAR.set(r"/media/steven/Elements/Videos/")
+        self.RAW_VIDEO_main_path_entry=tk.Entry(self.top,textvariable=self.RAW_VIDEO_main_path_VAR)
+        self.RAW_VIDEO_main_path_entry.grid(row=7,column=2,columnspan=20,sticky='we')
+        self.RAW_VIDEO_main_path_note=tk.Label(self.top,text='--main_path',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.RAW_VIDEO_main_path_note.grid(row=7,column=1,sticky='se')
+
+        # using_JETSON_NANO
+        self.RAW_VIDEO_using_JETSON_NANO_VAR=tk.StringVar()
+        self.using_JETSON_NANO_LIST=['False','True']
+        self.RAW_VIDEO_using_JETSON_NANO_VAR.set('False')
+        self.RAW_VIDEO_using_JETSON_NANO_dropdown=tk.OptionMenu(self.top,self.RAW_VIDEO_using_JETSON_NANO_VAR,*self.using_JETSON_NANO_LIST)
+        self.RAW_VIDEO_using_JETSON_NANO_dropdown.grid(row=8,column=2,sticky='sw')
+        self.RAW_VIDEO_using_JETSON_NANO_note=tk.Label(self.top,text='--using_JETSON_NANO',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.RAW_VIDEO_using_JETSON_NANO_note.grid(row=8,column=1,sticky='se')
+
+    def RECORD_RAW_VIDEO(self):
+         # RAW VIDEO PATHS
+        video=self.RAW_VIDEO_VAR.get()
+
+        # imW
+        imW=self.RAW_VIDEO_imW_VAR.get()
+        try:
+            int(imW)
+        except:
+            return print('imW is a bad value = {}, should be an int'.format(imW))
+        # imH
+        imH=self.RAW_VIDEO_imH_VAR.get()
+        try:
+            int(imW)
+        except:
+            return print('imH is a bad value = {}, should be an int'.format(imH))
+        # fps
+        fps=self.RAW_VIDEO_fps_VAR.get()
+        try:
+            int(fps)
+        except:
+            return print('fps is a bad value = {}, should be an int'.format(fps))
+
+        # UNIQUE DEVICE
+        UNIQUE_DEVICE=self.RAW_VIDEO_UNIQUE_DEVICE_VAR.get()
+        UNIQUE_DEVICE=UNIQUE_DEVICE.replace(' ','_')
+
+
+        # UNIQUE PREFIX
+        UNIQUE_PREFIX=self.RAW_VIDEO_UNIQUE_PREFIX_VAR.get()
+        UNIQUE_PREFIX=UNIQUE_PREFIX.replace(' ','_').replace('.','p').replace(':','_').replace(';','_')
+        if UNIQUE_PREFIX=='':
+            UNIQUE_PREFIX='""'
+
+        # main_path
+        main_path=self.RAW_VIDEO_main_path_VAR.get()
+        if os.path.exists(main_path):
+            main_path=main_path
+        elif os.path.exists(os.path.dirname(main_path)):
+            main_path=os.path.join(main_path,'Videos')
+            try:
+                os.makedirs(main_path)
+            except:
+                print('main_path exists at {}\n'.format(main_path))
+        else:
+            return print('Not a valid path at {}\n'.format(main_path))
+        # using_JETSON_NANO
+        using_JETSON_NANO=self.RAW_VIDEO_using_JETSON_NANO_VAR.get()
+
+        if using_JETSON_NANO=='False':
+            cmd_i=f'cd resources && python3 record_raw.py --video {video} --imW {imW} --imH {imH} --fps {fps} --UNIQUE_DEVICE {UNIQUE_DEVICE} --UNIQUE_PREFIX {UNIQUE_PREFIX} --main_path {main_path}'
+        else:
+            cmd_i=cmd_i+' --using_JETSON_NANO'
+        print('cmd_i = {}\n'.format(cmd_i))
+        self.run_cmd(cmd_i)
+
+  
+    def LOAD_RAW_VIDEO_PATHS(self):
+
+        self.RAW_VIDEO_PATHS='libs/RAW_VIDEO_PATHS.txt'
+        if os.path.exists(self.RAW_VIDEO_PATHS):
+            f=open(self.RAW_VIDEO_PATHS,'r')
+            f_read=f.readlines()
+            f.close()
+            self.RAW_VIDEO_LIST=[w.replace('\n','').strip() for w in f_read]
+        else:
+            self.RAW_VIDEO_LIST=['0']
+            f=open(self.RAW_VIDEO_PATHS,'w')
+            tmp=[f.writelines(w+'\n') for w in self.RAW_VIDEO_LIST]
+            f.close()
+        try:
+           del self.RAW_VIDEO_dropdown
+        except:
+            pass
+        self.RAW_VIDEO_VAR=tk.StringVar()
+        self.RAW_VIDEO_VAR.set(self.RAW_VIDEO_LIST[0])
+        self.RAW_VIDEO_dropdown=tk.OptionMenu(self.top,self.RAW_VIDEO_VAR,*self.RAW_VIDEO_LIST)
+        self.RAW_VIDEO_dropdown.grid(row=1,column=2,sticky='sw')
+        self.RAW_VIDEO_dropdown_note=tk.Label(self.top,text='--video',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.RAW_VIDEO_dropdown_note.grid(row=1,column=1,sticky='se')
+    
+    def OPEN_RAW_VIDEO_PATHS(self):
+        self.LOAD_RAW_VIDEO_PATHS()
+        cmd_i=open_cmd+' {}'.format(self.RAW_VIDEO_PATHS)
+        self.run_cmd(cmd_i)
+        
 
     def popupWindow_ERROR(self,message):
         try:
