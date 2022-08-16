@@ -17,10 +17,26 @@ def create_imgs_from_video(path_movie=None,fps='1/2'):
         print('This is not a string for the fps! {}'.format(str(type(fps))))
     elif path_movie.lower().find('.mp4')!=-1 or path_movie.lower().find('.mov')!=-1:
         return_dir=os.getcwd()
-        
+
         basepath=os.path.dirname(path_movie)
         os.chdir(basepath)
         print(basepath)
+        video_files=os.listdir(basepath)
+        video_files=[w for w in video_files if w.lower().find('.mp4')!=-1 or w.lower().find('.mov')!=-1]
+        if len(video_files)>0 and os.path.basename(basepath)!=os.path.basename(path_movie.split('.')[0]):
+            print('MULTIPLE VIDEO FILES, moving to separate directories')
+            for video_file_i in tqdm(video_files):
+                video_file_i_path=os.path.join(basepath,video_file_i)
+                video_file_i_dir_path_new=video_file_i_path.split('.')[0]
+                try:
+                    os.makedirs(video_file_i_dir_path_new)
+                except:
+                    pass
+                shutil.move(video_file_i_path,video_file_i_dir_path_new)
+            path_movie=os.path.join(os.path.join(basepath,os.path.basename(path_movie).split('.')[0]),os.path.basename(path_movie))
+            basepath=os.path.dirname(path_movie)
+            os.chdir(basepath)
+            print(basepath)
         video=cv2.VideoCapture(path_movie)
         actual_video_fps=str(int(np.ceil(video.get(cv2.CAP_PROP_FPS))))
         actual_frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
