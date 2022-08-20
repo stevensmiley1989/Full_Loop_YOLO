@@ -660,7 +660,7 @@ class yolo_cfg:
         self.path_predJPEGImages=None
         self.path_MOVMP4=None
         self.MOVMP4_selected=False
-
+        self.SOCKET_PREFIX='top'
         # self.root.withdraw()
         # self.top=tk.Toplevel(self.root,width=300,height=300)
         # self.canvas_generate=tk.Canvas(self.top,bg='white')
@@ -1782,15 +1782,146 @@ class yolo_cfg:
             self.USE_RTSP_dropdown.grid(row=13+spacer-2,column=3,sticky='sw')
             self.USE_RTSP_label=tk.Label(self.root,text='RTSP Server?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
             self.USE_RTSP_label.grid(row=14+spacer-2,column=3,sticky='nw')   
-        if self.RTSP_CLIENT and self.USE_RTSP_CLIENT_VAR==None:   
-            self.load_RTSP_clients(spacer)
-            self.USE_RTSP_CLIENT_label=tk.Label(self.root,text='RTSP Client?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
-            self.USE_RTSP_CLIENT_label.grid(row=16+spacer-2,column=3,sticky='nw')
-            self.OPEN_RTSP_CLIENT_Button=tk.Button(self.root,text='OPEN RTSP CLIENTS',command=self.open_RTSP_CLIENT_List,bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
-            self.OPEN_RTSP_CLIENT_Button.grid(row=17+spacer-2,column=3,sticky='sw')
-            self.LOAD_RTSP_CLIENT_Button=tk.Button(self.root,text='LOAD RTSP CLIENTS',command=partial(self.load_RTSP_clients,spacer),bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
-            self.LOAD_RTSP_CLIENT_Button.grid(row=18+spacer-2,column=3,sticky='sw')
+        if self.RTSP_CLIENT and self.USE_RTSP_CLIENT_VAR==None: 
+            self.popupWindow_RTSP()
+            self.cleanup()
+            self.RTSP_BUTTONS()  
 
+
+    def RTSP_BUTTONS(self):
+        self.popup_RTSP_button=Button(self.root,text='Client/Socket RTSP Buttons',command=self.popupWindow_RTSP,bg=self.root_fg,fg=self.root_bg)
+        self.popup_RTSP_button.grid(row=16+5-2,column=3,sticky='sw')
+
+    def popupWindow_RTSP(self):
+        spacer=-12
+        try:
+            self.top.destroy()
+        except:
+            pass
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+        self.top.title('RTSP Options')
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup_RTSP,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=0,column=0,sticky='se')
+        self.load_RTSP_clients(spacer)
+        self.USE_RTSP_CLIENT_label=tk.Label(self.top,text='RTSP Client?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.USE_RTSP_CLIENT_label.grid(row=16+spacer-2,column=3,sticky='nw')
+        self.OPEN_RTSP_CLIENT_Button=tk.Button(self.top,text='OPEN RTSP CLIENTS',command=self.open_RTSP_CLIENT_List,bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.OPEN_RTSP_CLIENT_Button.grid(row=17+spacer-2,column=3,sticky='sw')
+        self.LOAD_RTSP_CLIENT_Button=tk.Button(self.top,text='LOAD RTSP CLIENTS',command=partial(self.load_RTSP_clients,spacer),bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.LOAD_RTSP_CLIENT_Button.grid(row=18+spacer-2,column=3,sticky='sw')
+
+        self.load_SOCKET_RTSP_ports(spacer)
+        self.USE_SOCKET_RTSP_PORT_label=tk.Label(self.top,text='SOCKET RTSP PORT',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.USE_SOCKET_RTSP_PORT_label.grid(row=20+spacer-2,column=3,sticky='nw')
+        self.OPEN_SOCKET_RTSP_PORT_Button=tk.Button(self.top,text='OPEN SOCKET PORTS',command=self.open_SOCKET_RTSP_PORT_List,bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.OPEN_SOCKET_RTSP_PORT_Button.grid(row=21+spacer-2,column=3,sticky='sw')
+        self.LOAD_SOCKET_RTSP_PORT_Button=tk.Button(self.top,text='LOAD SOCKET PORTS',command=partial(self.load_SOCKET_RTSP_ports,spacer),bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.LOAD_SOCKET_RTSP_PORT_Button.grid(row=22+spacer-2,column=3,sticky='sw')
+
+        self.load_SOCKET_RTSP_hosts(spacer)
+        self.USE_SOCKET_RTSP_HOSTS_label=tk.Label(self.top,text='SOCKET RTSP HOSTS',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.USE_SOCKET_RTSP_HOSTS_label.grid(row=24+spacer-2,column=3,sticky='nw')
+        self.OPEN_SOCKET_RTSP_HOSTS_Button=tk.Button(self.top,text='OPEN SOCKET HOSTS',command=self.open_SOCKET_RTSP_HOST_List,bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.OPEN_SOCKET_RTSP_HOSTS_Button.grid(row=25+spacer-2,column=3,sticky='sw')
+        self.LOAD_SOCKET_RTSP_HOSTS_Button=tk.Button(self.top,text='LOAD SOCKET HOSTS',command=partial(self.load_SOCKET_RTSP_hosts,spacer),bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.LOAD_SOCKET_RTSP_HOSTS_Button.grid(row=26+spacer-2,column=3,sticky='sw')
+
+
+
+        self.SOCKET_PREFIX_VAR=tk.StringVar()
+        self.SOCKET_PREFIX_VAR.set(self.SOCKET_PREFIX)
+        self.SOCKET_PREFIX_entry=tk.Entry(self.top,textvariable=self.SOCKET_PREFIX_VAR)
+        self.SOCKET_PREFIX_entry.grid(row=27+spacer-2,column=3,sticky='nw')
+        self.SOCKET_PREFIX_label=tk.Label(self.top,text='SOCKET PREFIX',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.SOCKET_PREFIX_label.grid(row=28+spacer-2,column=3,sticky='nw')
+
+
+
+    def load_SOCKET_RTSP_ports(self,spacer):
+        try:
+            del self.USE_SOCKET_RTSP_PORT_dropdown
+        except:
+            pass
+        self.USE_SOCKET_RTSP_PORT_VAR=tk.StringVar()
+        self.load_SOCKET_RTSP_PORT_list()
+        if len(self.SOCKET_RTSP_PORTS)>0:
+            success=True
+            for port_i in self.SOCKET_RTSP_PORTS:
+                try:
+                    int(port_i)
+                except:
+                    success=False
+                    print('Bad PORT = {}'.format(port_i))
+                    break
+        else:
+            self.SOCKET_RTSP_PORTS=['8889']
+        self.USE_SOCKET_RTSP_PORT_VAR.set(self.SOCKET_RTSP_PORTS[0])
+        self.USE_SOCKET_RTSP_PORT_dropdown=tk.OptionMenu(self.top,self.USE_SOCKET_RTSP_PORT_VAR,*self.SOCKET_RTSP_PORTS,command=self.return_SOCKET_RTSP_PORT)
+        self.USE_SOCKET_RTSP_PORT_dropdown.grid(row=19+spacer-2,column=3,sticky='sw')
+
+    def load_SOCKET_RTSP_hosts(self,spacer):
+        try:
+            del self.USE_SOCKET_RTSP_HOST_dropdown
+        except:
+            pass
+        self.USE_SOCKET_RTSP_HOST_VAR=tk.StringVar()
+        self.load_SOCKET_RTSP_HOST_list()
+        if len(self.SOCKET_RTSP_HOSTS)>0:
+            success=True
+            for sock_i in self.SOCKET_RTSP_HOSTS:
+                try:
+                    pass
+                except:
+                    success=False
+                    print('Bad SOCKET = {}'.format(sock_i))
+                    break
+        else:
+            self.SOCKET_RTSP_HOSTS=['10.5.1.201']
+        self.USE_SOCKET_RTSP_HOST_VAR.set(self.SOCKET_RTSP_HOSTS[0])
+        self.USE_SOCKET_RTSP_HOST_dropdown=tk.OptionMenu(self.top,self.USE_SOCKET_RTSP_HOST_VAR,*self.SOCKET_RTSP_HOSTS,command=self.return_SOCKET_RTSP_HOST)
+        self.USE_SOCKET_RTSP_HOST_dropdown.grid(row=23+spacer-2,column=3,sticky='sw')
+
+    def check_int_from_str(self,str_i):
+        success=True
+        try:
+            int(str_i)
+        except:
+            success=False
+        return success
+
+    def load_SOCKET_RTSP_PORT_list(self):
+        self.SOCKET_RTSP_PORT_LIST='libs/SOCKET_RTSP_PORT_LIST.txt'
+        if os.path.exists(self.SOCKET_RTSP_PORT_LIST):
+            f=open(self.SOCKET_RTSP_PORT_LIST,'r')
+            f_read=f.readlines()
+            f.close()
+            self.SOCKET_RTSP_PORTS=[w.replace(' ','').replace('\n','') for w in f_read if self.check_int_from_str(w)]
+        else:
+            f=open(self.SOCKET_RTSP_PORT_LIST,'w')
+            f.writelines('8889\n')
+            f.close()
+            f=open(self.SOCKET_RTSP_PORT_LIST,'r')
+            f_read=f.readlines()
+            f.close()
+            self.SOCKET_RTSP_PORTS=[w.replace(' ','').replace('\n','') for w in f_read if self.check_int_from_str(w)]
+
+    def load_SOCKET_RTSP_HOST_list(self):
+        self.SOCKET_RTSP_HOST_LIST='libs/SOCKET_RTSP_HOST_LIST.txt'
+        if os.path.exists(self.SOCKET_RTSP_HOST_LIST):
+            f=open(self.SOCKET_RTSP_HOST_LIST,'r')
+            f_read=f.readlines()
+            f.close()
+            self.SOCKET_RTSP_HOSTS=[w.replace(' ','').replace('\n','') for w in f_read]
+        else:
+            f=open(self.SOCKET_RTSP_HOST_LIST,'w')
+            f.writelines('10.5.1.201\n')
+            f.close()
+            f=open(self.SOCKET_RTSP_HOST_LIST,'r')
+            f_read=f.readlines()
+            f.close()
+            self.SOCKET_RTSP_HOSTS=[w.replace(' ','').replace('\n','') for w in f_read]
 
     def load_RTSP_clients(self,spacer):
         try:
@@ -1804,17 +1935,30 @@ class yolo_cfg:
         else:
             self.RTSP_CLIENTS=['NO RTSP OPTIONS AVAILABLE']
         self.USE_RTSP_CLIENT_VAR.set(self.RTSP_CLIENTS[0])
-        self.USE_RTSP_CLIENT_dropdown=tk.OptionMenu(self.root,self.USE_RTSP_CLIENT_VAR,*self.RTSP_CLIENTS,command=self.return_RTSP_CLIENT)
+        self.USE_RTSP_CLIENT_dropdown=tk.OptionMenu(self.top,self.USE_RTSP_CLIENT_VAR,*self.RTSP_CLIENTS,command=self.return_RTSP_CLIENT)
         self.USE_RTSP_CLIENT_dropdown.grid(row=15+spacer-2,column=3,sticky='sw')
 
 
     def open_RTSP_CLIENT_List(self):
         cmd_i=open_cmd+" '{}'".format(self.RTSP_CLIENT_LIST)
         self.run_cmd(cmd_i)
-    
+
+    def open_SOCKET_RTSP_PORT_List(self):
+        cmd_i=open_cmd+" '{}'".format(self.SOCKET_RTSP_PORT_LIST)
+        self.run_cmd(cmd_i)   
+    def open_SOCKET_RTSP_HOST_List(self):
+        cmd_i=open_cmd+" '{}'".format(self.SOCKET_RTSP_HOST_LIST)
+        self.run_cmd(cmd_i) 
 
     def return_RTSP_CLIENT(self):
         print(self.USE_RTSP_CLIENT_VAR.get())
+
+    def return_SOCKET_RTSP_PORT(self):
+        print(self.USE_SOCKET_RTSP_PORT_VAR.get())
+
+    def return_SOCKET_RTSP_HOST(self):
+        print(self.USE_SOCKET_RTSP_HOST_VAR.get())
+
     def load_RTSP_CLIENT_list(self):
         self.RTSP_CLIENT_LIST='libs/RTSP_CLIENT_LIST.txt'
         if os.path.exists(self.RTSP_CLIENT_LIST):
@@ -2698,6 +2842,7 @@ class yolo_cfg:
             else:
                 #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
                 cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.USE_RTSP_CLIENT_VAR.get())
+            cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
             if self.sec.get()=='y':
                 self.destination_list_final=''
                 for w_var in self.phone_dic_trigger_var.values():
@@ -2706,6 +2851,7 @@ class yolo_cfg:
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+                cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
             f.writelines(cmd_i)
 
 
@@ -2718,9 +2864,13 @@ class yolo_cfg:
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.USE_RTSP_CLIENT_VAR.get())
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
             f.writelines(cmd_i)
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.USE_RTSP_CLIENT_VAR.get()))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.USE_RTSP_CLIENT_VAR.get())
+            cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
+            #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.USE_RTSP_CLIENT_VAR.get()))
+            f.writelines(cmd_i)
         f.close()
 
     def create_test_bash_webcam_yolov7_RTMP(self):
@@ -2791,6 +2941,7 @@ class yolo_cfg:
                 cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {} --source {} \n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get(),self.USE_RTSP_CLIENT_VAR.get())
             else:
                 cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.USE_RTSP_CLIENT_VAR.get())
+                cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
             if self.sec.get()=='y':
                 self.destination_list_final=''
                 for w_var in self.phone_dic_trigger_var.values():
@@ -2799,6 +2950,7 @@ class yolo_cfg:
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+                cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
             f.writelines(cmd_i)         
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2809,9 +2961,14 @@ class yolo_cfg:
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.USE_RTSP_CLIENT_VAR.get())
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
             f.writelines(cmd_i)
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.USE_RTSP_CLIENT_VAR.get()))
+            #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.USE_RTSP_CLIENT_VAR.get()))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.USE_RTSP_CLIENT_VAR.get())
+            #cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
+            f.writelines(cmd_i)
         f.close()
 
     def create_test_bash_webcam_yolov7_e6e_RTMP(self):
@@ -2883,6 +3040,7 @@ class yolo_cfg:
                 cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok  --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {} --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get(),self.USE_RTSP_CLIENT_VAR.get())
             else:
                 cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.USE_RTSP_CLIENT_VAR.get())
+                cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
             if self.sec.get()=='y':
                 self.destination_list_final=''
                 for w_var in self.phone_dic_trigger_var.values():
@@ -2891,6 +3049,7 @@ class yolo_cfg:
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+                cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
             f.writelines(cmd_i) 
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2901,9 +3060,13 @@ class yolo_cfg:
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.USE_RTSP_CLIENT_VAR.get())
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
             f.writelines(cmd_i)
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.USE_RTSP_CLIENT_VAR.get()))
+            #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.USE_RTSP_CLIENT_VAR.get()))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.USE_RTSP_CLIENT_VAR.get())
+            cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
+            f.writelines(cmd_i) 
         f.close()
 
     def create_test_bash_webcam_yolov7_re_RTMP(self):
@@ -3993,6 +4156,11 @@ class yolo_cfg:
         except:
             print('Invalid sleep time of {}\n should be int/float'.format(sleep_time_i))
             self.sleep_time_chips_VAR.set('30')
+    def cleanup_RTSP(self):
+        self.USE_RTSP_CLIENT_VAR.set(self.USE_RTSP_CLIENT_VAR.get())
+        self.SOCKET_PREFIX=self.SOCKET_PREFIX_VAR.get()
+        self.top.destroy()
+
     def convert_PascalVOC_to_YOLO_VALID(self):
         self.ERROR_FOUND=False
         if os.path.exists(str(self.path_predJPEGImages)):
