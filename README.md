@@ -41,7 +41,7 @@ Darknet Yolov4
     #git clone https://github.com/AlexeyAB/darknet
     git clone https://github.com/stevensmiley1989/darknet.git
     cd darknet
-    git switch smiley #if using smiley branch, this is a version control method
+    git switch smiley_r0_prior_20220902 #if using smiley branch, this is a version control method
     make #modify MakeFile before to use cuda
     wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
     wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.conv.137
