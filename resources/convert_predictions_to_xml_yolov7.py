@@ -95,8 +95,13 @@ for i in tqdm(range(len(df))):
     f.close()
 
     img_data=plt.imread(path_jpg)
-    height,width,depth=img_data.shape
-    print(height,width,depth)
+    try:
+        height,width,depth=img_data.shape
+    except:
+        print('EXCEPTION for {}'.format(path_pred))
+        height,width=img_data.shape
+        depth=2
+    #print(height,width,depth)
     folder='JPEGImages'
     filename=os.path.basename(path_jpg)
     path=os.path.join(path_jpegs,filename)

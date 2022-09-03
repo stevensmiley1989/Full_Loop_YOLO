@@ -27,8 +27,8 @@ parser.add_argument("--fps",type=int,default=30,help='fps')
 parser.add_argument("--using_JETSON_NANO",action='store_true', help='If using Jetson NANO, issues with RET, so want to have this flag to handle it')
 parser.add_argument("--UNIQUE_DEVICE",type=str,default='Jetson',help='device type for name')
 parser.add_argument("--UNIQUE_PREFIX",type=str,default='',help='Additional unique prefix (i.e. soccer) for video file made')
-parser.add_argument("--main_path",type=str,default=r"/media/steven/Elements/Videos/",help='location of recorded videos')
-parser.add_argument("--second_path",type=str,default=r"/media/steven/OneTouch4tb/Videos/",help='backup location')
+parser.add_argument("--second_path",type=str,default=r"/media/steven/Elements/Videos/",help='backup location of recorded videos')
+parser.add_argument("--main_path",type=str,default=r"/media/steven/OneTouch4tb/Videos/",help='main location')
 
 args = vars(parser.parse_args())
 
@@ -82,11 +82,11 @@ if str(args['video']).find('rtsp')!=-1:
     os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"]="rtsp_transport;udp" #edit sjs 8/4/2021
 class VideoStream:
     """Camera object that controls video streaming from the Picamera"""
-    def __init__(self,video,resolution=(imW,imH),framerate=30,output_file_path=OUTPUT_FILE): #edit 8/4/2021 sjs, includes 640x640 default with video parameter defined for rtsp arg.
+    def __init__(self,video,resolution=(imW,imH),framerate=30,output_file_path=OUTPUT_FILE): #edit 8/4/2021 sjs, includes 640x640 default with video parameter defined for rtsp arg.	
         # Initialize the PiCamera and the camera image stream
         #self.stream = cv2.VideoCapture(video) #edit 8/4/2021 sjs, includes the cv2.CAP_FFMPEG for the os.env set earlier for better feed.
         print('video is set to {}'.format(video))
-        if str(video)!='0' and str(video)!='1' and str(video).find('rtsp')==-1:
+        if str(video)!='0' and str(video)!='1' and str(video).find('rtsp')==-1 and str(video).find('cam')==-1:
             print('using path 1')
             #self.stream = cv2.VideoCapture(video,cv2.CAP_FFMPEG) #ed
             self.stream=cv2.VideoCapture(video,cv2.CAP_DSHOW)
@@ -94,6 +94,13 @@ class VideoStream:
             print('using path 2')
             print('using rtsp cam {}'.format(str(video)))
             self.stream=cv2.VideoCapture(video)
+        elif str(video).find('0_cam')!=-1:
+            self.stream=cv2.VideoCapture(0)
+            output_file_path=output_file_path.replace('.mp4','.mp4')
+            imW=int(self.stream.get(cv2.CAP_PROP_FRAME_WIDTH))
+            imH=int(self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            resolution=(imW,imH)
+            fps=self.stream.get(cv2.CAP_PROP_FPS)
         else:
             print('using path 3')
             self.stream=cv2.VideoCapture(video)
@@ -122,7 +129,13 @@ class VideoStream:
 
         self.resolution=resolution
         self.output_file_path=output_file_path
-        self.fourcc=cv2.VideoWriter_fourcc(*'XVID')
+        #self.fourcc=cv2.VideoWriter_fourcc(*'XVID')
+        self.fourcc=cv2.VideoWriter_fourcc(*'mp4v')
+        #self.fourcc=cv2.VideoWriter_fourcc('a', 'v', 'c', '1')
+        if str(video).find('0_cam')!=-1:
+            pass
+            #self.fourcc=cv2.VideoWriter_fourcc(*'avc2')
+
         self.videoOut=cv2.VideoWriter(self.output_file_path,self.fourcc,fps,self.resolution)
         # Read first frame from the stream
         (self.grabbed, self.frame) = self.stream.read()
