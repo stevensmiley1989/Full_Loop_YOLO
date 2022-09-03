@@ -1482,6 +1482,8 @@ class yolo_cfg:
         self.create_yolo_objs_button_note=tk.Label(self.root,text='2.a \n Create Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.create_yolo_objs_button_note.grid(row=2,column=1,sticky='ne')
 
+        
+
         self.var_overwrite=tk.StringVar()
         # df_pkls=os.listdir(self.path_Yolo)
         # df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
@@ -1726,7 +1728,7 @@ class yolo_cfg:
         self.epochs_yolov_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.epochs_yolov_label.grid(row=6,column=2,sticky='nw')
 
-    def train_yolov4(self):
+    def train_yolov4_madness(self):
         if self.epochs_VAR.get()!=self.epochs:
             #self.epochs=int(self.max_batches.replace('\n','').strip().split('=')[1])//self.iterations_per_epoch
             try:
@@ -1737,9 +1739,16 @@ class yolo_cfg:
                 print('Could not convert epochs desired to cfg')
             self.generate_cfg()
             self.remaining_buttons()
-        self.save_settings()
+        self.save_settings()       
+
+    def train_yolov4(self):
+        
+        self.train_yolov4_madness()
         cmd_i=" bash '{}'".format(self.save_cfg_path_train.replace('.cfg','.sh'))
-        self.run_cmd(cmd_i)
+        if self.train_load_repeat.get()=='None':
+            self.run_cmd(cmd_i)
+        else:
+            self.loop_train_load(cmd_i,'train_yolov4_madness')
 
     def show_table(self):
         self.app = TestApp(self.top, self.df_filename_csv)
@@ -2166,12 +2175,18 @@ class yolo_cfg:
             #self.test_yolov7_webcam()
             #self.test_yolov7_webcam_RTMP()
             #self.test_yolov7_mAP()
-    def train_yolov7_cmd(self):
+    def train_yolov7_madness(self):
+        self.clear_cache_yolov7()
         self.create_test_bash_mp4_yolov7()
         self.create_train_bash_yolov7()
         self.save_settings()
+    def train_yolov7_cmd(self):
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7)
-        self.run_cmd(cmd_i)
+        if self.train_load_repeat.get()=='None':
+            self.run_cmd(cmd_i)
+        else:
+            self.loop_train_load(cmd_i,'train_yolov7_madness')
+
 
     def train_yolov7_e6e(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -2191,12 +2206,26 @@ class yolo_cfg:
             #self.test_yolov7_webcam_e6e()
             #self.test_yolov7_webcam_e6e_RTMP()
             #self.test_yolov7_mAP_e6e()
-    def train_yolov7_e6e_cmd(self):
+    def clear_cache_yolov7(self):
+        self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
+        if os.path.exists(os.path.join(self.YOLO_MODEL_PATH,'train.cache')):
+            print('Deleting {}'.format(os.path.join(self.YOLO_MODEL_PATH,'train.cache')))
+            os.remove(os.path.join(self.YOLO_MODEL_PATH,'train.cache'))
+        if os.path.exists(os.path.join(self.YOLO_MODEL_PATH,'valid.cache')):
+            print('Deleting {}'.format(os.path.join(self.YOLO_MODEL_PATH,'valid.cache')))
+            os.remove(os.path.join(self.YOLO_MODEL_PATH,'valid.cache'))
+    def train_yolov7_e6e_madness(self):
+        self.clear_cache_yolov7()
         self.create_test_bash_mp4_yolov7_e6e()
         self.create_train_bash_yolov7_e6e()
         self.save_settings()
+    def train_yolov7_e6e_cmd(self):
+        self.train_yolov7_e6e_madness()
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_e6e)
-        self.run_cmd(cmd_i)
+        if self.train_load_repeat.get()=='None':
+            self.run_cmd(cmd_i)
+        else:
+            self.loop_train_load(cmd_i,'train_yolov7_e6e_madness')
 
     def train_yolov7_re(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -2214,13 +2243,18 @@ class yolo_cfg:
             #self.test_yolov7_webcam_re()
             #self.test_yolov7_webcam_re_RTMP()
             #self.test_yolov7_mAP_re()
-    def train_yolov7_re_cmd(self):
+    def train_yolov7_re_madness(self):
+        self.clear_cache_yolov7()
         self.create_test_bash_mp4_yolov7_re()
         self.create_train_bash_yolov7_re()
         self.save_settings()
+    def train_yolov7_re_cmd(self):
+        self.train_yolov7_re_madness()
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_re)
-        self.run_cmd(cmd_i)
-
+        if self.train_load_repeat.get()=='None':
+            self.run_cmd(cmd_i)
+        else:
+            self.loop_train_load(cmd_i,'train_yolov7_re_madness')
 
     def test_yolov7_mp4(self):
         if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
@@ -2287,7 +2321,7 @@ class yolo_cfg:
             cmd_i=" bash '{}'".format(self.TEST_WEBCAM_YOLOV7_e6e)
             self.test_webcam_yolov7_e6e_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
             self.test_webcam_yolov7_e6e_objs_button.grid(row=12-7,column=11-7,sticky='se')
-            self.test_webcam_yolov7_e6e_objs_button_note=tk.Label(self.top,text='rtsp \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_webcam_yolov7_e6e_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_e6e_objs_button_note.grid(row=13-7,column=11-7,sticky='ne')
 
     def test_yolov7_rtsp_e6e(self):
@@ -2355,6 +2389,7 @@ class yolo_cfg:
             self.test_predict_MAP_yolov7_objs_button_note.grid(row=17-7,column=10-7,sticky='ne')
 
     def run_create_predict_bash_mAP_yolov7(self):
+        self.clear_cache_yolov7()
         self.create_predict_bash_mAP_yolov7()
         cmd_i=" bash '{}'".format(self.TEST_PREDICT_YOLOV7)
         self.run_cmd(cmd_i)
@@ -2367,6 +2402,7 @@ class yolo_cfg:
             self.test_predict_MAP_yolov7_e6e_objs_button_note.grid(row=17-7,column=11-7,sticky='ne')
 
     def run_create_predict_bash_mAP_yolov7_e6e(self):
+        self.clear_cache_yolov7()
         self.create_predict_bash_mAP_yolov7_e6e()
         cmd_i=" bash '{}'".format(self.TEST_PREDICT_YOLOV7_e6e)
         self.run_cmd(cmd_i)
@@ -2379,6 +2415,7 @@ class yolo_cfg:
             self.test_predict_MAP_yolov7_re_objs_button_note.grid(row=17-7,column=12-7,sticky='ne')
 
     def run_create_predict_bash_mAP_yolov7_re(self):
+        self.clear_cache_yolov7()
         self.create_predict_bash_mAP_yolov7_re()
         cmd_i=" bash '{}'".format(self.TEST_PREDICT_YOLOV7_re)
         self.run_cmd(cmd_i)
@@ -2511,7 +2548,7 @@ class yolo_cfg:
 
         # main_path
         self.RAW_VIDEO_main_path_VAR=tk.StringVar()
-        self.RAW_VIDEO_main_path_VAR.set(r"/media/steven/Elements/Videos/")
+        self.RAW_VIDEO_main_path_VAR.set(r"/media/steven/OneTouch4tb/Videos/")
         self.RAW_VIDEO_main_path_entry=tk.Entry(self.top,textvariable=self.RAW_VIDEO_main_path_VAR)
         self.RAW_VIDEO_main_path_entry.grid(row=7,column=2,columnspan=20,sticky='we')
         self.RAW_VIDEO_main_path_note=tk.Label(self.top,text='--main_path',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
@@ -3101,6 +3138,7 @@ class yolo_cfg:
         f.writelines("python3 test.py --data {} --weights {} --conf {} --img-size {} --batch 32 --iou {} --project {} --name predictions --exist-ok --save-txt --save-conf --verbose --task test --device 0\n".format(self.YAML_PATH, self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.IOU_THRESH,self.yolov7_path_project_tiny))
         f.writelines('cd {}\n'.format(self.CWD))
         f.writelines('python3 resources/convert_predictions_to_xml_yolov7.py --path_result_list_txt=$path_result_list_txt --path_predictions_folder=$path_predictions_folder --path_objs_names=$path_objs_names \n')
+        f.writelines('python3 resources/iou_chips.py --Prediction_xml $path_predictions_folder/Annotations --path_result_list_txt=$path_result_list_txt\n')
         f.close()
 
     def create_predict_bash_mAP_yolov7_e6e(self):
@@ -3116,6 +3154,7 @@ class yolo_cfg:
         f.writelines("python3 test.py --data {} --weights {} --conf {} --img-size {} --batch 1 --iou {} --project {} --name predictions --exist-ok --save-txt --save-conf --verbose --task test --device 0\n".format(self.YAML_PATH, self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.IOU_THRESH,self.yolov7_path_project_e6e))
         f.writelines('cd {}\n'.format(self.CWD))
         f.writelines('python3 resources/convert_predictions_to_xml_yolov7.py --path_result_list_txt=$path_result_list_txt --path_predictions_folder=$path_predictions_folder --path_objs_names=$path_objs_names \n')
+        f.writelines('python3 resources/iou_chips.py --Prediction_xml $path_predictions_folder/Annotations --path_result_list_txt=$path_result_list_txt\n')
         f.close()
 
     def create_predict_bash_mAP_yolov7_re(self):
@@ -3130,6 +3169,7 @@ class yolo_cfg:
         f.writelines("python3 test.py --data {} --weights {} --conf {} --img-size {} --batch 32 --iou {} --project {} --name predictions --exist-ok --save-txt --save-conf --verbose --task test --device 0\n".format(self.YAML_PATH, self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.IOU_THRESH,self.yolov7_path_project_re))
         f.writelines('cd {}\n'.format(self.CWD))
         f.writelines('python3 resources/convert_predictions_to_xml_yolov7.py --path_result_list_txt=$path_result_list_txt --path_predictions_folder=$path_predictions_folder --path_objs_names=$path_objs_names \n')
+        f.writelines('python3 resources/iou_chips.py --Prediction_xml $path_predictions_folder/Annotations --path_result_list_txt=$path_result_list_txt\n')
         f.close()
 
     def create_tflite_bash(self):
@@ -3711,6 +3751,7 @@ class yolo_cfg:
         else:
             f.writelines('path_test_list_txt='+str(self.img_list_path)+'\n')
         self.prediction_list_path=os.path.join(self.base_path,'predictions.txt')
+        print('self.prediction_list_path',self.prediction_list_path)
         f.writelines('path_result_list_txt='+str(self.prediction_list_path)+'\n')
         f.writelines('cd {}\n'.format(self.darknet_path))
         f.writelines('$darknet detector test $data_path $config_path_test $best_weights -thresh {} -dont_show -ext_output < $path_test_list_txt > $path_result_list_txt\n'.format(str(round(float(self.THRESH_VAR.get()),2))))
@@ -3718,6 +3759,7 @@ class yolo_cfg:
         f.writelines('python3 {} --path_result_list_txt {} \n'.format(create_predictions, self.prediction_list_path))
         create_chips=os.path.join(os.getcwd(),'resources/iou_chips.py')
         f.writelines('python3 {} --Prediction_xml {}'.format(create_chips,os.path.join(self.prediction_list_path.split('.txt')[0],'Annotations')))
+        #f.writelines('python3 resources/iou_chips.py --Prediction_xml $path_predictions_folder/Annotations --path_result_list_txt=$path_result_list_txt\n')
         f.close()
         #os.system('sudo chmod 777 "{}"'.format(self.save_cfg_path_test.replace('.cfg','_images_with_predictions.sh')))
 
@@ -3747,7 +3789,8 @@ class yolo_cfg:
             sample_fo_read=sample_fo.readlines()
             sample_fo.close()
         print("sample_fo_read[0]",sample_fo_read[0])
-        self.result_list_path=os.path.join(self.base_path,'obj'+os.path.basename(sample_fo_read[0].split('.')[0].replace('\n','').strip())).replace('/','_').rstrip('/').lstrip('/')+'_THRESH{}__IOU{}__POINTS{}_results.txt'.format(str(self.THRESH).replace('.','p'),str(self.IOU_THRESH).replace('.','p'),str(self.POINTS).replace('.','p'))
+        self.result_list_path=os.path.join(self.base_path,'prediction_images_with_mAP.sh')
+        #self.result_list_path=os.path.join(self.base_path,'obj'+os.path.basename(sample_fo_read[0].split('.')[0].replace('\n','').strip())).replace('/','_').rstrip('/').lstrip('/')+'_THRESH{}__IOU{}__POINTS{}_results.txt'.format(str(self.THRESH).replace('.','p'),str(self.IOU_THRESH).replace('.','p'),str(self.POINTS).replace('.','p'))
         f.writelines('path_result_list_txt='+str(self.result_list_path)+'\n')
         f.writelines('thresh='+str(self.THRESH)+'\n')
         f.writelines('iou_thresh='+str(self.IOU_THRESH)+'\n')
@@ -4044,6 +4087,43 @@ class yolo_cfg:
                     Thread(target=self.copy_files,args=(path_jpeg_i,path_jpeg_dest_i,)).start()
                 Thread(target=self.copy_files,args=(path_anno_i,path_anno_dest_xml_i,)).start()
 
+    def loop_train_load(self,train_cmd,madness='None'):
+        count=0
+        while True:
+
+            if madness.find('train_yolov4_madness')!=-1:
+                    self.epochs=int(self.epochs_VAR.get())
+                    self.epochs+=1
+                    self.epochs=str(self.epochs)
+                    self.epochs_VAR.set(self.epochs)
+                    self.train_yolov4_madness()
+            if madness.find('train_yolov7_madness')!=-1:
+                    self.epochs_yolov7=int(self.epochs_yolov7_VAR.get())
+                    self.epochs_yolov7+=1
+                    self.epochs_yolov7=str(self.epochs_yolov7)
+                    self.epochs_yolov7_VAR.set(self.epochs_yolov7)
+                    self.train_yolov7_madness()
+            elif madness.find('train_yolov7_re_madness')!=-1:
+                    self.epochs_yolov7_re=int(self.epochs_yolov7_re_VAR.get())
+                    self.epochs_yolov7_re+=1
+                    self.epochs_yolov7_re=str(self.epochs_yolov7_re)
+                    self.epochs_yolov7_re_VAR.set(self.epochs_yolov7_re)
+                    self.train_yolov7_re_madness()
+            elif madness.find('train_yolov7_e6e_madness')!=-1:
+                    self.epochs_yolov7_e6e=int(self.epochs_yolov7_e6e_VAR.get())
+                    self.epochs_yolov7_e6e+=1
+                    self.epochs_yolov7_e6e=str(self.epochs_yolov7_e6e)
+                    self.epochs_yolov7_e6e_VAR.set(self.epochs_yolov7_e6e)
+                    self.train_yolov7_e6e_madness()
+            else:
+                pass
+
+            self.run_cmd(train_cmd)
+            print('Finished Training Loop # {} at {}'.format(count,time.time()))
+            count+=1
+            self.var_overwrite.set('Yes')
+            self.convert_PascalVOC_to_YOLO()
+            self.split_objs()
 
     def popupWindow_TRAIN(self):
         try:
@@ -4057,6 +4137,13 @@ class yolo_cfg:
         self.b.grid(row=0,column=0,sticky='se')
         self.test_yolov4_note=tk.Label(self.top,text='{}'.format(self.var_yolo_choice.get().replace('-','\n-')),bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
         self.test_yolov4_note.grid(row=2,column=2,sticky='s')
+
+        #TD Loop Loading Objects
+        self.train_load_repeat=tk.StringVar()
+        self.train_load_repeat.set('None')
+        self.loop_load_check=tk.Checkbutton(self.top,text='{}'.format('Train/Load Repeat?'),variable=self.train_load_repeat,onvalue="On",offvalue='None',bg='white',fg='blue')
+        self.loop_load_check.grid(row=1,column=2,sticky='s')
+
         #TD TRAIN yolov4
         self.train_yolo()
 
@@ -4371,6 +4458,8 @@ class yolo_cfg:
         self.split_yolo_objs_button_note=tk.Label(self.root,text='2.b \n Split Train/Test Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.split_yolo_objs_button_note.grid(row=5,column=1,sticky='ne')
 
+        
+
     def split_objs(self):
         self.TRAIN_SPLIT=int(self.TRAIN_SPLIT_VAR.get())
         if self.TRAIN_SPLIT>99:
@@ -4460,12 +4549,16 @@ class yolo_cfg:
         self.POINTS_label.grid(row=9,column=4,sticky='nw')
         self.create_yolo_scripts_buttons()
         self.load_yolo_scripts_buttons()
+
+
     def load_yolo_scripts_buttons(self):
         self.load_yolo_files_button=Button(self.root,image=self.icon_scripts,command=self.remaining_buttons,bg=self.root_bg,fg=self.root_fg)
         self.load_yolo_files_button.grid(row=6,column=1,sticky='se')
         self.load_yolo_files_button_note=tk.Label(self.root,text='3.a \n Load Yolo \n Scripts (.sh)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.load_yolo_files_button_note.grid(row=7,column=1,sticky='ne')
         self.create_darknet_buttons()
+
+
     def create_yolo_scripts_buttons(self):
         self.create_yolo_files_button=Button(self.root,image=self.icon_scripts,command=self.create_yolo_files,bg=self.root_bg,fg=self.root_fg)
         self.create_yolo_files_button.grid(row=8,column=1,sticky='se')
