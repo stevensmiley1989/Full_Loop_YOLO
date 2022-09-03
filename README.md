@@ -13,7 +13,7 @@ Darknet (Yolov4) should be installed from (https://github.com/AlexeyAB/darknet).
 
 Yolov7 should be installed from (https://github.com/WongKinYiu/yolov7).  A version controlled fork is shown in these instructions below.
 
-tensorflow-yolov4-tflite installed from (https://github.com/stevensmiley1989/tensorflow-yolov4-tflite) and switched to the smiley_yolov4tiny branch.
+tensorflow-yolov4-tflite installed from (https://github.com/stevensmiley1989/tensorflow-yolov4-tflite) and switched to the smiley_yolov4tiny_r0_prior_20220902 branch.
 
 Change your DEFAULT_SETTINGS path (located at libs/DEFAULT_SETTINGS.py) to point to your installed Darknet path for use.  
 
@@ -62,7 +62,7 @@ Yolov7
     #git clone https://github.com/WongKinYiu/yolov7.git
     git clone https://github.com/stevensmiley1989/yolov7.git
     cd yolov7
-    git switch smiley #if using smiley branch, this is a version control method
+    git switch smiley_r0_prior_20220902 #if using smiley branch, this is a version control method
     pip3 install -r requirements.txt #you might need to adjust things manually here for versions of PyTorch    
 ~~~~~~~
 
@@ -73,6 +73,7 @@ MOSAIC_Chip_Sorter
     cd ~/
     git clone https://github.com/stevensmiley1989/MOSAIC_Chip_Sorter.git
     cd MOSAIC_Chip_Sorter
+    git switch r0_prior_20220902
     pip3 install -r requirements.txt #you might need to adjust things manually, see repo of MOSAIC_Chip_Sorter for more info 
 ~~~~~~~
 
@@ -83,7 +84,7 @@ tensorflow-yolov4-tflite
     cd ~/
     git clone https://github.com/stevensmiley1989/tensorflow-yolov4-tflite.git
     cd tensorflow-yolov4-tflite
-    git switch smiley_yolov4tiny #
+    git switch smiley_yolov4tiny_r0_prior_20220902 #
     pip3 install -r requirements_smiley_yolov4_tiny_converter.txt #you might need to adjust things manually    
 ~~~~~~~
 
@@ -93,7 +94,7 @@ labelImg
     cd ~/
     git clone https://github.com/stevensmiley1989/labelImg.git
     cd labelImg
-    git switch smiley
+    git switch smiley_r0_prior_20220902
     pip3 install -r requirements/requirements-linux-python3.txt #you might need to adjust things manually    
 ~~~~~~~
 
@@ -103,6 +104,7 @@ IMAGE_AUG_GUI
     cd ~/
     git clone https://github.com/stevensmiley1989/IMAGE_AUG_GUI.git
     cd IMAGE_AUG_GUI
+    git switch r0_prior_20220902
     pip3 install -r requirements.txt #you might need to adjust things manually
 ~~~~~~~
 
@@ -117,6 +119,7 @@ Python 3 + Tkinter
     source venv_Full_Loop_YOLO/bin/activate
     
     cd ~/Full_Loop_YOLO
+    git swtich r0_prior_20220902
     pip3 install -r requirements.txt
     nano libs/DEFAULT_SETTINGS.py #edit the path for darknet to your installed path above
     nano libs/tensorflow_yolov4_tflite_path.py #edit the path for your installed path above
