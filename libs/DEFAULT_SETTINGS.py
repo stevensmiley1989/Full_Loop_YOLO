@@ -2,7 +2,7 @@ import os
 WIDTH_NUM=640
 HEIGHT_NUM=640
 TRAIN_SPLIT=70 #70/30 train/val split only need to say 70
-increment=10000 #for writing out pandas pickle files RAM efficient
+increment=10000000 #for writing out pandas pickle files RAM efficient
 num_div=0
 num_classes=12
 path_prefix_elements=r''
