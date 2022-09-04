@@ -641,6 +641,7 @@ class yolo_cfg:
         self.icon_test=ImageTk.PhotoImage(Image.open('resources/icons/test.png'))
         self.icon_MOSAIC=ImageTk.PhotoImage(Image.open('resources/icons/appM_icon.png'))
         self.icon_IMGAUG=ImageTk.PhotoImage(Image.open('resources/icons/appI_icon.png'))    
+        self.icon_CLASSIFY_CHIPS=ImageTk.PhotoImage(Image.open('resources/icons/appC_icon.png'))    
 
         self.root_H=int(self.root.winfo_screenheight()*0.95)
         self.root_W=int(self.root.winfo_screenwidth()*0.95)
@@ -661,6 +662,12 @@ class yolo_cfg:
         self.path_MOVMP4=None
         self.MOVMP4_selected=False
         self.SOCKET_PREFIX='top'
+        self.CLASSIFY_CHIPS_SETTINGS_PATH_VAR=tk.StringVar()
+        self.CLASSIFY_CHIPS_SETTINGS_PATH_VAR.set('None')
+        self.CLASSIFY_CHIPS_LOGIC=tk.StringVar()
+        self.CLASSIFY_CHIPS_LOGIC.set('No')
+        self.USE_CLASSIFY_CHIPS_VAR=tk.StringVar()
+        self.USE_CLASSIFY_CHIPS_VAR.set('None')
         # self.root.withdraw()
         # self.top=tk.Toplevel(self.root,width=300,height=300)
         # self.canvas_generate=tk.Canvas(self.top,bg='white')
@@ -1560,6 +1567,7 @@ class yolo_cfg:
 
     def create_yolo_files(self):
         self.RTSP()
+        self.CLASSIFYCHIPS()
         self.create_obj_data()
         self.create_train_bash()
 
@@ -1577,7 +1585,9 @@ class yolo_cfg:
         self.labelImg_buttons()
         self.MOSAIC_buttons()
         self.IMGAUG_buttons()
+        self.CLASSIFY_CHIPS_buttons()
         self.send_text_buttons()
+        
 
 
     def remaining_buttons(self):
@@ -1796,10 +1806,102 @@ class yolo_cfg:
             self.cleanup()
             self.RTSP_BUTTONS()  
 
+    def CLASSIFYCHIPS(self):
+        self.popupWindow_CLASSIFY_CHIPS()
+        self.cleanup()
+        self.CLASSIFY_CHIPS_BUTTONS()
+
 
     def RTSP_BUTTONS(self):
         self.popup_RTSP_button=Button(self.root,text='Client/Socket RTSP Buttons',command=self.popupWindow_RTSP,bg=self.root_fg,fg=self.root_bg)
         self.popup_RTSP_button.grid(row=16+5-2,column=3,sticky='sw')
+
+    def CLASSIFY_CHIPS_BUTTONS(self):
+        self.popup_CLASSIFY_CHIPS_button=Button(self.root,text='CLASSIFY CHIPS Buttons',command=self.popupWindow_CLASSIFY_CHIPS,bg=self.root_fg,fg=self.root_bg)
+        self.popup_CLASSIFY_CHIPS_button.grid(row=9,column=8,sticky='sw')
+
+
+        self.style3=ttk.Style()
+        self.style3.configure('Normal.TRadiobutton',
+                             background='green',
+                             foreground='black')
+        self.button_classify_yes=ttk.Radiobutton(text='Yes',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='Yes')
+
+        self.button_classify_yes.grid(row=9,column=9,stick='nw')
+        self.button_classify_no=ttk.Radiobutton(text='No',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='No')
+        self.button_classify_no.grid(row=9,column=10,stick='ne')
+        self.label_classify=tk.Label(self.root,text='CLASSIFY CHIPS?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.label_classify.grid(row=8,column=9,columnspan=2,stick='sew')
+
+    def popupWindow_CLASSIFY_CHIPS(self):
+        spacer=-12
+        try:
+            self.top.destroy()
+        except:
+            pass
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+        self.top.title('CLASSIFY CHIPS INFERENCE Options')
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup_CLASSIFY_CHIPS,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=0,column=0,sticky='se')
+        self.load_CLASSIFY_CHIPS_INFERENCE_Options(spacer)
+        self.USE_CLASSIFY_CHIPS_INFERENCE_label=tk.Label(self.top,text='INFERENCE SCRIPTS FOR SECOND-STAGE CLASSIFIER',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.USE_CLASSIFY_CHIPS_INFERENCE_label.grid(row=16+spacer-2,column=3,sticky='nw')
+        self.OPEN_CLASSIFY_CHIPS_INFERENCE_Button=tk.Button(self.top,text='OPEN CLASSIFY_CHIPS_INFERENCE Options',command=self.open_CLASSIFY_CHIPS_INFERENCE_List,bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.OPEN_CLASSIFY_CHIPS_INFERENCE_Button.grid(row=17+spacer-2,column=3,sticky='sw')
+        self.LOAD_CLASSIFY_CHIPS_INFERENCE_Button=tk.Button(self.top,text='LOAD CLASSIFY_CHIPS_INFERENCE Options',command=partial(self.load_CLASSIFY_CHIPS_INFERENCE_Options,spacer),bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.LOAD_CLASSIFY_CHIPS_INFERENCE_Button.grid(row=18+spacer-2,column=3,sticky='sw')
+
+
+
+    def cleanup_CLASSIFY_CHIPS(self):
+        self.USE_CLASSIFY_CHIPS_VAR.set(self.USE_CLASSIFY_CHIPS_VAR.get())
+        if os.path.exists(self.USE_CLASSIFY_CHIPS_VAR.get()):
+            SAVED_SETTINGS_PATH=os.path.join(os.path.dirname(self.USE_CLASSIFY_CHIPS_VAR.get()),os.path.basename(os.path.dirname(self.USE_CLASSIFY_CHIPS_VAR.get()))+'_SAVED_SETTINGS.py')
+            print(f"SAVED_SETTINGS_PATH = {SAVED_SETTINGS_PATH}")
+            if os.path.exists(SAVED_SETTINGS_PATH):
+                print("EXISTS")
+                self.CLASSIFY_CHIPS_SETTINGS_PATH_VAR.set(os.path.join(os.path.dirname(self.USE_CLASSIFY_CHIPS_VAR.get()),os.path.basename(os.path.dirname(self.USE_CLASSIFY_CHIPS_VAR.get()))+'_SAVED_SETTINGS.py'))
+            else:
+                print('DOES NOT EXIST')
+        self.top.destroy()
+    def load_CLASSIFY_CHIPS_INFERENCE_Options_list(self):
+        self.CLASSIFY_CHIPS_INFERENCE_LIST='libs/CLASSIFY_CHIPS_LIST.txt'
+        if os.path.exists(self.CLASSIFY_CHIPS_INFERENCE_LIST):
+            f=open(self.CLASSIFY_CHIPS_INFERENCE_LIST,'r')
+            f_read=f.readlines()
+            f.close()
+            self.CLASSIFY_CHIPS_LIST=[w.replace(' ','').replace('\n','') for w in f_read if w.find('INFERENCE')!=-1]
+        else:
+            f=open(self.CLASSIFY_CHIPS_INFERENCE_LIST,'w')
+            f.writelines('NO OPTIONS AVAILABLE\n')
+            f.close()
+            f=open(self.CLASSIFY_CHIPS_INFERENCE_LIST,'r')
+            f_read=f.readlines()
+            f.close()
+            self.CLASSIFY_CHIPS_LIST=[w.replace(' ','').replace('\n','') for w in f_read if w.find('INFERENCE')!=-1]
+    def open_CLASSIFY_CHIPS_INFERENCE_List(self):
+        cmd_i=open_cmd+" '{}'".format(self.CLASSIFY_CHIPS_INFERENCE_LIST)
+        self.run_cmd(cmd_i)  
+
+    def load_CLASSIFY_CHIPS_INFERENCE_Options(self,spacer):
+        try:
+            del self.USE_CLASSIFY_CHIPS_dropdown
+        except:
+            pass
+        self.USE_CLASSIFY_CHIPS_VAR=tk.StringVar()
+        self.load_CLASSIFY_CHIPS_INFERENCE_Options_list()
+        if len(self.CLASSIFY_CHIPS_LIST)>0:
+            pass
+        else:
+            self.CLASSIFY_CHIPS_LIST=['NO OPTIONS AVAILABLE']
+        self.USE_CLASSIFY_CHIPS_VAR.set(self.CLASSIFY_CHIPS_LIST[0])
+        self.USE_CLASSIFY_CHIPS_dropdown=tk.OptionMenu(self.top,self.USE_CLASSIFY_CHIPS_VAR,*self.CLASSIFY_CHIPS_LIST,command=self.return_CLASSIFY_CHIPS)
+        self.USE_CLASSIFY_CHIPS_dropdown.grid(row=15+spacer-2,column=3,sticky='sw')
+
+    def return_CLASSIFY_CHIPS(self):
+        print(self.USE_CLASSIFY_CHIPS_VAR.get())
 
     def popupWindow_RTSP(self):
         spacer=-12
@@ -2120,6 +2222,27 @@ class yolo_cfg:
             self.IMGAUG_button.grid(row=9,column=6,sticky='se')
             self.IMGAUG_button_note=tk.Label(self.root,text='IMAGE AUG GUI',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.IMGAUG_button_note.grid(row=10,column=6,sticky='ne') 
+    def CLASSIFY_CHIPS_buttons(self):
+        if os.path.exists('libs/CLASSIFY_CHIPS_path.py'):
+            self.CLASSIFY_CHIPS_button=Button(self.root,image=self.icon_CLASSIFY_CHIPS,command=self.open_CLASSIFY_CHIPS,bg=self.root_bg,fg=self.root_fg)
+            self.CLASSIFY_CHIPS_button.grid(row=9,column=7,sticky='se')
+            self.CLASSIFY_CHIPS_button_note=tk.Label(self.root,text='CLASSIFY CHIPS GUI',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.CLASSIFY_CHIPS_button_note.grid(row=10,column=7,sticky='ne')       
+
+    def open_CLASSIFY_CHIPS(self):
+        from libs import CLASSIFY_CHIPS_path
+        from multiprocessing import Process
+        self.path_CLASSIFY_CHIPS=CLASSIFY_CHIPS_path.path
+        self.PYTHON_PATH="python3"
+        if os.path.exists(self.path_CLASSIFY_CHIPS):
+            self.cmd_i='cd {};{} "{}"'.format(os.path.dirname(self.path_CLASSIFY_CHIPS),self.PYTHON_PATH, self.path_CLASSIFY_CHIPS)
+            if os.path.exists(self.CLASSIFY_CHIPS_SETTINGS_PATH_VAR.get()):
+                self.cmd_i=self.cmd_i+' --SETTINGS_PATH= "{}"'.format(self.CLASSIFY_CHIPS_SETTINGS_PATH_VAR.get())
+            else:
+                self.cmd_i=self.cmd_i
+            self.CLASSIFY_CHIPS=Process(target=self.run_cmd,args=(self.cmd_i,)).start()
+        else:
+            self.popup_text='Please provide a valid CLASSIFY_CHIPS.py path. \n  Current path is: {}'.format(self.path_CLASSIFY_CHIPS)     
 
     def open_MOSAIC(self):
         from libs import MOSAIC_Chip_Sorter_path
@@ -2219,6 +2342,7 @@ class yolo_cfg:
         self.create_test_bash_mp4_yolov7_e6e()
         self.create_train_bash_yolov7_e6e()
         self.save_settings()
+
     def train_yolov7_e6e_cmd(self):
         self.train_yolov7_e6e_madness()
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_e6e)
@@ -2243,11 +2367,13 @@ class yolo_cfg:
             #self.test_yolov7_webcam_re()
             #self.test_yolov7_webcam_re_RTMP()
             #self.test_yolov7_mAP_re()
+
     def train_yolov7_re_madness(self):
         self.clear_cache_yolov7()
         self.create_test_bash_mp4_yolov7_re()
         self.create_train_bash_yolov7_re()
         self.save_settings()
+
     def train_yolov7_re_cmd(self):
         self.train_yolov7_re_madness()
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_re)
@@ -2738,6 +2864,8 @@ class yolo_cfg:
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)   
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2748,9 +2876,14 @@ class yolo_cfg:
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny)
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
         f.close()
 
     def create_test_bash_mp4_yolov7_e6e(self):
@@ -2774,6 +2907,8 @@ class yolo_cfg:
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i) 
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2784,9 +2919,14 @@ class yolo_cfg:
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e)
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
         f.close()
 
 
@@ -2812,6 +2952,8 @@ class yolo_cfg:
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i) 
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2822,10 +2964,15 @@ class yolo_cfg:
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re)
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
         f.close()
 
 
@@ -2850,6 +2997,8 @@ class yolo_cfg:
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
 
 
@@ -2862,9 +3011,14 @@ class yolo_cfg:
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny)
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
         f.close()
 
     def create_test_bash_rtsp_yolov7(self):
@@ -2889,6 +3043,8 @@ class yolo_cfg:
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
                 cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
 
 
@@ -2902,11 +3058,15 @@ class yolo_cfg:
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.USE_RTSP_CLIENT_VAR.get())
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         else:
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.USE_RTSP_CLIENT_VAR.get())
             cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
             #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.USE_RTSP_CLIENT_VAR.get()))
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         f.close()
 
@@ -2922,11 +3082,20 @@ class yolo_cfg:
         f.writelines('cd {}\n'.format(self.yolov7_path))
         if self.RTSP_SERVER:
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
+                if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                    cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+                f.writelines(cmd_i)
             else:
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny)
+                if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                    cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+                f.writelines(cmd_i)
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_tiny)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
         f.close()
 
     def create_test_bash_webcam_yolov7_e6e(self):
@@ -2950,6 +3119,8 @@ class yolo_cfg:
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)         
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2960,9 +3131,14 @@ class yolo_cfg:
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e)
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
         f.close()
 
     def create_test_bash_rtsp_yolov7_e6e(self):
@@ -2988,6 +3164,8 @@ class yolo_cfg:
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
                 cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)         
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -2999,12 +3177,16 @@ class yolo_cfg:
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.USE_RTSP_CLIENT_VAR.get())
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         else:
             #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.USE_RTSP_CLIENT_VAR.get()))
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.USE_RTSP_CLIENT_VAR.get())
             #cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         f.close()
 
@@ -3020,11 +3202,20 @@ class yolo_cfg:
         f.writelines('cd {}\n'.format(self.yolov7_path))
         if self.RTSP_SERVER:
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
+                if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                    cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+                f.writelines(cmd_i)
             else:
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e)
+                if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                    cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+                f.writelines(cmd_i)
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_e6e)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
         f.close()
 
     def create_test_bash_webcam_yolov7_re(self):
@@ -3048,6 +3239,8 @@ class yolo_cfg:
                         self.destination_list_final=self.destination_list_final+";"+var_i
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i) 
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -3058,9 +3251,14 @@ class yolo_cfg:
             self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re)
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
         f.close()
 
 
@@ -3087,6 +3285,8 @@ class yolo_cfg:
                 self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
                 cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
                 cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i) 
         elif self.sec.get()=='y':
             self.destination_list_final=''
@@ -3098,11 +3298,15 @@ class yolo_cfg:
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.USE_RTSP_CLIENT_VAR.get())
             cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
             cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         else:
             #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.USE_RTSP_CLIENT_VAR.get()))
             cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.USE_RTSP_CLIENT_VAR.get())
             cmd_i=cmd_i.replace('\n',"")+ ' --PORT {} --HOST {} --socket_prefix {} \n'.format(self.USE_SOCKET_RTSP_PORT_VAR.get(),self.USE_SOCKET_RTSP_HOST_VAR.get(),self.SOCKET_PREFIX_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i) 
         f.close()
 
@@ -3118,11 +3322,20 @@ class yolo_cfg:
         f.writelines('cd {}\n'.format(self.yolov7_path))
         if self.RTSP_SERVER:
             if self.USE_RTSP_VAR.get()=="Yes":
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
+                if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                    cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+                f.writelines(cmd_i)
             else:
-                f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
+                cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re)
+                if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                    cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+                f.writelines(cmd_i)
         else:
-            f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re))
+            cmd_i="python3 detect.py --weights {} --conf {} --img-size {} --project {} --exist-ok --source 0 --YOUTUBE_RTMP=$YOUTUBE_RTMP --YOUTUBE_STREAM_RES=$YOUTUBE_STREAM_RES\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.yolov7_path_project_re)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
         f.close()
 
     def create_predict_bash_mAP_yolov7(self):
