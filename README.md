@@ -27,6 +27,8 @@ Change your MOSAIC_Chip_Sorter path (located at libs/MOSAIC_Chip_Sorter_path.py)
 
 Change your IMAGE_AUG_GUI path (located at libs/IMAGE_AUG_GUI_path.py) to point to your installed IMAGE_AUG_GUI path for use. NOT REQUIRED.
 
+Change your CLASSIFY_CHIPS path (located at libs/CLASSIFY_CHIPS_path.py) to point to your installed CLASSIFY_CHIPS path for use.  NOT REQUIRED.
+
 Ensure you put the yolov4-tiny.conv.29 weights in your Darknet path.  You can get these weights from:
 https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29
 
@@ -106,6 +108,17 @@ IMAGE_AUG_GUI
     pip3 install -r requirements.txt #you might need to adjust things manually
 ~~~~~~~
 
+
+~~~~~~~
+CLASSIFY_CHIPS
+.. code:: shell
+    cd ~/
+    git clone https://github.com/stevensmiley1989/CLASSIFY_CHIPS.git
+    cd CLASSIFY_CHIPS
+    pip3 install -r requirements.txt #you might need to adjust things manually
+~~~~~~~
+
+
 Installation
 ------------------
 ~~~~~~~
@@ -124,6 +137,7 @@ Python 3 + Tkinter
     nano libs/labelImg_path.py #edit the path for labelImg to your installed path above
     nano libs/MOSAIC_Chip_Sorter_path.py #edit the path for MOSAIC_Chip_Sorter path above
     nano libs/IMAGE_AUG_GUI_path.py #edit the path for IMAGE_AUG_GUI path above
+    nano libs/CLASSIFY_CHIPS_path.py #edit the path for CLASSIFY_CHIPS path above
     python3 Full_Loop_YOLO.py
 ~~~~~~~
 
