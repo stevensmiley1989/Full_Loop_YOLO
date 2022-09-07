@@ -597,10 +597,13 @@ for name in list(df['name'].unique()):
         pass
 df['mAP']=df['Precision'].copy()
 df['mAP']=''
-if df['Precision'].astype(str).str.contains('NA').any()==True:
-    df['mAP'][0]=[df['Precision'].drop(df['Precision'].str.contains('NA').dropna().index).mean()]
-else:
-    df['mAP'][0]=[df['Precision'].mean()]
-
+try:
+    if df['Precision'].astype(str).str.contains('NA').any()==True:
+        df['mAP'][0]=[df['Precision'].drop(df['Precision'].str.contains('NA').dropna().index).mean()]
+    else:
+        df['mAP'][0]=[df['Precision'].mean()]
+except:
+    print('invalid mAP')
+    pass
 df.to_csv(df_filename_main,index=None)
 print(df)
