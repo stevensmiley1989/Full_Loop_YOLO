@@ -7,7 +7,7 @@ import shutil
 from tqdm import tqdm
 import collections
 from resources.create_img_list import create_img_list
-def create_imgs_from_video(path_movie=None,fps='1/2'):
+def create_imgs_from_video(path_movie=None,fps='1/2',delete_previous_ACTUAL=True,delete_previous_DESIRED=True):
     '''path_change should be the MOV or mp4 path '''
     print('\npath_movie = {} \n'.format(path_movie))
     print('\nfps={}\n'.format(fps))
@@ -44,7 +44,7 @@ def create_imgs_from_video(path_movie=None,fps='1/2'):
         print('Actual frame count = {}'.format(actual_frames))
         movie_i_name=os.path.basename(path_movie).split('.')[0]
         basepath_desired=os.path.join(basepath,'FPS_DESIRED_{}'.format(fps.replace("/","d")))
-        basepath=os.path.join(basepath,'FPS_ACTUAL_{}_with_DESIRED_{}'.format(actual_video_fps,fps.replace("/","d")))
+        basepath=os.path.join(basepath,'FPS_ACTUAL_{}'.format(actual_video_fps,fps.replace("/","d")))
         if os.path.exists(basepath)==False:
             os.makedirs(basepath)
         if os.path.exists(basepath_desired)==False:
@@ -55,32 +55,49 @@ def create_imgs_from_video(path_movie=None,fps='1/2'):
         folders_in_basepath_desired=[w for w in folders_in_basepath_desired if os.path.isdir(os.path.join(basepath_desired,w))]
         JPEGImages_path=os.path.join(basepath,'JPEGImages')
         Annotations_path=os.path.join(basepath,'Annotations')
-        if 'JPEGImages' not in folders_in_basepath:
-            os.makedirs(JPEGImages_path)  
-        else:
-            #os.system('mv {} {}'.format(JPEGImages_path,JPEGImages_path+'_backup_{}'.format(time_i)))
-            JPEGImages_path=JPEGImages_path+'_'+time_i
-            os.makedirs(JPEGImages_path)
         if 'Annotations' not in folders_in_basepath:
             os.makedirs(Annotations_path)
         else:
             #os.system('mv {} {}'.format(Annotations_path,Annotations_path+'_backup_{}'.format(time_i)))
-            Annotations_path=Annotations_path+'_'+time_i
+            len_annos=len(os.listdir(Annotations_path))
+            if len_annos>0:
+                delete_previous_ACTUAL=False
+                Annotations_path=Annotations_path+'_'+time_i
+            else:
+                os.system(f'rm -rf {Annotations_path}')
             os.makedirs(Annotations_path)
-        JPEGImages_path_desired=os.path.join(basepath_desired,'JPEGImages')
-        Annotations_path_desired=os.path.join(basepath_desired,'Annotations')
-        if 'JPEGImages' not in folders_in_basepath_desired:
-            os.makedirs(JPEGImages_path_desired)  
+        if 'JPEGImages' not in folders_in_basepath:
+            os.makedirs(JPEGImages_path)  
         else:
             #os.system('mv {} {}'.format(JPEGImages_path,JPEGImages_path+'_backup_{}'.format(time_i)))
-            JPEGImages_path_desired=JPEGImages_path_desired+'_'+time_i
-            os.makedirs(JPEGImages_path_desired)
+            if delete_previous_ACTUAL:
+                os.system(f'rm -rf {JPEGImages_path}')
+            else:
+                JPEGImages_path=JPEGImages_path+'_'+time_i
+            os.makedirs(JPEGImages_path)
+        JPEGImages_path_desired=os.path.join(basepath_desired,'JPEGImages')
+        Annotations_path_desired=os.path.join(basepath_desired,'Annotations')
         if 'Annotations' not in folders_in_basepath_desired:
             os.makedirs(Annotations_path_desired)
         else:
             #os.system('mv {} {}'.format(Annotations_path,Annotations_path+'_backup_{}'.format(time_i)))
-            Annotations_path_desired=Annotations_path_desired+'_'+time_i
+            len_annos_desired=len(os.listdir(Annotations_path_desired))
+            if len_annos_desired>0:
+                delete_previous_DESIRED=False
+                Annotations_path_desired=Annotations_path_desired+'_'+time_i
+            else:
+                os.system(f'rm -rf {Annotations_path_desired}')
             os.makedirs(Annotations_path_desired)
+        if 'JPEGImages' not in folders_in_basepath_desired:
+            os.makedirs(JPEGImages_path_desired)  
+        else:
+            #os.system('mv {} {}'.format(JPEGImages_path,JPEGImages_path+'_backup_{}'.format(time_i)))
+            if delete_previous_DESIRED:
+                os.system(f'rm -rf {JPEGImages_path_desired}')
+            else:
+                JPEGImages_path_desired=JPEGImages_path_desired+'_'+time_i
+            os.makedirs(JPEGImages_path_desired)
+
 
 
         #os.system('ffmpeg -i {} -qscale:v 2 -vf fps={} {}/{}_fps{}_%08d.jpg'.format(path_movie,fps,JPEGImages_path,movie_i_name,fps.replace('/','d').replace('.','p')))
@@ -101,10 +118,10 @@ def create_imgs_from_video(path_movie=None,fps='1/2'):
             if counter>frames_every:
                 counter=0
                 desired_frames.append(frame_path)
-                shutil.move(frame_path,JPEGImages_path_desired)
+                shutil.copy(frame_path,JPEGImages_path_desired) #copy instead of move
             elif frame==1 or frame==last_frame:
                 desired_frames.append(frame_path)
-                shutil.move(frame_path,JPEGImages_path_desired)            
+                shutil.copy(frame_path,JPEGImages_path_desired) #copy instead of move         
                 
         os.chdir(return_dir)
         print('creating img list')
@@ -113,6 +130,8 @@ def create_imgs_from_video(path_movie=None,fps='1/2'):
         print('creating img list for desired')
         create_img_list(JPEGImages_path_desired)
         print('finished creating img list for desired')
+
+
     else:
         print('This is not a valid movie file.  Needs to be .mp4 or .MOV.  \n Provided: {}'.format(path_movie))
 
