@@ -426,6 +426,7 @@ class main_entry:
     def run_cmd_editpaths(self):
         cmd_i=open_cmd+" {}".format(self.list_script_path)
         os.system(cmd_i)
+
     def popupWindow_delete(self):
 
         self.USER=self.USER_SELECTION.get()
@@ -533,6 +534,8 @@ class yolo_cfg:
         self.PHONE_VAR=tk.StringVar()
         self.sec=tk.StringVar()
         self.sec.set('n')
+        self.path_JPEGImages_CUSTOM=self.path_JPEGImages
+        self.path_Annotations_CUSTOM=self.path_Annotations
 
         if os.path.exists(self.destination_list_file):
             self.load_destination_list()
@@ -688,6 +691,8 @@ class yolo_cfg:
         self.data_path_selected=False
         self.mp4_selected=False
         self.open_anno_selected=False
+        self.open_anno_selected_CUSTOM=False
+        self.open_jpeg_selected_CUSTOM=False
 
 
         self.open_darknet_label_var=None
@@ -918,10 +923,21 @@ class yolo_cfg:
     def select_folder(self,folder_i,title_i,var_i=None):
             filetypes=(('All files','*.*'))
             if var_i:
-                folder_i=var_i.get()
+                if var_i==self.open_anno_label_var_CUSTOM:
+                    self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
+                    initialdir=self.YOLO_MODEL_PATH
+                    folder_i=var_i.get()
+                elif var_i==self.open_jpeg_label_var_CUSTOM:
+                    self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
+                    initialdir=self.YOLO_MODEL_PATH
+                    folder_i=var_i.get()
+                else:
+                    folder_i=var_i.get() 
+                    initialdir=folder_i 
+                           
             if os.path.exists(folder_i):
                 self.foldername=fd.askdirectory(title=title_i,
-                                            initialdir=folder_i)
+                                            initialdir=initialdir)
             else:
                 self.foldername=fd.askdirectory(title=title_i)
             if self.foldername=='' or len(self.foldername)==0:
@@ -976,6 +992,7 @@ class yolo_cfg:
                     self.open_jpeg_label.grid(row=13,column=5,columnspan=50,sticky='sw')
                     self.path_JPEGImages=self.foldername
                     print(self.path_JPEGImages)  
+
                 if var_i==self.open_predjpeg_label_var:
                     var_i.set(folder_i)
                     self.open_predjpeg_label.destroy()
@@ -1003,6 +1020,32 @@ class yolo_cfg:
                     self.open_yolo_label.grid(row=15,column=5,columnspan=50,sticky='sw')
                     self.path_Yolo=self.foldername
                     print(self.path_Yolo)  
+                
+                if var_i==self.open_anno_label_var_CUSTOM:
+                    self.anno_selected_CUSTOM=True
+                    var_i.set(folder_i)
+                    self.open_anno_label_CUSTOM.destroy()
+                    del self.open_anno_label_CUSTOM
+                    cmd_i=open_cmd+" '{}'".format(self.open_anno_label_var_CUSTOM.get())
+                    self.open_anno_label_CUSTOM=Button(self.top,textvariable=self.open_anno_label_var_CUSTOM, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+                    self.open_anno_label_CUSTOM.grid(row=3,column=5,columnspan=50,sticky='sw')
+                    self.path_Annotations_CUSTOM=self.foldername
+                    print(self.path_Annotations_CUSTOM)
+                    self.open_anno_CUSTOM()
+
+                if var_i==self.open_jpeg_label_var_CUSTOM:
+                    self.jpeg_selected_CUSTOM=True
+                    var_i.set(folder_i)
+                    self.open_jpeg_label_CUSTOM.destroy()
+                    del self.open_jpeg_label_CUSTOM
+                    cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var_CUSTOM.get())
+                    self.open_jpeg_label_CUSTOM=Button(self.top,textvariable=self.open_jpeg_label_var_CUSTOM, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+                    self.open_jpeg_label_CUSTOM.grid(row=4,column=5,columnspan=50,sticky='sw')
+                    self.path_JPEGImages_CUSTOM=self.foldername
+                    print(self.path_JPEGImages_CUSTOM)  
+                    self.open_jpeg_CUSTOM()
+
+
 
     def update_paths(self,generate=True):
         self.PREFIX=str(self.PREFIX_VAR.get().strip())
@@ -1553,6 +1596,26 @@ class yolo_cfg:
         self.open_anno_label=Button(self.root,textvariable=self.open_anno_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_anno_label.grid(row=11,column=5,columnspan=50,sticky='sw')
         self.open_anno_selected=True
+
+    def open_anno_CUSTOM(self):
+        if self.open_anno_selected_CUSTOM==True:
+            self.open_anno_label_CUSTOM.destroy()
+            self.open_anno_note_CUSTOM.destroy()
+            self.open_anno_button_CUSTOM.destroy()
+            del self.open_anno_label_CUSTOM
+            del self.open_anno_note_CUSTOM
+            del self.open_anno_button_CUSTOM
+
+        self.open_anno_label_var_CUSTOM=tk.StringVar()
+        self.open_anno_label_var_CUSTOM.set(self.path_Annotations_CUSTOM)
+        self.open_anno_button_CUSTOM=Button(self.top,image=self.icon_folder,command=partial(self.select_folder,os.path.dirname(self.path_Yolo),'Open Custom Annotations Folder',self.open_anno_label_var_CUSTOM),bg=self.root_bg,fg=self.root_fg)
+        self.open_anno_button_CUSTOM.grid(row=3,column=6,sticky='se')
+        self.open_anno_note_CUSTOM=tk.Label(self.top,text="Custom Annotations dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_anno_note_CUSTOM.grid(row=4,column=6,sticky='ne')
+
+        self.open_anno_label_CUSTOM=Button(self.top,textvariable=self.open_anno_label_var_CUSTOM, command=self.open_custom_anno_cmd,bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_anno_label_CUSTOM.grid(row=3,column=7,columnspan=75,sticky='sew')
+        self.open_anno_selected_CUSTOM=True
 
     def send_text_buttons(self):
         self.ck2=tk.Checkbutton(self.root,text='Send Text Message/Email Alerts',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
@@ -2200,10 +2263,111 @@ class yolo_cfg:
             self.test_mp4_yolo_objs_button.grid(row=7,column=2,sticky='se')
             self.test_mp4_yolo_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolo_objs_button_note.grid(row=8,column=2,sticky='ne')
+
+    def popupWindow_MOSAIC(self):
+        try:
+            self.top.destroy()
+        except:
+            pass
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.1),int(self.root.winfo_screenheight()*0.95//1.1)) )
+        self.top.title('LAUNCH MOSAIC CHIP SORTER?')
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=1,column=0,sticky='se')
+        self.submit_MOSAIC=Button(self.top,image=self.icon_MOSAIC,command=partial(self.open_MOSAIC,False),bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.submit_MOSAIC.grid(row=0,column=4,sticky='se')
+        self.submit_MOSAIC_label=tk.Label(self.top,text="Open Training Dataset",bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.submit_MOSAIC_label.grid(row=1,column=4,sticky='ne')
+
+        self.submit_MOSAIC_CUSTOM=Button(self.top,image=self.icon_MOSAIC,command=partial(self.open_MOSAIC,True),bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.submit_MOSAIC_CUSTOM.grid(row=2,column=4,sticky='se')
+        self.submit_MOSAIC_label_CUSTOM=tk.Label(self.top,text="Open Custom Dataset",bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.submit_MOSAIC_label_CUSTOM.grid(row=3,column=4,sticky='ne')
+
+        self.open_anno_CUSTOM()
+        self.open_jpeg_CUSTOM()
+
+    def popupWindow_labelImg(self):
+        try:
+            self.top.destroy()
+        except:
+            pass
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.1),int(self.root.winfo_screenheight()*0.95//1.1)) )
+        self.top.title('LAUNCH labelImg?')
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=1,column=0,sticky='se')
+        self.submit_LABELIMG=Button(self.top,image=self.icon_labelImg,command=partial(self.open_labelImg,False),bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.submit_LABELIMG.grid(row=0,column=4,sticky='se')
+        self.submit_LABELIMG_label=tk.Label(self.top,text="Open Training Dataset",bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.submit_LABELIMG_label.grid(row=1,column=4,sticky='ne')
+
+        self.submit_LABELIMG_CUSTOM=Button(self.top,image=self.icon_labelImg,command=partial(self.open_labelImg,True),bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.submit_LABELIMG_CUSTOM.grid(row=2,column=4,sticky='se')
+        self.submit_LABELIMG_label_CUSTOM=tk.Label(self.top,text="Open Custom Dataset",bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.submit_LABELIMG_label_CUSTOM.grid(row=3,column=4,sticky='ne')
+
+        self.open_anno_CUSTOM()
+        self.open_jpeg_CUSTOM()
+
+    def popupWindow_IMGAUG(self):
+        try:
+            self.top.destroy()
+        except:
+            pass
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.1),int(self.root.winfo_screenheight()*0.95//1.1)) )
+        self.top.title('LAUNCH IMGAUG GUI?')
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=1,column=0,sticky='se')
+        self.submit_IMGAUG=Button(self.top,image=self.icon_IMGAUG,command=partial(self.open_IMGAUG,False),bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.submit_IMGAUG.grid(row=0,column=4,sticky='se')
+        self.submit_IMGAUG_label=tk.Label(self.top,text="Open Training Dataset",bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.submit_IMGAUG_label.grid(row=1,column=4,sticky='ne')
+
+        self.submit_IMGAUG_CUSTOM=Button(self.top,image=self.icon_IMGAUG,command=partial(self.open_IMGAUG,True),bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.submit_IMGAUG_CUSTOM.grid(row=2,column=4,sticky='se')
+        self.submit_IMGAUG_label_CUSTOM=tk.Label(self.top,text="Open Custom Dataset",bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.submit_IMGAUG_label_CUSTOM.grid(row=3,column=4,sticky='ne')
+
+        self.open_anno_CUSTOM()
+        self.open_jpeg_CUSTOM()
+    
+    def open_jpeg_CUSTOM(self):
+        if self.open_jpeg_selected_CUSTOM==True:
+            self.open_jpeg_label_CUSTOM.destroy()
+            self.open_jpeg_note_CUSTOM.destroy()
+            self.open_jpeg_button_CUSTOM.destroy()
+            del self.open_jpeg_label_CUSTOM
+            del self.open_jpeg_note_CUSTOM
+            del self.open_jpeg_button_CUSTOM
+        
+        self.open_jpeg_label_var_CUSTOM=tk.StringVar()
+        self.open_jpeg_label_var_CUSTOM.set(self.path_JPEGImages_CUSTOM)
+        self.open_jpeg_button_CUSTOM=Button(self.top,image=self.icon_folder,command=partial(self.select_folder,os.path.dirname(self.path_Yolo),'Open Custom JPEGImages Folder',self.open_jpeg_label_var_CUSTOM),bg=self.root_bg,fg=self.root_fg)
+        self.open_jpeg_button_CUSTOM.grid(row=6,column=6,sticky='se')
+        self.open_jpeg_note_CUSTOM=tk.Label(self.top,text="Custom JPEGImages dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_jpeg_note_CUSTOM.grid(row=7,column=6,sticky='ne')
+        cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var_CUSTOM.get())
+        self.open_jpeg_label_CUSTOM=Button(self.top,textvariable=self.open_jpeg_label_var_CUSTOM, command=self.open_custom_jpeg_cmd,bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_jpeg_label_CUSTOM.grid(row=6,column=7,columnspan=75,sticky='sew')
+        self.open_jpeg_selected_CUSTOM=True
+
+    def open_custom_jpeg_cmd(self):
+        cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var_CUSTOM.get())
+        self.run_cmd(cmd_i)
+
+    def open_custom_anno_cmd(self):
+        cmd_i=open_cmd+" '{}'".format(self.open_anno_label_var_CUSTOM.get())
+        self.run_cmd(cmd_i)
+
     def labelImg_buttons(self):
         if os.path.exists('libs/labelImg_path.py'):
 
-            self.labelImg_button=Button(self.root,image=self.icon_labelImg,command=self.open_labelImg,bg=self.root_bg,fg=self.root_fg)
+            self.labelImg_button=Button(self.root,image=self.icon_labelImg,command=self.popupWindow_labelImg,bg=self.root_bg,fg=self.root_fg)
             self.labelImg_button.grid(row=9,column=4,sticky='se')
             self.labelImg_button_note=tk.Label(self.root,text='LabelImg',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.labelImg_button_note.grid(row=10,column=4,sticky='ne')    
@@ -2211,17 +2375,19 @@ class yolo_cfg:
     def MOSAIC_buttons(self):
         if os.path.exists('libs/MOSAIC_Chip_Sorter_path.py'):
 
-            self.MOSAIC_button=Button(self.root,image=self.icon_MOSAIC,command=self.open_MOSAIC,bg=self.root_bg,fg=self.root_fg)
+            self.MOSAIC_button=Button(self.root,image=self.icon_MOSAIC,command=self.popupWindow_MOSAIC,bg=self.root_bg,fg=self.root_fg)
             self.MOSAIC_button.grid(row=9,column=5,sticky='se')
             self.MOSAIC_button_note=tk.Label(self.root,text='MOSAIC Chip Sorter',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.MOSAIC_button_note.grid(row=10,column=5,sticky='ne')         
+
     def IMGAUG_buttons(self):
         if os.path.exists('libs/IMAGE_AUG_GUI_path.py'):
 
-            self.IMGAUG_button=Button(self.root,image=self.icon_IMGAUG,command=self.open_IMGAUG,bg=self.root_bg,fg=self.root_fg)
+            self.IMGAUG_button=Button(self.root,image=self.icon_IMGAUG,command=self.popupWindow_IMGAUG,bg=self.root_bg,fg=self.root_fg)
             self.IMGAUG_button.grid(row=9,column=6,sticky='se')
             self.IMGAUG_button_note=tk.Label(self.root,text='IMAGE AUG GUI',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.IMGAUG_button_note.grid(row=10,column=6,sticky='ne') 
+
     def CLASSIFY_CHIPS_buttons(self):
         if os.path.exists('libs/CLASSIFY_CHIPS_path.py'):
             self.CLASSIFY_CHIPS_button=Button(self.root,image=self.icon_CLASSIFY_CHIPS,command=self.open_CLASSIFY_CHIPS,bg=self.root_bg,fg=self.root_fg)
@@ -2244,36 +2410,58 @@ class yolo_cfg:
         else:
             self.popup_text='Please provide a valid CLASSIFY_CHIPS.py path. \n  Current path is: {}'.format(self.path_CLASSIFY_CHIPS)     
 
-    def open_MOSAIC(self):
+    def open_MOSAIC(self,custom):
         from libs import MOSAIC_Chip_Sorter_path
         from multiprocessing import Process
         self.path_MOSAIC=MOSAIC_Chip_Sorter_path.path
         self.PYTHON_PATH="python3"
+        self.path_JPEGImages_CUSTOM=self.open_jpeg_label_var_CUSTOM.get()
+        self.path_Annotations_CUSTOM=self.open_anno_label_var_CUSTOM.get()
+        if custom:
+            pass
+        else:
+            self.path_JPEGImages_CUSTOM=self.path_JPEGImages
+            self.path_Annotations_CUSTOM=self.path_Annotations
+
         if os.path.exists(self.path_MOSAIC):
-            self.cmd_i='cd {};{} "{}" --path_Annotations "{}" --path_JPEGImages "{}"'.format(os.path.dirname(self.path_MOSAIC),self.PYTHON_PATH ,self.path_MOSAIC,self.path_Annotations,self.path_JPEGImages)
+            self.cmd_i='cd {};{} "{}" --path_Annotations "{}" --path_JPEGImages "{}"'.format(os.path.dirname(self.path_MOSAIC),self.PYTHON_PATH ,self.path_MOSAIC,self.path_Annotations_CUSTOM,self.path_JPEGImages_CUSTOM)
             self.MOSAIC=Process(target=self.run_cmd,args=(self.cmd_i,)).start()
         else:
             self.popup_text='Please provide a valid MOSAIC_Chip_Sorter.py path. \n  Current path is: {}'.format(self.path_MOSAIC)
 
-    def open_IMGAUG(self):
+    def open_IMGAUG(self,custom):
         from libs import IMAGE_AUG_GUI_path
         from multiprocessing import Process
         self.path_IMGAUG=IMAGE_AUG_GUI_path.path
         self.PYTHON_PATH="python3"
+        self.path_JPEGImages_CUSTOM=self.open_jpeg_label_var_CUSTOM.get()
+        self.path_Annotations_CUSTOM=self.open_anno_label_var_CUSTOM.get()
+        if custom:
+            pass
+        else:
+            self.path_JPEGImages_CUSTOM=self.path_JPEGImages
+            self.path_Annotations_CUSTOM=self.path_Annotations
         if os.path.exists(self.path_IMGAUG):
-            self.cmd_i='cd {};{} "{}" --path_Annotations "{}" --path_JPEGImages "{}"'.format(os.path.dirname(self.path_IMGAUG),self.PYTHON_PATH ,self.path_IMGAUG,self.path_Annotations,self.path_JPEGImages)
+            self.cmd_i='cd {};{} "{}" --path_Annotations "{}" --path_JPEGImages "{}"'.format(os.path.dirname(self.path_IMGAUG),self.PYTHON_PATH ,self.path_IMGAUG,self.path_Annotations_CUSTOM,self.path_JPEGImages_CUSTOM)
             self.IMGAUG=Process(target=self.run_cmd,args=(self.cmd_i,)).start()
         else:
             self.popup_text='Please provide a valid IMAGE_AUG_GUI.py path. \n  Current path is: {}'.format(self.path_IMGAUG)
 
-    def open_labelImg(self):
+    def open_labelImg(self,custom):
         from libs import labelImg_path
         from multiprocessing import Process
         self.path_labelImg=labelImg_path.path
         self.path_labelImg_predefined_classes_file=os.path.join(os.path.dirname(self.names_path),'predefined_classes.txt')
         shutil.copy(self.names_path,self.path_labelImg_predefined_classes_file)
-        self.path_labelImg_save_dir=self.path_Annotations
-        self.path_labelImg_image_dir=self.path_JPEGImages
+        self.path_JPEGImages_CUSTOM=self.open_jpeg_label_var_CUSTOM.get()
+        self.path_Annotations_CUSTOM=self.open_anno_label_var_CUSTOM.get()
+        if custom:
+            pass
+        else:
+            self.path_JPEGImages_CUSTOM=self.path_JPEGImages
+            self.path_Annotations_CUSTOM=self.path_Annotations
+        self.path_labelImg_save_dir=self.path_Annotations_CUSTOM
+        self.path_labelImg_image_dir=self.path_JPEGImages_CUSTOM
         self.PYTHON_PATH="python3"
         if os.path.exists(self.path_labelImg):
             self.cmd_i='{} "{}" "{}" "{}" "{}"'.format(self.PYTHON_PATH ,self.path_labelImg,self.path_labelImg_image_dir,self.path_labelImg_predefined_classes_file,self.path_labelImg_save_dir)
