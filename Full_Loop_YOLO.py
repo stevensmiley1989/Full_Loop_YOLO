@@ -536,6 +536,11 @@ class yolo_cfg:
         self.sec.set('n')
         self.path_JPEGImages_CUSTOM=self.path_JPEGImages
         self.path_Annotations_CUSTOM=self.path_Annotations
+        self.open_anno_label_var_CUSTOM=tk.StringVar()
+        self.open_anno_label_var_CUSTOM.set(self.path_Annotations_CUSTOM)
+        self.open_jpeg_label_var_CUSTOM=tk.StringVar()
+        self.open_jpeg_label_var_CUSTOM.set(self.path_JPEGImages_CUSTOM)
+
 
         if os.path.exists(self.destination_list_file):
             self.load_destination_list()
@@ -923,14 +928,18 @@ class yolo_cfg:
     def select_folder(self,folder_i,title_i,var_i=None):
             filetypes=(('All files','*.*'))
             if var_i:
-                if var_i==self.open_anno_label_var_CUSTOM:
-                    self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
-                    initialdir=self.YOLO_MODEL_PATH
-                    folder_i=var_i.get()
-                elif var_i==self.open_jpeg_label_var_CUSTOM:
-                    self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
-                    initialdir=self.YOLO_MODEL_PATH
-                    folder_i=var_i.get()
+                if self.open_anno_label_var_CUSTOM and self.open_jpeg_label_var_CUSTOM:
+                    if var_i==self.open_anno_label_var_CUSTOM:
+                        self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
+                        initialdir=self.YOLO_MODEL_PATH
+                        folder_i=var_i.get()
+                    elif var_i==self.open_jpeg_label_var_CUSTOM:
+                        self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
+                        initialdir=self.YOLO_MODEL_PATH
+                        folder_i=var_i.get()
+                    else:
+                        folder_i=var_i.get() 
+                        initialdir=folder_i 
                 else:
                     folder_i=var_i.get() 
                     initialdir=folder_i 
