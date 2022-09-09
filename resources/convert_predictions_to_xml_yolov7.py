@@ -59,7 +59,7 @@ end=0
 j=0
 df=pd.DataFrame(columns=['path_jpeg'])
 for i,line in enumerate(f_read):
-    jpg_i=line.replace('/n','').strip()
+    jpg_i=line.rstrip('/n').strip()
     
     path_txt_i=os.path.basename(jpg_i).replace('.jpg','.txt')
     path_pred_txt_i=os.path.join(path_predictions_folder,os.path.join('labels',path_txt_i))
