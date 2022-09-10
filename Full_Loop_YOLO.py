@@ -2588,6 +2588,15 @@ class yolo_cfg:
             self.test_mp4_yolov7_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolov7_objs_button_note.grid(row=15-7,column=10-7,sticky='ne')
 
+    def test_yolov7_labelimg(self):
+        if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_labelimg_yolov7()
+            cmd_i=" bash '{}'".format(self.TEST_labelimg_YOLOV7)
+            self.test_labelimg_yolov7_objs_button=Button(self.top,image=self.icon_labelImg,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_labelimg_yolov7_objs_button.grid(row=14-7+10,column=10-7,sticky='se')
+            self.test_labelimg_yolov7_objs_button_note=tk.Label(self.top,text='inference \n labelImg \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_labelimg_yolov7_objs_button_note.grid(row=15-7+10,column=10-7,sticky='ne')
+
     def test_yolov7_mp4_e6e(self):
         if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_mp4_yolov7_e6e()
@@ -2597,6 +2606,15 @@ class yolo_cfg:
             self.test_mp4_yolov7_e6e_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolov7_e6e_objs_button_note.grid(row=15-7,column=11-7,sticky='ne')
 
+    def test_yolov7_labelimg_e6e(self):
+        if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_labelimg_yolov7_e6e()
+            cmd_i=" bash '{}'".format(self.TEST_labelimg_YOLOV7_e6e)
+            self.test_labelimg_yolov7_e6e_objs_button=Button(self.top,image=self.icon_labelImg,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_labelimg_yolov7_e6e_objs_button.grid(row=14-7+10,column=11-7,sticky='se')
+            self.test_labelimg_yolov7_e6e_objs_button_note=tk.Label(self.top,text='inference \n labelImg \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_labelimg_yolov7_e6e_objs_button_note.grid(row=15-7+10,column=11-7,sticky='ne')
+
     def test_yolov7_mp4_re(self):
         if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
             self.create_test_bash_mp4_yolov7_re()
@@ -2605,6 +2623,15 @@ class yolo_cfg:
             self.test_mp4_yolov7_re_objs_button.grid(row=14-7,column=12-7,sticky='se')
             self.test_mp4_yolov7_re_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolov7_re_objs_button_note.grid(row=15-7,column=12-7,sticky='ne')
+
+    def test_yolov7_labelimg_re(self):
+        if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_labelimg_yolov7_re()
+            cmd_i=" bash '{}'".format(self.TEST_labelimg_YOLOV7_re)
+            self.test_labelimg_yolov7_re_objs_button=Button(self.top,image=self.icon_labelImg,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_labelimg_yolov7_re_objs_button.grid(row=14-7+10,column=12-7,sticky='se')
+            self.test_labelimg_yolov7_re_objs_button_note=tk.Label(self.top,text='inference \n labelImg \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_labelimg_yolov7_re_objs_button_note.grid(row=15-7+10,column=12-7,sticky='ne')
 
     def test_yolov7_webcam(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3083,6 +3110,48 @@ class yolo_cfg:
             f.writelines(cmd_i)
         f.close()
 
+    def create_test_bash_labelimg_yolov7(self):
+        self.TEST_labelimg_YOLOV7=os.path.join(os.path.dirname(self.data_path),'test_labelimg_custom_Yolov7-tiny.sh')
+        f=open(self.TEST_labelimg_YOLOV7,'w')
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        if self.RTSP_SERVER:
+            if self.USE_RTSP_VAR.get()=="Yes":
+                #f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            #else:
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny))
+                cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok  --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
+            else:
+                cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok \n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny)
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)   
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok \n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
+        else:
+            cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok \n".format(self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_tiny)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
+        f.close()
+
     def create_test_bash_mp4_yolov7_e6e(self):
         self.TEST_MP4_YOLOV7_e6e=os.path.join(os.path.dirname(self.data_path),'test_MP4_custom_Yolov7-e6e.sh')
         f=open(self.TEST_MP4_YOLOV7_e6e,'w')
@@ -3127,6 +3196,92 @@ class yolo_cfg:
         f.close()
 
 
+    def create_test_bash_labelimg_yolov7_e6e(self):
+        self.TEST_labelimg_YOLOV7_e6e=os.path.join(os.path.dirname(self.data_path),'test_labelimg_custom_Yolov7-e6e.sh')
+        f=open(self.TEST_labelimg_YOLOV7_e6e,'w')
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        if self.RTSP_SERVER:
+            #if self.USE_RTSP_VAR.get()=="Yes":
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            #else:
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e))
+            if self.USE_RTSP_VAR.get()=="Yes":
+                cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e, self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
+            else:
+                cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok \n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e)
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i) 
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok \n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
+        else:
+            cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok \n".format(self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_e6e)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
+        f.close()
+
+    def create_test_bash_labelimg_yolov7_re(self):
+        self.TEST_labelimg_YOLOV7_re=os.path.join(os.path.dirname(self.data_path),'test_labelimg_custom_Yolov7.sh')
+        f=open(self.TEST_labelimg_YOLOV7_re,'w')
+        f.writelines('cd {}\n'.format(self.yolov7_path))
+        if self.RTSP_SERVER:
+            #if self.USE_RTSP_VAR.get()=="Yes":
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get()))
+            #else:
+            #    f.writelines("python3 detect.py --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --view-img\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re))
+            if self.USE_RTSP_VAR.get()=="Yes":
+                cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok --RTSP_PATH Custom --RTSP_SERVER_PATH {} --fps {} --port {} --stream_key {}\n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re,self.RTSP_SERVER_PATH,self.FPS_VAR.get(),self.PORT_VAR.get(),self.STREAM_KEY_VAR.get())
+            else:
+                cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok \n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re)
+            if self.sec.get()=='y':
+                self.destination_list_final=''
+                for w_var in self.phone_dic_trigger_var.values():
+                    var_i=w_var.get()
+                    if var_i!='None':
+                        self.destination_list_final=self.destination_list_final+";"+var_i
+                self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+                cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i) 
+        elif self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok \n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re)
+            cmd_i=cmd_i.replace('\n',"") + ' --destinations={} --sleep_time_chips={} --send_image_to_cell \n'.format(self.destination_list_final,self.sleep_time_chips_VAR.get())
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
+        
+        else:
+            cmd_i="python3 detect.py --use_socket_receive_imgs --weights {} --conf {} --img-size {} --source {} --project {} --exist-ok \n".format(self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.mp4_video_path,self.yolov7_path_project_re)
+            if self.CLASSIFY_CHIPS_LOGIC.get()=='Yes':
+                cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
+            f.writelines(cmd_i)
+        f.close()
 
     def create_test_bash_mp4_yolov7_re(self):
         self.TEST_MP4_YOLOV7_re=os.path.join(os.path.dirname(self.data_path),'test_MP4_custom_Yolov7.sh')
@@ -3171,8 +3326,6 @@ class yolo_cfg:
                 cmd_i=cmd_i.replace('\n',"") + ' --INFERENCE_TENSORFLOW_path={} \n'.format(self.USE_CLASSIFY_CHIPS_VAR.get())
             f.writelines(cmd_i)
         f.close()
-
-
 
     def create_test_bash_webcam_yolov7(self):
         self.TEST_WEBCAM_YOLOV7=os.path.join(os.path.dirname(self.data_path),'test_webcam_custom_Yolov7-tiny.sh')
@@ -4624,6 +4777,7 @@ class yolo_cfg:
         self.test_yolov7_webcam_RTMP()
         self.test_yolov7_mAP()
         self.test_yolov7_rtsp()
+        self.test_yolov7_labelimg()
 
         self.test_yolov7_re_note=tk.Label(self.top,text='Yolov7\n',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
         self.test_yolov7_re_note.grid(row=2,column=5,sticky='se')
@@ -4632,6 +4786,7 @@ class yolo_cfg:
         self.test_yolov7_webcam_re_RTMP()
         self.test_yolov7_mAP_re()
         self.test_yolov7_rtsp_re()
+        self.test_yolov7_labelimg_re()
 
         self.test_yolov7_E6E_note=tk.Label(self.top,text='Yolov7\n-E6E',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
         self.test_yolov7_E6E_note.grid(row=2,column=4,sticky='se')
@@ -4640,6 +4795,7 @@ class yolo_cfg:
         self.test_yolov7_webcam_e6e_RTMP()
         self.test_yolov7_mAP_e6e()
         self.test_yolov7_rtsp_e6e()
+        self.test_yolov7_labelimg_e6e()
 
     def cleanup(self):
         self.ITERATION_NUM_VAR.get()
