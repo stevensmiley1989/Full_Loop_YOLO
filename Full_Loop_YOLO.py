@@ -269,7 +269,8 @@ class main_entry:
                             self.df_settings.at[i,'Number Models']=0
                         found=True
                     elif line.find('path_Annotations')!=-1:
-                        self.df_settings.at[i,'Annotations']=line.split('=')[-1].replace("'",'"').split('"')[1].split('Annotations')[0].split('/')[-2]
+                        #self.df_settings.at[i,'Annotations']=line.split('=')[-1].replace("'",'"').split('"')[1].split('Annotations')[0].split('/')[-2]
+                        self.df_settings.at[i,'Annotations']=line.split('=')[-1].replace("'",'"').split('"')[1].split('Annotations')[0]
                     elif line.find('mp4_video_path')!=-1:
                         self.df_settings.at[i,'mp4_video_path']=line.split('=')[-1].replace("'",'"').split('"')[1]
                 if found==True:
@@ -281,26 +282,27 @@ class main_entry:
         self.checkd_vars={}
         self.checkd_label=tk.Label(self.root,text='Dataset',bg=self.root_bg,fg=self.root_fg,font=('Arial 14 underline'))
         self.checkd_label.grid(row=1,column=2,sticky='nw')
-        for i,label in enumerate(list(self.df_settings['Annotations'].unique())):
+        for i,label in enumerate(list(sorted(self.df_settings['Annotations'].unique()))):
             self.checkd_vars[label]=tk.IntVar()
-            self.checkd_vars[label].set(1)
+            self.checkd_vars[label].set(0)
             self.checkd_buttons[file]=ttk.Checkbutton(self.root, style='Normal.TCheckbutton',text=label,variable=self.checkd_vars[label], command=self.update_checks,onvalue=1, offvalue=0)
             self.checkd_buttons[file].grid(row=i+1,column=2,sticky='sw')
         self.checkm_buttons={}
         self.checkm_vars={}
-        self.checkm_label=tk.Label(self.root,text='Number of Models',bg=self.root_bg,fg=self.root_fg,font=('Arial 14 underline'))
-        self.checkm_label.grid(row=1,column=3,sticky='nw')
+        #self.checkm_label=tk.Label(self.root,text='Number of Models',bg=self.root_bg,fg=self.root_fg,font=('Arial 14 underline'))
+        #self.checkm_label.grid(row=1,column=3,sticky='nw')
         for i,label in enumerate(sorted(list(self.df_settings['Number Models'].astype(int).unique()))):
             self.checkm_vars[label]=tk.IntVar()
             self.checkm_vars[label].set(1)
-            self.checkm_buttons[file]=ttk.Checkbutton(self.root, style='Normal.TCheckbutton',text=label,variable=self.checkm_vars[label], command=self.update_checks,onvalue=1, offvalue=0)
-            self.checkm_buttons[file].grid(row=i+1,column=3,sticky='sw')           
+            #self.checkm_buttons[file]=ttk.Checkbutton(self.root, style='Normal.TCheckbutton',text=label,variable=self.checkm_vars[label], command=self.update_checks,onvalue=1, offvalue=0)
+            #self.checkm_buttons[file].grid(row=i+1,column=3,sticky='sw')           
 
 
         self.SETTINGS_FILE_LIST=self.files_keep
         self.df_comb=pd.DataFrame(columns=['times','items'])
         self.df_comb['times']=[os.path.getmtime(os.path.join('libs',w+'.py')) for w in self.SETTINGS_FILE_LIST] #edit sjs 6/11/2022 use to be libs/
         self.df_comb['items']=[w for w in self.SETTINGS_FILE_LIST]
+        #self.df_comb=self.df_comb.sort_values(by='times',ascending=True).reset_index().drop('index',axis=1)
         self.df_comb=self.df_comb.sort_values(by='times',ascending=True).reset_index().drop('index',axis=1)
         self.SETTINGS_FILE_LIST=list(self.df_comb['items'])
         self.USER=""
@@ -310,6 +312,8 @@ class main_entry:
         self.submit_label.grid(row=1,column=5,sticky='se')
         self.delete_label=Button(self.root,text='Delete',command=self.popupWindow_delete,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         self.delete_label.grid(row=2,column=5,sticky='se')
+        self.open_libs=Button(self.root,text='Open /libs',command=self.run_cmd_open_libs,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
+        self.open_libs.grid(row=3,column=5,sticky='se')
         # self.submit2_label=Button(self.root,text='Run Script',command=self.submit_script,bg=self.root_fg,fg=self.root_bg,font=('Arial',12))
         # self.submit2_label.grid(row=4,column=1,sticky='se')
         # self.select_file_script_label=Button(self.root,image=self.icon_folder,command=self.select_file_script,bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
@@ -419,6 +423,9 @@ class main_entry:
     def run_cmd_libs(self):
         cmd_i=open_cmd+" {}.py".format(os.path.join('libs',self.USER_SELECTION.get()))
         os.system(cmd_i)
+    def run_cmd_open_libs(self):
+        cmd_i=open_cmd+" libs"
+        os.system(cmd_i)        
     # def run_cmd_scripts(self):
     #     if os.path.exists(self.USER_SELECTION2.get()):
     #         cmd_i=open_cmd+" {}".format(self.USER_SELECTION2.get())
@@ -707,6 +714,11 @@ class yolo_cfg:
         self.save_settings_button.grid(row=1,column=4,sticky='se')
         self.save_settings_note=tk.Label(self.root,text='Save Settings',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.save_settings_note.grid(row=2,column=4,sticky='ne')
+
+        self.save_custom_settings_button=Button(self.root,image=self.icon_save_settings,command=self.save_settings_CUSTOM,bg=self.root_bg,fg=self.root_fg)
+        self.save_custom_settings_button.grid(row=1,column=3,sticky='se')
+        self.save_custom_settings_note=tk.Label(self.root,text='Save Custom Settings',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.save_custom_settings_note.grid(row=2,column=3,sticky='ne')
 
         self.return_to_main_button=Button(self.root,text='Return to Main Menu',command=self.return_to_main,bg=self.root_fg,fg=self.root_bg)
         self.return_to_main_button.grid(row=0,column=0,sticky='se')
@@ -4400,25 +4412,11 @@ class yolo_cfg:
                     pass
                 elif type(prefix_i_value).__name__.find('str')!=-1:
                     prefix_i_value="'"+prefix_i_value+"'"
-                f_new.append(prefix_i+"="+str(prefix_i_value)+'\n')               
+                f_new.append(prefix_i+"="+str(prefix_i_value)+'\n')
+                           
             prefix_save=_platform+'_'+self.prefix_foldername+'_SAVED_SETTINGS'
+            self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
             f_new.append('YOLO_MODEL_PATH=r"{}"\n'.format(os.path.join(self.base_path_OG,self.prefix_foldername)))
-            # try:
-            #     self.ITERATION_NUM=DEFAULT_SETTINGS.ITERATION_NUM
-            # except:
-            #     self.ITERATION_NUM=2000
-            # try:
-            #     self.epochs_yolov7=DEFAULT_SETTINGS.epochs_yolov7
-            # except:
-            #     self.epochs_yolov7=40
-            # try:
-            #     self.epochs_yolov7_re=DEFAULT_SETTINGS.epochs_yolov7_re
-            # except:
-            #     self.epochs_yolov7_re=40
-            # try:
-            #     self.epochs_yolov7_e6e=DEFAULT_SETTINGS.epochs_yolov7_e6e
-            # except:
-            #     self.epochs_yolov7_e6e=40
             f_new.append('ITERATION_NUM={}\n'.format(self.ITERATION_NUM_VAR.get()))
             f_new.append('epochs_yolov7={}\n'.format(self.epochs_yolov7_VAR.get()))
             f_new.append('epochs_yolov7_re={}\n'.format(self.epochs_yolov7_re_VAR.get()))        
@@ -4428,7 +4426,89 @@ class yolo_cfg:
             f.close()
             self.SAVED_SETTINGS_PATH='{}.py'.format(os.path.join(save_root,prefix_save.replace('-','_')))
             self.root.title(os.path.basename(self.SAVED_SETTINGS_PATH))
-
+    def save_settings_CUSTOM(self,save_root='libs'):
+        if os.path.exists(os.path.join('libs','DEFAULT_SETTINGS.py')):
+            f=open(os.path.join('libs','DEFAULT_SETTINGS.py'),'r')
+            f_read=f.readlines()
+            f.close()
+            from libs import DEFAULT_SETTINGS as DS
+            all_variables = dir(DS)
+            all_real_variables=[]
+            # Iterate over the whole list where dir( )
+            # is stored.
+            for name in all_variables:
+                # Print the item if it doesn't start with '__'
+                if not name.startswith('__'):
+                    if name.find('path_prefix_volumes_one')==-1 and name.find('path_prefix_elements')==-1 and name.find('path_prefix_mount_mac')==-1 and name!='os':
+                        all_real_variables.append(name)
+            f_new=[]
+            custom_time=str(time.time()).split('.')[0]
+            self.path_Yolo_CUSTOM=os.path.join(os.path.dirname(self.path_Annotations_CUSTOM),'Yolo_Objs')
+            if not(os.path.exists(self.path_Yolo_CUSTOM)):
+                os.makedirs(self.path_Yolo_CUSTOM)
+            shutil.copy(os.path.join(self.path_Yolo,os.path.basename(self.names_path)),self.path_Yolo_CUSTOM)
+            for prefix_i in all_real_variables:
+                try:
+                    if prefix_i.find('PREFIX')!=-1:
+                        self.PREFIX_CUSTOM=self.PREFIX+"_TXLEARN_"+custom_time
+                        prefix_i_value=self.PREFIX_CUSTOM
+                    elif prefix_i.find('path_Annotations')!=-1:
+                        prefix_i_value=self.path_Annotations_CUSTOM
+                    elif prefix_i.find('path_JPEGImages')!=-1:
+                        prefix_i_value=self.path_JPEGImages_CUSTOM
+                    elif prefix_i.find('path_Yolo')!=-1:
+                        prefix_i_value=self.path_Yolo_CUSTOM
+                    elif prefix_i.find('path_prefix')!=-1:
+                        prefix_i_value='r"'+str(os.path.abspath(self.path_Yolo_CUSTOM))+'"'
+                    else: 
+                        prefix_i_comb="self."+prefix_i
+                        prefix_i_comb=prefix_i_comb.strip()
+                        print(prefix_i_comb)
+                        prefix_i_value=eval(prefix_i_comb)
+                except:
+                    pass
+                if prefix_i=='path_prefix':
+                    pass
+                elif (prefix_i.lower().find('path')!=-1 or prefix_i.lower().find('background')!=-1):
+                    prefix_i_value="r'"+prefix_i_value+"'"
+                elif type(prefix_i_value).__name__.find('int')!=-1:
+                    pass
+                elif type(prefix_i_value).__name__.find('str')!=-1:
+                    prefix_i_value="'"+prefix_i_value+"'"
+                f_new.append(prefix_i+"="+str(prefix_i_value)+'\n')  
+            if self.random=='0':
+                self.prefix_foldername_CUSTOM='{}_w{}_h{}_d{}_c{}'.format(self.PREFIX_CUSTOM,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes)
+            else:
+                self.prefix_foldername_CUSTOM='{}_w{}_h{}_d{}_c{}_r{}'.format(self.PREFIX_CUSTOM,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes,self.random)          
+            prefix_save=_platform+'_'+self.prefix_foldername_CUSTOM+'_SAVED_SETTINGS'
+            existing_weight_dirs=os.listdir(self.YOLO_MODEL_PATH)
+            existing_weight_dirs=[os.path.join(self.YOLO_MODEL_PATH,w) for w in existing_weight_dirs]
+            existing_weight_dirs=[w for w in existing_weight_dirs if os.path.isdir(w) and w.find('detections')==-1]
+            YOLO_MODEL_PATH_CUSTOM=os.path.join(self.base_path_OG,self.prefix_foldername_CUSTOM)
+            if not(os.path.exists(YOLO_MODEL_PATH_CUSTOM)):
+                os.makedirs(YOLO_MODEL_PATH_CUSTOM)
+            shutil.copy(os.path.join(self.path_Yolo,os.path.basename(self.names_path)),YOLO_MODEL_PATH_CUSTOM)
+            for dir_i in tqdm(existing_weight_dirs):
+                new_dirs_in_custom_model_path=os.listdir(YOLO_MODEL_PATH_CUSTOM)
+                new_dir_i_base=os.path.basename(dir_i)
+                if new_dir_i_base not in new_dirs_in_custom_model_path:
+                    print(f'SHUTIL COPYING dir_i={dir_i} to YOLO_MODEL_PATH_CUSTOM={YOLO_MODEL_PATH_CUSTOM}')
+                    shutil.copytree(dir_i,os.path.join(YOLO_MODEL_PATH_CUSTOM,new_dir_i_base))
+                else:
+                    os.system(f'rm -rf {os.path.join(YOLO_MODEL_PATH_CUSTOM,new_dir_i_base)}')
+                    print(f'SHUTIL COPYING dir_i={dir_i} to YOLO_MODEL_PATH_CUSTOM={YOLO_MODEL_PATH_CUSTOM}')
+                    shutil.copytree(dir_i,os.path.join(YOLO_MODEL_PATH_CUSTOM,new_dir_i_base))
+            f_new.append('YOLO_MODEL_PATH=r"{}"\n'.format(YOLO_MODEL_PATH_CUSTOM))
+            f_new.append('ITERATION_NUM={}\n'.format(self.ITERATION_NUM_VAR.get()))
+            f_new.append('epochs_yolov7={}\n'.format(self.epochs_yolov7_VAR.get()))
+            f_new.append('epochs_yolov7_re={}\n'.format(self.epochs_yolov7_re_VAR.get()))        
+            f_new.append('epochs_yolov7_e6e={}\n'.format(self.epochs_yolov7_e6e_VAR.get()))   
+            f=open('{}.py'.format(os.path.join(save_root,prefix_save.replace('-','_'))),'w')
+            wrote=[f.writelines(w) for w in f_new]
+            f.close()
+            self.SAVED_SETTINGS_PATH_CUSTOM='{}.py'.format(os.path.join(save_root,prefix_save.replace('-','_')))
+            self.return_to_main()
+            #self.root.title(os.path.basename(self.SAVED_SETTINGS_PATH_CUSTOM))
     def get_update_background_img(self):
         self.image=Image.open(self.root_background_img)
         self.image=self.image.resize((self.root_W,self.root_H),Image.ANTIALIAS)
