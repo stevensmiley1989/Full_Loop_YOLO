@@ -110,7 +110,24 @@ class GENERATE_SEARCH:
                     bad_list.append(row)    
         self.df=df.copy()
         self.df.drop(bad_list,inplace=True)
+        self.df=self.df.sample(frac=1.0,random_state=42)
         self.df=self.df.reset_index().drop('index',axis=1)
+
+        #REDUCE BY COUNT
+        self.df['COUNT']=self.df['path_Annotations'].copy()
+        self.df['COUNT']=1
+        count=0
+        for i,anno in enumerate(self.df['path_Annotations']):
+            f=open(anno,'r')
+            f_read=f.read()
+            f.close()
+            count_i=f_read.count(self.CLASS_I)
+            count+=count_i
+            self.df[i,'COUNT']=count_i
+            if count>self.MAX_PER_CLASS:
+                break
+        self.df=self.df.loc[0:i]
+
         self.df.to_csv(self.df_filename) 
 def SEARCH_LISTS(dic_anno_jpeg_path,list_targets,MAX_PER_CLASS,path_Desired):
     print('SEARCHING_LISTS')
