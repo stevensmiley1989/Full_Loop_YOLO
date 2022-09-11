@@ -247,13 +247,14 @@ class main_entry:
         self.root.configure(bg=self.root_bg)
         self.dropdown=None
         self.CWD=os.getcwd()
-        self.df_settings=pd.DataFrame(columns=['files','Annotations','Number Models','mp4_video_path',])
+        self.df_settings=pd.DataFrame(columns=['files','Annotations','Number Models','mp4_video_path','path_Annotations','path_JPEGImages'])
         self.SETTINGS_FILE_LIST=[w.split('.py')[0] for w in os.listdir('libs') if w.find('SETTINGS')!=-1 and w[0]!='.'] 
         self.files_keep=[]
         i=0
         for file in self.SETTINGS_FILE_LIST:
             file=file+'.py'
             if file!="DEFAULT_SETTINGS.py":
+                #print(file)
                 found=False
                 f=open(os.path.join('libs',file),'r')
                 f_read=f.readlines()
@@ -271,6 +272,10 @@ class main_entry:
                     elif line.find('path_Annotations')!=-1:
                         #self.df_settings.at[i,'Annotations']=line.split('=')[-1].replace("'",'"').split('"')[1].split('Annotations')[0].split('/')[-2]
                         self.df_settings.at[i,'Annotations']=line.split('=')[-1].replace("'",'"').split('"')[1].split('Annotations')[0]
+                        self.df_settings.at[i,'path_Annotations']=line.split('=')[-1].replace("'",'"').split('"')[1].replace('\n','')
+                    elif line.find('path_JPEGImages')!=-1:
+                        self.df_settings.at[i,'path_JPEGImages']=line.split('=')[-1].replace("'",'"').split('"')[1].replace('\n','')
+
                     elif line.find('mp4_video_path')!=-1:
                         self.df_settings.at[i,'mp4_video_path']=line.split('=')[-1].replace("'",'"').split('"')[1]
                 if found==True:
@@ -282,7 +287,13 @@ class main_entry:
         self.checkd_vars={}
         self.checkd_label=tk.Label(self.root,text='Dataset',bg=self.root_bg,fg=self.root_fg,font=('Arial 14 underline'))
         self.checkd_label.grid(row=1,column=2,sticky='nw')
+        f=open('libs/DATASETS_LIST.txt','w')
+        for i,path_JPEGImages_i in enumerate(list(self.df_settings['path_JPEGImages'])):
+            zip_i=self.df_settings['path_Annotations'].iloc[i]+":"+self.df_settings['path_JPEGImages'].iloc[i]
+            f.writelines(zip_i+'\n')
+        f.close()
         for i,label in enumerate(list(sorted(self.df_settings['Annotations'].unique()))):
+
             self.checkd_vars[label]=tk.IntVar()
             self.checkd_vars[label].set(0)
             self.checkd_buttons[file]=ttk.Checkbutton(self.root, style='Normal.TCheckbutton',text=label,variable=self.checkd_vars[label], command=self.update_checks,onvalue=1, offvalue=0)
@@ -683,6 +694,12 @@ class yolo_cfg:
         self.CLASSIFY_CHIPS_LOGIC.set('No')
         self.USE_CLASSIFY_CHIPS_VAR=tk.StringVar()
         self.USE_CLASSIFY_CHIPS_VAR.set('None')
+        self.MAX_PER_CLASS_VAR=tk.StringVar()
+        self.MAX_PER_CLASS=500
+        self.MAX_PER_CLASS_VAR.set(self.MAX_PER_CLASS)
+        self.TARGET_LIST_VAR=tk.StringVar()
+        self.TARGET_LIST='car;truck;van;'
+        self.TARGET_LIST_VAR.set(self.TARGET_LIST)
         # self.root.withdraw()
         # self.top=tk.Toplevel(self.root,width=300,height=300)
         # self.canvas_generate=tk.Canvas(self.top,bg='white')
@@ -942,12 +959,18 @@ class yolo_cfg:
             if var_i:
                 if self.open_anno_label_var_CUSTOM and self.open_jpeg_label_var_CUSTOM:
                     if var_i==self.open_anno_label_var_CUSTOM:
-                        self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
-                        initialdir=self.YOLO_MODEL_PATH
+                        if self.open_anno_label_var_CUSTOM.get()==self.path_Annotations:
+                            self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
+                            initialdir=self.YOLO_MODEL_PATH
+                        else:
+                            initialdir=os.path.dirname(self.path_Annotations_CUSTOM)
                         folder_i=var_i.get()
                     elif var_i==self.open_jpeg_label_var_CUSTOM:
-                        self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
-                        initialdir=self.YOLO_MODEL_PATH
+                        if self.open_jpeg_label_var_CUSTOM.get()==self.path_JPEGImages:
+                            self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
+                            initialdir=self.YOLO_MODEL_PATH
+                        else:
+                            initialdir=os.path.dirname(self.path_JPEGImages_CUSTOM)
                         folder_i=var_i.get()
                     else:
                         folder_i=var_i.get() 
@@ -1126,6 +1149,14 @@ class yolo_cfg:
             self.base_path_OG=self.base_path_OG
         else:
             self.base_path_OG=os.path.join(os.getcwd(),'tmp_cfgs')
+        try:
+            self.base_path_prior=self.base_path
+            self.existing_weight_dirs=os.listdir(self.base_path)
+            self.existing_weight_dirs=[os.path.join(self.base_path,w) for w in self.existing_weight_dirs]
+            self.existing_weight_dirs=[w for w in self.existing_weight_dirs if os.path.isdir(w) and w.find('detections')==-1]
+        except:
+            self.base_path_prior='None'
+            self.existing_weight_dirs=[]
         if self.random=='0':
             self.base_path=os.path.join(self.base_path_OG,'{}_w{}_h{}_d{}_c{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
         else:
@@ -1134,6 +1165,18 @@ class yolo_cfg:
             os.makedirs(self.base_path)
         except:
             pass
+
+        if self.base_path_prior!='None' and self.base_path_prior!=self.base_path:
+            for dir_i in tqdm(self.existing_weight_dirs):
+                new_dirs_in_custom_model_path=os.listdir(self.base_path)
+                new_dir_i_base=os.path.basename(dir_i)
+                if new_dir_i_base not in new_dirs_in_custom_model_path:
+                    print(f'SHUTIL COPYING dir_i={dir_i} to YOLO_MODEL_PATH_CUSTOM={self.base_path}')
+                    shutil.copytree(dir_i,os.path.join(self.base_path,new_dir_i_base))
+                else:
+
+                    print(f'PASS ON SHUTIL COPYING dir_i={dir_i} to YOLO_MODEL_PATH_CUSTOM={self.base_path}, already exists')
+
         try:
             os.makedirs(os.path.join(self.base_path_OG,'temp'))
         except:
@@ -1671,6 +1714,7 @@ class yolo_cfg:
         self.IMGAUG_buttons()
         self.CLASSIFY_CHIPS_buttons()
         self.send_text_buttons()
+        self.GENERATE_CUSTOM_DATASET_BUTTONS()
         
 
 
@@ -1916,6 +1960,122 @@ class yolo_cfg:
         self.button_classify_no.grid(row=9,column=10,stick='ne')
         self.label_classify=tk.Label(self.root,text='CLASSIFY CHIPS?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
         self.label_classify.grid(row=8,column=9,columnspan=2,stick='sew')
+
+    def GENERATE_CUSTOM_DATASET_BUTTONS(self):
+        self.popup_GCD_button=Button(self.root,text='GENERATE CUSTOM DATASET Buttons',command=self.popupWindow_GCD,bg=self.root_fg,fg=self.root_bg)
+        self.popup_GCD_button.grid(row=0,column=3,sticky='se')
+
+    def popupWindow_GCD(self):
+        try:
+            self.top.destroy()
+        except:
+            pass
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.1),int(self.root.winfo_screenheight()*0.95//1.1)) )
+        self.top.title('GENERATE CUSTOM DATASET?')
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=1,column=1,sticky='se')
+
+        self.open_GCD_label_CUSTOM=Button(self.top,text="Open Custom Dataset LIST OPTIONS",command=self.open_dataset_lists,bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_GCD_label_CUSTOM.grid(row=0,column=8,sticky='ne')
+
+        self.generate_GCD_label_CUSTOM=Button(self.top,text="Generate Custom Dataset",command=self.generate_GCD,bg='green',fg=self.root_bg,font=("Arial", 10))
+        self.generate_GCD_label_CUSTOM.grid(row=3,column=0,sticky='sw')
+
+        self.MAX_PER_CLASS_VAR=tk.StringVar()
+        self.MAX_PER_CLASS_VAR.set(self.MAX_PER_CLASS)
+        self.MAX_PER_CLASS_entry=tk.Entry(self.top,textvariable=self.MAX_PER_CLASS_VAR)
+        self.MAX_PER_CLASS_entry.grid(row=5,column=0,sticky='nw')
+        self.MAX_PER_CLASS_label=tk.Label(self.top,text='MAX_PER_CLASS',bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.MAX_PER_CLASS_label.grid(row=4,column=0,sticky='sw')
+
+        self.TARGET_LIST_VAR=tk.StringVar()
+        self.TARGET_LIST_VAR.set(self.TARGET_LIST)
+        self.TARGET_LIST_entry=tk.Entry(self.top,textvariable=self.TARGET_LIST_VAR)
+        self.TARGET_LIST_entry.grid(row=7,column=0,sticky='nw')
+        self.TARGET_LIST_label=tk.Label(self.top,text='CLASS LIST',bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.TARGET_LIST_label.grid(row=6,column=0,sticky='sw')
+
+        self.open_anno_CUSTOM()
+        self.open_jpeg_CUSTOM()
+        self.load_dataset_lists()
+        self.load_dataset_lists_buttons()
+    def generate_GCD(self):
+        if os.path.exists('resources/find_class_balance.py'):
+            from resources import find_class_balance as gcd
+            try:
+                self.SELECTED_SEARCH_OPTIONS={}
+                for k,v in self.DATASET_checkvars.items():
+                    if v.get()==1:
+                        self.SELECTED_SEARCH_OPTIONS[k]=self.DATASET_OPTIONS[k]
+                TARGET_LIST=self.TARGET_LIST_VAR.get()
+                if TARGET_LIST.find(';')!=-1:
+                    list_targets=TARGET_LIST.split(';')
+                else:
+                    list_targets=['nothing_to_search']
+                list_targets=[w for w in list_targets if w!='']
+                print('list_targets',list_targets)
+                self.MAX_PER_CLASS=self.MAX_PER_CLASS_VAR.get()
+                try:
+                    MAX_PER_CLASS=int(self.MAX_PER_CLASS)
+                except:
+                    print('ISSUE WIHT MAX_PER_CLASS, defaulting to 500')
+                    MAX_PER_CLASS=500
+                path_Desired=os.path.join(os.path.dirname(self.path_Annotations_CUSTOM),'Results')
+                self.df_results,self.path_Annotations_CUSTOM,self.path_JPEGImages_CUSTOM=gcd.JUST_DO_IT(self.SELECTED_SEARCH_OPTIONS,list_targets,MAX_PER_CLASS,path_Desired)
+                self.open_anno_label_var_CUSTOM.set(self.path_Annotations_CUSTOM)
+                self.open_jpeg_label_var_CUSTOM.set(self.path_JPEGImages_CUSTOM)
+            except:
+                print('issue with generating this custom dataset')
+    def open_dataset_lists(self):
+        if not(os.path.exists('libs/DATASETS_LIST.txt')):
+            f=open('libs/DATASETS_LIST.txt','w')
+            f.close()
+        cmd_i=open_cmd+' '+'libs/DATASETS_LIST.txt'
+        self.run_cmd(cmd_i)
+    def load_dataset_lists_buttons(self):
+        self.load_GCD_label_CUSTOM=Button(self.top,text="Load Custom Dataset LIST OPTIONS",command=self.load_dataset_lists,bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.load_GCD_label_CUSTOM.grid(row=0,column=9,sticky='ne')   
+
+    def load_dataset_lists(self):
+        spacer=10
+        dic_i={}
+        if os.path.exists('libs/DATASETS_LIST.txt'):
+            f=open('libs/DATASETS_LIST.txt')
+            f_read=f.readlines()
+            f.close()
+            for line in f_read:
+                if line.find(':')!=-1:
+                    anno_i=line.split(':')[0].replace('\n','')
+                    jpeg_i=line.split(':')[1].replace('\n','')
+                    if os.path.exists(anno_i) and os.path.exists(jpeg_i):
+                        dic_i[anno_i]=jpeg_i
+        self.DATASET_OPTIONS=dic_i
+        #print(self.DATASET_OPTIONS)
+        try:
+            [w.destroy() for w in self.DATASET_checkvars.values()]
+        except:
+            pass
+        try:
+            [w.destroy() for w in self.DATASET_checkbuttons.values()]
+        except:
+            pass
+        try:
+            self.DATASET_label.destroy()
+        except:
+            pass
+
+        self.DATASET_checkvars={}
+        self.DATASET_checkbuttons={}
+        self.DATASET_label=tk.Label(self.top,text='DATASETS USED LIST',bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.DATASET_label.grid(row=8,column=0,sticky='sw')
+        for i,k in enumerate(self.DATASET_OPTIONS.keys()):
+            self.DATASET_checkvars[k]=tk.IntVar()
+            self.DATASET_checkvars[k].set(0)
+            self.DATASET_checkbuttons[k]=tk.Checkbutton(self.top,text='{}'.format(k),variable=self.DATASET_checkvars[k],onvalue=1,offvalue=0,bg=self.root_fg,fg=self.root_bg)
+            self.DATASET_checkbuttons[k].grid(row=spacer+i,column=0,sticky='sw')
+
 
     def popupWindow_CLASSIFY_CHIPS(self):
         spacer=-12
@@ -5057,13 +5217,13 @@ class yolo_cfg:
                     i=len(self.df)
                 else:
                     if i==0:
-                        print('Removing self.path_Yolo: \n {}'.format(self.path_Yolo))
-                        #if os.path.exists(os.path.join(self.path_Yolo,'backup_models')):
-                        #    os.system('mv {} ..'.format(os.path.join(self.path_Yolo,'backup_models')))
-                        #    os.system('rm -rf {}'.format(self.path_Yolo))
-                        #    os.system('mv ..{} {}'.format(os.path.join(self.path_Yolo,'backup_models')))
-                        #else:
-                        os.system('rm -rf {}'.format(self.path_Yolo))
+                        if os.path.exists(os.path.join(os.path.dirname(self.path_Annotations),'Yolo_Objs'))==False:
+                            self.path_Yolo=os.path.join(os.path.dirname(self.path_Annotations),'Yolo_Objs')
+                            print(f'Generating new self.path_Yolo here instead: {self.path_Yolo}')
+                            os.makedirs(self.path_Yolo)
+                        else:
+                            print('Removing self.path_Yolo: \n {}'.format(self.path_Yolo))
+                            os.system('rm -rf {}'.format(self.path_Yolo))
                     pass
                 if os.path.exists(self.path_Yolo)==False:
                     print('Creating self.path_Yolo: \n {}'.format(self.path_Yolo))
@@ -5078,10 +5238,21 @@ class yolo_cfg:
         if self.num_classes!=len(self.found_names.items()):
             self.num_classes=len(self.found_names.items())
             self.num_classes_VAR.set(self.num_classes)
-            if os.path.exists(os.path.join(self.base_path,'backup_models')):
-                os.system('mv {} ..'.format(os.path.join(self.base_path,'backup_models')))
+            self.existing_weight_dirs=os.listdir(self.base_path)
+            self.existing_weight_dirs=[os.path.join(self.base_path,w) for w in self.existing_weight_dirs]
+            self.existing_weight_dirs=[w for w in self.existing_weight_dirs if os.path.isdir(w) and w.find('detections')==-1]
+            if len(self.existing_weight_dirs)>0:
+                moved_list=[]
+                tmp_backup=os.path.join(os.path.dirname(os.getcwd()),'tmp_'+str(time.time()).split('.')[0])
+                if not(os.path.exists(tmp_backup)):
+                    os.makedirs(tmp_backup)
+                for item in tqdm(self.existing_weight_dirs):
+                    moved_list.append(os.path.join(tmp_backup,os.path.basename(item)))
+                    shutil.move(item,os.path.join(tmp_backup,os.path.basename(item)))
                 os.system('rm -rf {}'.format(self.base_path))
-                os.system('mv ..{} {}'.format(os.path.join(self.base_path,'backup_models')))
+                for item in tqdm(moved_list):   
+                    shutil.move(item,os.path.join(self.base_path,os.path.basename(item)))
+                os.system('rm -rf {}'.format(tmp_backup))
             else:
                 os.system('rm -rf "{}"'.format(self.base_path))
             self.generate_cfg()
