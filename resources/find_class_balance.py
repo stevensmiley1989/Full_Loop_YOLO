@@ -32,7 +32,11 @@ class GENERATE_SEARCH:
             os.makedirs(self.path_Desired)
         self.CLASS_I=CLASS_I
         self.MAX_PER_CLASS=MAX_PER_CLASS
-        self.WAIT_TIME=10
+        time_start=time.time()
+        self.number_files=os.listdir(self.path_Annotations)
+        time_end=time.time()
+        self.WAIT_TIME=2*(time_end-time_start)
+        print(f'WAIT_TIME = {self.WAIT_TIME} for this directory {self.path_Annotations} ')
         self.search()
     def run_cmd(self,cmd_i):
         os.system(cmd_i)
@@ -115,18 +119,20 @@ class GENERATE_SEARCH:
 
         #REDUCE BY COUNT
         self.df['COUNT']=self.df['path_Annotations'].copy()
-        self.df['COUNT']=1
-        count=0
-        for i,anno in enumerate(self.df['path_Annotations']):
-            f=open(anno,'r')
-            f_read=f.read()
-            f.close()
-            count_i=f_read.count(self.CLASS_I)
-            count+=count_i
-            self.df[i,'COUNT']=count_i
-            if count>self.MAX_PER_CLASS:
-                break
-        self.df=self.df.loc[0:i]
+        
+        if len(self.df['path_Annotations'])>0:
+            count=0
+            self.df['COUNT']=1
+            for i,anno in enumerate(self.df['path_Annotations']):
+                f=open(anno,'r')
+                f_read=f.read()
+                f.close()
+                count_i=f_read.count(self.CLASS_I)
+                count+=count_i
+                self.df[i,'COUNT']=count_i
+                if count>self.MAX_PER_CLASS:
+                    break
+            self.df=self.df.iloc[0:i]
 
         self.df.to_csv(self.df_filename) 
 def SEARCH_LISTS(dic_anno_jpeg_path,list_targets,MAX_PER_CLASS,path_Desired):
