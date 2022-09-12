@@ -247,7 +247,7 @@ class main_entry:
         self.root.configure(bg=self.root_bg)
         self.dropdown=None
         self.CWD=os.getcwd()
-        self.df_settings=pd.DataFrame(columns=['files','Annotations','Number Models','mp4_video_path','path_Annotations','path_JPEGImages'])
+        self.df_settings=pd.DataFrame(columns=['files','Annotations','Number Models','mp4_video_path','path_Annotations','path_JPEGImages','path_Yolo','YOLO_MODEL_PATH'])
         self.SETTINGS_FILE_LIST=[w.split('.py')[0] for w in os.listdir('libs') if w.find('SETTINGS')!=-1 and w[0]!='.'] 
         self.files_keep=[]
         i=0
@@ -261,6 +261,7 @@ class main_entry:
                 f.close()
                 for line in f_read:
                     if line.find('YOLO_MODEL_PATH')!=-1:
+                        self.df_settings.at[i,'YOLO_MODEL_PATH']=line.split('=')[-1].replace("'",'"').split('"')[1].replace('\n','')
                         self.files_keep.append(file.split('.py')[0])
                         self.df_settings.at[i,'files']=file.split('.py')[0]
                         if os.path.exists(os.path.join(line.split('=')[-1].replace("'",'"').split('"')[1],'backup_models')):
@@ -275,6 +276,9 @@ class main_entry:
                         self.df_settings.at[i,'path_Annotations']=line.split('=')[-1].replace("'",'"').split('"')[1].replace('\n','')
                     elif line.find('path_JPEGImages')!=-1:
                         self.df_settings.at[i,'path_JPEGImages']=line.split('=')[-1].replace("'",'"').split('"')[1].replace('\n','')
+                    elif line.find('path_Yolo')!=-1:
+                        self.df_settings.at[i,'path_Yolo']=line.split('=')[-1].replace("'",'"').split('"')[1].replace('\n','')
+                        
 
                     elif line.find('mp4_video_path')!=-1:
                         self.df_settings.at[i,'mp4_video_path']=line.split('=')[-1].replace("'",'"').split('"')[1]
@@ -288,8 +292,9 @@ class main_entry:
         self.checkd_label=tk.Label(self.root,text='Dataset',bg=self.root_bg,fg=self.root_fg,font=('Arial 14 underline'))
         self.checkd_label.grid(row=1,column=2,sticky='nw')
         f=open('libs/DATASETS_LIST.txt','w')
+        print(self.df_settings)
         for i,path_JPEGImages_i in enumerate(list(self.df_settings['path_JPEGImages'])):
-            zip_i=self.df_settings['path_Annotations'].iloc[i]+":"+self.df_settings['path_JPEGImages'].iloc[i]
+            zip_i=self.df_settings['path_Annotations'].iloc[i]+":"+self.df_settings['path_JPEGImages'].iloc[i]+":"+self.df_settings['path_Yolo'].iloc[i]+":"+self.df_settings['YOLO_MODEL_PATH'].iloc[i]
             f.writelines(zip_i+'\n')
         f.close()
         for i,label in enumerate(list(sorted(self.df_settings['Annotations'].unique()))):
@@ -1661,7 +1666,7 @@ class yolo_cfg:
         self.open_anno_label.grid(row=11,column=5,columnspan=50,sticky='sw')
         self.open_anno_selected=True
 
-    def open_anno_CUSTOM(self):
+    def open_anno_CUSTOM(self,row_i=3,col_i=6,columnspan=75,sticky='sew',location=None,sticky2='ne',sticky3='se'):
         if self.open_anno_selected_CUSTOM==True:
             self.open_anno_label_CUSTOM.destroy()
             self.open_anno_note_CUSTOM.destroy()
@@ -1669,16 +1674,27 @@ class yolo_cfg:
             del self.open_anno_label_CUSTOM
             del self.open_anno_note_CUSTOM
             del self.open_anno_button_CUSTOM
-
+        try:
+            if location==None:
+                location=self.top
+            else:
+                location=location
+        except:
+            location=location
+        print('location=',location)
         self.open_anno_label_var_CUSTOM=tk.StringVar()
         self.open_anno_label_var_CUSTOM.set(self.path_Annotations_CUSTOM)
-        self.open_anno_button_CUSTOM=Button(self.top,image=self.icon_folder,command=partial(self.select_folder,os.path.dirname(self.path_Yolo),'Open Custom Annotations Folder',self.open_anno_label_var_CUSTOM),bg=self.root_bg,fg=self.root_fg)
-        self.open_anno_button_CUSTOM.grid(row=3,column=6,sticky='se')
-        self.open_anno_note_CUSTOM=tk.Label(self.top,text="Custom Annotations dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
-        self.open_anno_note_CUSTOM.grid(row=4,column=6,sticky='ne')
+        
+        self.open_anno_button_CUSTOM=Button(location,image=self.icon_folder,command=partial(self.select_folder,os.path.dirname(self.path_Yolo),'Open Custom Annotations Folder',self.open_anno_label_var_CUSTOM),bg=self.root_bg,fg=self.root_fg)
 
-        self.open_anno_label_CUSTOM=Button(self.top,textvariable=self.open_anno_label_var_CUSTOM, command=self.open_custom_anno_cmd,bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
-        self.open_anno_label_CUSTOM.grid(row=3,column=7,columnspan=75,sticky='sew')
+        self.open_anno_note_CUSTOM=tk.Label(location,text="Custom Annotations dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+
+        if col_i>0:
+            self.open_anno_button_CUSTOM.grid(row=row_i,column=col_i,sticky=sticky3)
+            self.open_anno_note_CUSTOM.grid(row=row_i+1,column=col_i,sticky=sticky2)
+
+        self.open_anno_label_CUSTOM=Button(location,textvariable=self.open_anno_label_var_CUSTOM, command=self.open_custom_anno_cmd,bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_anno_label_CUSTOM.grid(row=row_i,column=col_i+1,columnspan=columnspan,sticky=sticky)
         self.open_anno_selected_CUSTOM=True
 
     def send_text_buttons(self):
@@ -1970,37 +1986,66 @@ class yolo_cfg:
             self.top.destroy()
         except:
             pass
+        
         self.top=tk.Toplevel(self.root)
         self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.1),int(self.root.winfo_screenheight()*0.95//1.1)) )
         self.top.title('GENERATE CUSTOM DATASET?')
         self.top.configure(background = 'black')
-        self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
-        self.b.grid(row=1,column=1,sticky='se')
+        
+        self.top.columnconfigure(0,weight=1)
+        self.top.rowconfigure(0,weight=1)
+        self.FMas=tk.Frame(self.top,bg='Black')
+        self.FMas.grid(sticky=(tk.N,tk.E,tk.S,tk.W))
+        self.FMas.columnconfigure(0,weight=1)
 
-        self.open_GCD_label_CUSTOM=Button(self.top,text="Open Custom Dataset LIST OPTIONS",command=self.open_dataset_lists,bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
-        self.open_GCD_label_CUSTOM.grid(row=0,column=8,sticky='ne')
 
-        self.generate_GCD_label_CUSTOM=Button(self.top,text="Generate Custom Dataset",command=self.generate_GCD,bg='green',fg=self.root_bg,font=("Arial", 10))
-        self.generate_GCD_label_CUSTOM.grid(row=3,column=0,sticky='sw')
+
+        self.b=Button(self.FMas,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=2,column=0,sticky='sw')
+
+        self.open_GCD_label_CUSTOM=Button(self.FMas,text="Open Custom Dataset LIST OPTIONS",command=self.open_dataset_lists,bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_GCD_label_CUSTOM.grid(row=0,column=0,sticky='nw')
+
+        self.generate_GCD_label_CUSTOM=Button(self.FMas,text="Generate Custom Dataset",command=self.generate_GCD,bg='green',fg=self.root_bg,font=("Arial", 10))
+        self.generate_GCD_label_CUSTOM.grid(row=7,column=0,sticky='sw')
 
         self.MAX_PER_CLASS_VAR=tk.StringVar()
         self.MAX_PER_CLASS_VAR.set(self.MAX_PER_CLASS)
-        self.MAX_PER_CLASS_entry=tk.Entry(self.top,textvariable=self.MAX_PER_CLASS_VAR)
-        self.MAX_PER_CLASS_entry.grid(row=5,column=0,sticky='nw')
-        self.MAX_PER_CLASS_label=tk.Label(self.top,text='MAX_PER_CLASS',bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
-        self.MAX_PER_CLASS_label.grid(row=4,column=0,sticky='sw')
+        self.MAX_PER_CLASS_entry=tk.Entry(self.FMas,textvariable=self.MAX_PER_CLASS_VAR)
+        self.MAX_PER_CLASS_entry.grid(row=9,column=0,sticky='nw')
+        self.MAX_PER_CLASS_label=tk.Label(self.FMas,text='MAX_PER_CLASS',bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.MAX_PER_CLASS_label.grid(row=8,column=0,sticky='sw')
 
         self.TARGET_LIST_VAR=tk.StringVar()
         self.TARGET_LIST_VAR.set(self.TARGET_LIST)
-        self.TARGET_LIST_entry=tk.Entry(self.top,textvariable=self.TARGET_LIST_VAR)
-        self.TARGET_LIST_entry.grid(row=7,column=0,sticky='nw')
-        self.TARGET_LIST_label=tk.Label(self.top,text='CLASS LIST',bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
-        self.TARGET_LIST_label.grid(row=6,column=0,sticky='sw')
+        self.TARGET_LIST_entry=tk.Entry(self.FMas,textvariable=self.TARGET_LIST_VAR)
+        self.TARGET_LIST_entry.grid(row=11,column=0,sticky='nw')
+        self.TARGET_LIST_label=tk.Label(self.FMas,text='CLASS LIST',bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.TARGET_LIST_label.grid(row=10,column=0,sticky='sw')
 
-        self.open_anno_CUSTOM()
-        self.open_jpeg_CUSTOM()
-        self.load_dataset_lists()
+        self.open_anno_CUSTOM(row_i=12,col_i=-1,columnspan=1,sticky='sw',location=self.FMas,sticky2='ne',sticky3='ne')
+        self.open_jpeg_CUSTOM(row_i=14,col_i=-1,columnspan=1,sticky='sw',location=self.FMas,sticky2='ne',sticky3='ne')
+        
         self.load_dataset_lists_buttons()
+        self.frame_canvas=tk.Frame(self.FMas)
+        self.frame_canvas.grid(row=17,column=0,sticky='nw')
+        self.frame_canvas.grid_rowconfigure(0,weight=1)
+        self.frame_canvas.grid_columnconfigure(0,weight=1)
+        self.frame_canvas.grid_propagate(False)
+        self.canvas=tk.Canvas(self.frame_canvas,bg='black')
+        self.canvas.grid(row=0,column=0,sticky='news')
+        self.vsbar=tk.Scrollbar(self.frame_canvas,orient="vertical",command=self.canvas.yview)
+        self.vsbar.grid(row=0,column=1,sticky='nes')
+        self.hsbar=tk.Scrollbar(self.frame_canvas,orient="horizontal",command=self.canvas.xview)
+        self.hsbar.grid(row=0,column=0,rowspan=100,sticky='new')
+        self.canvas.configure(yscrollcommand=self.vsbar.set)
+        self.canvas.configure(xscrollcommand=self.hsbar.set)
+        self.frame_table=tk.Frame(self.canvas,bg='black')
+        self.canvas.create_window((0,0),window=self.frame_table,anchor='nw')
+
+
+
+        self.load_dataset_lists()
     def generate_GCD(self):
         if os.path.exists('resources/find_class_balance.py'):
             from resources import find_class_balance as gcd
@@ -2022,12 +2067,21 @@ class yolo_cfg:
                 except:
                     print('ISSUE WIHT MAX_PER_CLASS, defaulting to 500')
                     MAX_PER_CLASS=500
+                self.path_Annotation_CUSTOM_OG=self.path_Annotations_CUSTOM
+                self.path_JPEGImages_CUSTOM_OG=self.path_JPEGImages_CUSTOM
                 path_Desired=os.path.join(os.path.dirname(self.path_Annotations_CUSTOM),'Results')
                 self.df_results,self.path_Annotations_CUSTOM,self.path_JPEGImages_CUSTOM=gcd.JUST_DO_IT(self.SELECTED_SEARCH_OPTIONS,list_targets,MAX_PER_CLASS,path_Desired)
                 self.open_anno_label_var_CUSTOM.set(self.path_Annotations_CUSTOM)
                 self.open_jpeg_label_var_CUSTOM.set(self.path_JPEGImages_CUSTOM)
             except:
-                print('issue with generating this custom dataset')
+                try:
+                    self.path_Annotation_CUSTOM=self.path_Annotation_CUSTOM_OG
+                    self.path_JPEGImages_CUSTOM=self.path_JPEGImages_CUSTOM_OG
+                    self.open_anno_label_var_CUSTOM.set(self.path_Annotation_CUSTOM_OG)
+                    self.open_jpeg_label_var_CUSTOM.set(self.path_JPEGImages_CUSTOM_OG)
+                    print('issue with generating this custom dataset')
+                except:
+                    print('really an issue')
     def open_dataset_lists(self):
         if not(os.path.exists('libs/DATASETS_LIST.txt')):
             f=open('libs/DATASETS_LIST.txt','w')
@@ -2035,12 +2089,13 @@ class yolo_cfg:
         cmd_i=open_cmd+' '+'libs/DATASETS_LIST.txt'
         self.run_cmd(cmd_i)
     def load_dataset_lists_buttons(self):
-        self.load_GCD_label_CUSTOM=Button(self.top,text="Load Custom Dataset LIST OPTIONS",command=self.load_dataset_lists,bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
-        self.load_GCD_label_CUSTOM.grid(row=0,column=9,sticky='ne')   
+        self.load_GCD_label_CUSTOM=Button(self.FMas,text="Load Custom Dataset LIST OPTIONS",command=self.load_dataset_lists,bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.load_GCD_label_CUSTOM.grid(row=1,column=0,sticky='nw')   
 
     def load_dataset_lists(self):
-        spacer=10
+        spacer=0
         dic_i={}
+        obj_i={}
         if os.path.exists('libs/DATASETS_LIST.txt'):
             f=open('libs/DATASETS_LIST.txt')
             f_read=f.readlines()
@@ -2049,9 +2104,19 @@ class yolo_cfg:
                 if line.find(':')!=-1:
                     anno_i=line.split(':')[0].replace('\n','')
                     jpeg_i=line.split(':')[1].replace('\n','')
+                    yolo_i=line.split(':')[2].replace('\n','')
+                    yolo_model_i=line.split(':')[3].replace('\n','')
                     if os.path.exists(anno_i) and os.path.exists(jpeg_i):
+                        if os.path.exists(os.path.join(yolo_i,'obj.names')):
+                            obj_i[anno_i]=os.path.join(yolo_i,'obj.names')
+                        elif os.path.exists(os.path.join(yolo_model_i,'obj.names')):
+                            obj_i[anno_i]=os.path.join(yolo_model_i,'obj.names')
+                        else:
+                            obj_i[anno_i]='None'
+
                         dic_i[anno_i]=jpeg_i
         self.DATASET_OPTIONS=dic_i
+        self.DATASET_OBJECTS=obj_i
         #print(self.DATASET_OPTIONS)
         try:
             [w.destroy() for w in self.DATASET_checkvars.values()]
@@ -2065,16 +2130,81 @@ class yolo_cfg:
             self.DATASET_label.destroy()
         except:
             pass
-
+        try:
+            [w.destroy() for w in self.DATASET_dropdownvars.values()]
+        except:
+            pass
+        try:
+            [w.destroy() for w in self.DATASET_dropdownlists.values()]
+        except:
+            pass
+        try:
+            [w.destroy() for w in self.DATASET_dropdownoptions.values()]
+        except:
+            pass
         self.DATASET_checkvars={}
         self.DATASET_checkbuttons={}
-        self.DATASET_label=tk.Label(self.top,text='DATASETS USED LIST',bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.DATASET_label=tk.Label(self.FMas,text='DATASETS USED LIST',bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.DATASET_label.grid(row=8,column=0,sticky='sw')
+        self.DATASET_dropdownvars={}
+        self.DATASET_dropdownlists={}
+        self.DATASET_dropdownoptions={}
         for i,k in enumerate(self.DATASET_OPTIONS.keys()):
             self.DATASET_checkvars[k]=tk.IntVar()
             self.DATASET_checkvars[k].set(0)
-            self.DATASET_checkbuttons[k]=tk.Checkbutton(self.top,text='{}'.format(k),variable=self.DATASET_checkvars[k],onvalue=1,offvalue=0,bg=self.root_fg,fg=self.root_bg)
+            self.DATASET_checkbuttons[k]=tk.Checkbutton(self.frame_table,text='{}'.format(k),variable=self.DATASET_checkvars[k],onvalue=1,offvalue=0,bg=self.root_fg,fg=self.root_bg)
             self.DATASET_checkbuttons[k].grid(row=spacer+i,column=0,sticky='sw')
+            if self.DATASET_OBJECTS[k]!='None':
+                f=open(self.DATASET_OBJECTS[k],'r')
+                f_read=f.readlines()
+                f.close()     
+                df_i=pd.DataFrame([w.replace('\n','').replace(' ','') for w in f_read])     
+
+            elif os.path.exists(os.path.join(os.path.dirname(k))):
+                path_to_read=os.path.join(os.path.dirname(k),'grep_results.txt')
+                cmd_i='cd {} && find {} -name obj.names > {}'.format(os.path.dirname(k),os.path.dirname(k),path_to_read)    
+                self.run_cmd(cmd_i)
+                f=open(path_to_read,'r')
+                f_read=f.readlines()
+                f.close()     
+                if len(f_read)>0:
+                    f=open(f_read[0].replace('\n','').replace(' ',''))
+                    f_read=f.readlines()
+                    f.close()
+                    df_i=pd.DataFrame([w.replace('\n','').replace(' ','') for w in f_read])     
+                else:  
+                    print("DOING THIS THE LONG WAY since no obj.names was found here for:\n\t {}\n".format(k))    
+                    path_to_read=os.path.join(os.path.dirname(k),'grep_results.txt')
+                    cmd_i='cd {} && grep -r "<name>" Annotations > {}'.format(os.path.dirname(k),path_to_read)
+                    self.run_cmd(cmd_i)
+                    f=open(path_to_read,'r')
+                    f_read=f.readlines()
+                    f.close()
+                    df_i=pd.DataFrame([w.split("<name>")[1].split("</name")[0] for w in f_read])
+            list_i=list(df_i[0].unique())
+            list_i=sorted(list_i)
+            list_i=";".join([w for w in list_i])
+            list_i=[""]+[list_i]
+            self.DATASET_dropdownlists[k]=list_i
+            self.DATASET_dropdownvars[k]=tk.StringVar()
+            self.DATASET_dropdownvars[k].set(list_i[1])
+            self.DATASET_dropdownoptions[k]=tk.OptionMenu(self.frame_table,self.DATASET_dropdownvars[k],*self.DATASET_dropdownlists[k])
+            self.DATASET_dropdownoptions[k].grid(row=spacer+i,column=1,sticky='sw')
+
+        self.frame_table.update_idletasks()
+        width_i=sum([w.winfo_width() for w in self.DATASET_dropdownoptions.values()])
+        width_j=sum([w.winfo_width() for w in self.DATASET_checkbuttons.values()])
+        height_i=sum([w.winfo_height() for w in self.DATASET_dropdownoptions.values()])
+        height_j=sum([w.winfo_height() for w in self.DATASET_checkbuttons.values()])
+        total_width=width_i+width_j+self.hsbar.winfo_width()
+        total_height=height_i+height_j+self.vsbar.winfo_height()
+        print('total_width',total_width)
+        print('total_height',total_height)
+        self.frame_canvas.config(width=total_width,height=total_height)
+        self.canvas.config(scrollregion=self.canvas.bbox('all'))
+        self.top.mainloop()
+
+
 
 
     def popupWindow_CLASSIFY_CHIPS(self):
@@ -2517,7 +2647,7 @@ class yolo_cfg:
         self.open_anno_CUSTOM()
         self.open_jpeg_CUSTOM()
     
-    def open_jpeg_CUSTOM(self):
+    def open_jpeg_CUSTOM(self,row_i=6,col_i=6,columnspan=75,sticky='sew',location=None,sticky2='ne',sticky3='se'):
         if self.open_jpeg_selected_CUSTOM==True:
             self.open_jpeg_label_CUSTOM.destroy()
             self.open_jpeg_note_CUSTOM.destroy()
@@ -2525,16 +2655,27 @@ class yolo_cfg:
             del self.open_jpeg_label_CUSTOM
             del self.open_jpeg_note_CUSTOM
             del self.open_jpeg_button_CUSTOM
+        try:
+            if location==None:
+                location=self.top
+            else:
+                location=location
+        except:
+            location=location
+        print('location=',location)
         
         self.open_jpeg_label_var_CUSTOM=tk.StringVar()
         self.open_jpeg_label_var_CUSTOM.set(self.path_JPEGImages_CUSTOM)
-        self.open_jpeg_button_CUSTOM=Button(self.top,image=self.icon_folder,command=partial(self.select_folder,os.path.dirname(self.path_Yolo),'Open Custom JPEGImages Folder',self.open_jpeg_label_var_CUSTOM),bg=self.root_bg,fg=self.root_fg)
-        self.open_jpeg_button_CUSTOM.grid(row=6,column=6,sticky='se')
-        self.open_jpeg_note_CUSTOM=tk.Label(self.top,text="Custom JPEGImages dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
-        self.open_jpeg_note_CUSTOM.grid(row=7,column=6,sticky='ne')
+        self.open_jpeg_button_CUSTOM=Button(location,image=self.icon_folder,command=partial(self.select_folder,os.path.dirname(self.path_Yolo),'Open Custom JPEGImages Folder',self.open_jpeg_label_var_CUSTOM),bg=self.root_bg,fg=self.root_fg)
+
+        self.open_jpeg_note_CUSTOM=tk.Label(location,text="Custom JPEGImages dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+
+        if col_i>0:
+            self.open_jpeg_button_CUSTOM.grid(row=row_i,column=col_i,sticky=sticky2)
+            self.open_jpeg_note_CUSTOM.grid(row=row_i+1,column=col_i,sticky=sticky3)
         cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var_CUSTOM.get())
-        self.open_jpeg_label_CUSTOM=Button(self.top,textvariable=self.open_jpeg_label_var_CUSTOM, command=self.open_custom_jpeg_cmd,bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
-        self.open_jpeg_label_CUSTOM.grid(row=6,column=7,columnspan=75,sticky='sew')
+        self.open_jpeg_label_CUSTOM=Button(location,textvariable=self.open_jpeg_label_var_CUSTOM, command=self.open_custom_jpeg_cmd,bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_jpeg_label_CUSTOM.grid(row=row_i,column=col_i+1,columnspan=columnspan,sticky=sticky)
         self.open_jpeg_selected_CUSTOM=True
 
     def open_custom_jpeg_cmd(self):
