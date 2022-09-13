@@ -283,7 +283,7 @@ video=str(0)
 save='No'
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image",
+ap.add_argument("-i", "--image", default='None',
     help="path to input image")
 ap.add_argument("-c", "--confidence", type=float, default=0.5,
     help="minimum probability to filter weak detections")
@@ -311,10 +311,14 @@ ap.add_argument("--destinations",type=str,default='XXXYYYZZZZ@mms.att.net',help=
 ap.add_argument("--basepath_chips",type=str,default="/media/steven/Elements/chips",help="path for chips stored")
 ap.add_argument("--sleep_time_chips",type=float,default=30,help="Seconds to sleep between sending chips")
 ap.add_argument("--using_JETSON_NANO",action='store_true', help='If using Jetson NANO, issues with RET, so want to have this flag to handle it')
+ap.add_argument("--use_socket_receive_imgs",action='store_true',help='if you want to receive images from a set path given by labelimg and send predictions to labelimg')
+ap.add_argument("--noview",action='store_true',help='if you do not want to see output')
+
 global args
 global send_image_to_cell,send_image_to_cell_path,destinations,basepath_chips,sleep_time_chips
 args = vars(ap.parse_args())
 print(args)
+image_i=args['image']
 weightsPath=args['weightsPath']
 labelsPath=args['labelsPath']
 configPath=args['configPath']
@@ -439,6 +443,30 @@ for i in net.getUnconnectedOutLayers():
 #pprint(yolo_layers)
 if str(video).find('rtsp')!=-1:
     os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"]="rtsp_transport;udp" #edit sjs 8/4/2021
+
+
+def load_imges_from_folder(folder):
+    found_image=False
+    while found_image==False:
+        try:
+            images = []
+            filenames=os.listdir(folder)
+            filenames=[w for w in filenames if w.find('.jpg')!=-1 or w.find('.png')!=-1]
+            for filename in filenames:
+                print('filename',filename)
+                #img = cv2.imread(os.path.join(folder,filename))
+                #if img is not None:
+                if os.path.exists(os.path.join(folder,filename)):
+                    image=cv2.imread(os.path.join(folder,filename))
+                    return image
+                else:
+                    pass
+        except:
+            pass
+    return images
+
+
+
 class VideoStream:
     """Camera object that controls video streaming from the Picamera"""
     def __init__(self,video,resolution=(300,300),framerate=40,output_file_path=OUTPUT_FILE): #edit 8/4/2021 sjs, includes 640x640 default with video parameter defined for rtsp arg.
@@ -515,14 +543,73 @@ def key_capture_thread():
 aspect=640./480.
 if imW==imH:
     imH=int(imW/aspect)
+if args['image']=='None':
+  videostream = VideoStream(video,resolution=(imW,imH),framerate=30).start()
+def dataset_loader(dataset_Queue,dataset_path_Queue,msg_i_Queue):
+    if args['use_socket_receive_imgs']:
+            import socket
+            import threading
+            from multiprocessing import Queue
+            xy=Queue() #bboxes
+            ready=Queue()
+            PORT_RX=8765
+            HOST_RX=socket.gethostname()
+            connected=False
+            while connected==False:
+                print('using Socket for PORT=={} and HOST=={}'.format(PORT_RX,HOST_RX))
+                try:
+                    yolov4_model=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    yolov4_model.connect((HOST_RX, PORT_RX)) #edit sjs
+                    connected=True
+                    msg_i_list="&" #get it started
+                except:
+                    print('Not accepting socket')
+            LOOP=True
+            dataset_path_i=yolov4_model.recv(1024)
+            dataset_path_i=dataset_path_i.decode()
+            image=dataset_path_i
+    else:
+        LOOP=False
+        dataset_path_i=dataset_path_Queue.get()
+    DO_THE_LOOP=True
+    while DO_THE_LOOP:
 
-videostream = VideoStream(video,resolution=(imW,imH),framerate=30).start()
+        print("PUT IMAGE")
+        image=load_imges_from_folder(image)
+        
+        dataset_Queue.put(image)
+        msg_i_list=msg_i_Queue.get()
+        #print(msg_i_list)
+        if LOOP:
+            yolov4_model.send(msg_i_list.encode())  
+            dataset_path_i=yolov4_model.recv(1024)
+            dataset_path_i=dataset_path_i.decode()
+            image=dataset_path_i
+
+        if LOOP==False:
+            print('FINISHED LOOP')
+            DO_THE_LOOP=False 
+
+
+                                
+dataset_Queue=Queue()
+dataset_path_Queue=Queue()
+msg_i_Queue=Queue()
+if args['image']!='None':
+    #dataset=load_images_from_folder(os.path.dirname(args['image']))
+    dataset_loader_process=Process(target=dataset_loader,args=(dataset_Queue,dataset_path_Queue,msg_i_Queue,)).start()
+    #dataset_path_Queue.put(os.path.dirname(args['image']))
+
+
+
 window_name='YOLO camera'
 
-def do_stuff():
+def do_stuff(dataset_Queue,dataset_path_Queue,msg_i_Queue):
     global time_found,target_found,myrtmp_addr,running,args,RTSP
     global send_image_to_cell,send_image_to_cell_path,destinations,basepath_chips,sleep_time_chips
     global total_fps, total_fps_count
+
+
     total_fps=0
     total_fps_count=0
     th.Thread(target=key_capture_thread,args=(),name='key_capture_thread',daemon=True).start()
@@ -577,19 +664,14 @@ def do_stuff():
             except:
                 pass
         try:
-               image = videostream.read()
+               if args['image']=='None':            
+                image = videostream.read()
+               else:
+                #image=cv2.imread(args['image'])
+                image=dataset_Queue.get()
+                
                (H, W) = image.shape[:2]
-               #print('H=',H)
-               #print('W=',W)
-               #image=cv2.resize(image,(imW,imH))
-               #H=imH
-               #W=imW
-               # determine only the *output* layer names that we need from YOLO
-
-               # construct a blob from the input image and then perform a forward
-               # pass of the YOLO object detector, giving us our bounding boxes and
-               # associated probabilities
-
+               msg_i_list="STAART&"
 
                #Check send chips
                time_now=time_start
@@ -681,7 +763,8 @@ def do_stuff():
                        score_i=confidences[i]
                        bndboxes.append([xmin,ymin,xmax,ymax,score_i])
                        labels_found.append(LABELS[classIDs[i]])
-                       if send_image_to_cell and os.path.exists(send_image_to_cell_path) and send_allowed:
+                       
+                       if (send_image_to_cell and os.path.exists(send_image_to_cell_path) and send_allowed) or args['image']!='None':
                         if os.path.exists(detection_path_i)==False:
                             os.makedirs(detection_path_i)
                         label = LABELS[classIDs[i]]+" Confidence="+str(score_i)
@@ -691,7 +774,7 @@ def do_stuff():
                         chip_i=label+".jpg"
                         chip_i=os.path.join(detection_path_i,chip_i)
                         label_list[chip_i]=label_og
-                        MARGIN=5
+                        MARGIN=0
                         print(im0_og.shape)
                         xmin=max(xmin-MARGIN,0)
                         xmax=min(xmax+MARGIN,im0_og.shape[1])
@@ -699,12 +782,16 @@ def do_stuff():
                         ymax=min(ymax+MARGIN,im0_og.shape[0])
                         print('xmin,xmax,ymin,ymax')
                         print(xmin,xmax,ymin,ymax)
-                        if len(list(im0_og.shape))==3:
-                            img_list[chip_i]=im0_og[ymin:ymax,xmin:xmax,:]
-                            cv2.imwrite(chip_i,im0_og[ymin:ymax,xmin:xmax,:])
-                        elif len(list(im0_og.shape))==2:
-                            img_list[chip_i]=im0_og[ymin:ymax,xmin:xmax]
-                            cv2.imwrite(chip_i,im0_og[ymin:ymax,xmin:xmax])
+                        prefix='yolov4tiny'
+                        msg_i=f'{prefix}_{LABELS[classIDs[i]]};{xmin};{ymin};{xmax};{ymax};{np.round(score_i,2)};{im0_og.shape[1]};{im0_og.shape[0]}' #edit sjs
+                        msg_i_list=msg_i_list+msg_i+"&"
+                        if send_image_to_cell and os.path.exists(send_image_to_cell_path) and send_allowed:
+                            if len(list(im0_og.shape))==3:
+                                img_list[chip_i]=im0_og[ymin:ymax,xmin:xmax,:]
+                                cv2.imwrite(chip_i,im0_og[ymin:ymax,xmin:xmax,:])
+                            elif len(list(im0_og.shape))==2:
+                                img_list[chip_i]=im0_og[ymin:ymax,xmin:xmax]
+                                cv2.imwrite(chip_i,im0_og[ymin:ymax,xmin:xmax])
                    if send_image_to_cell and os.path.exists(send_image_to_cell_path) and send_allowed and len(img_list)>0:
                     if os.path.exists(detection_path_i_full)==False:
                         os.makedirs(detection_path_i_full)
@@ -717,8 +804,13 @@ def do_stuff():
                     cv2.imwrite(os.path.join(detection_path_i_full,'Full_Detected.jpg'),image)
                     cv2.imwrite(os.path.join(detection_path_i_full,'Full_OG.jpg'),im0_og)
                     send_allowed=False
+
                else:
                    pass
+               if args['image']!='None':
+                if msg_i_Queue.empty():
+                    print('len(msg_i_list)',len(msg_i_list))
+                    msg_i_Queue.put(msg_i_list+'EENNDD')
                if save:
                    # Save Annotation
                    Thread(target=savePascalVocFormat,args=(anno_i,bndboxes,labels_found,jpeg_i,image,scores,)).start()
@@ -732,7 +824,8 @@ def do_stuff():
                    print('FOUND YOUR TARGET')
                    if time.time()-time_found>0.1:
                         time_found=time.time()
-               cv2.imshow('YOLO DNN',image)
+               if not(args['noview']):
+                   cv2.imshow('YOLO DNN',image)
                if RTMP:
                 YH_i,YW_i,VBR_i=YOUTUBE_STREAM_RESOLUTION(res=YOUTUBE_STREAM_RES)
                 image_og=cv2.resize(image,(YW_i,YH_i))
@@ -762,4 +855,4 @@ def do_stuff():
         if fps_i>500:
             print('Slowing down to debug error\n')
             time.sleep(1)
-do_stuff()
+do_stuff(dataset_Queue,dataset_path_Queue,msg_i_Queue)
