@@ -1720,6 +1720,7 @@ class yolo_cfg:
         self.create_test_bash_images_with_predictions()
         self.create_test_bash_images_with_predictions_mAP()
         self.create_test_bash_dnn()
+        self.create_test_bash_dnn_labelimg()
         self.create_test_bash_dnn_rtsp()
         self.YOUTUBE_RTMP()
 
@@ -2515,6 +2516,16 @@ class yolo_cfg:
         self.test_yolo_objsdnn_button.grid(row=13,column=2,sticky='se')
         self.test_yolo_objsdnn_button_note=tk.Label(self.top,text='DNN \n webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.test_yolo_objsdnn_button_note.grid(row=14,column=2,sticky='ne')
+
+    def test_yolodnn_labelimg(self):
+        if os.path.exists('libs/yolov7_path.py'):
+            self.create_test_bash_dnn_labelimg()
+            cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','dnn_labelimg.sh'))
+            self.test_yolo_labelimg_objs_button=Button(self.top,image=self.icon_labelImg,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.test_yolo_labelimg_objs_button.grid(row=14-7+10,column=2,sticky='se')
+            self.test_yolo_labelimg_objs_button_note=tk.Label(self.top,text='inference \n labelImg \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.test_yolo_labelimg_objs_button_note.grid(row=15-7+10,column=2,sticky='ne')
+
 
     def test_yolodnn_rtsp(self):
         self.TMP_create_test_dnn_bash_rtsp()
@@ -4300,6 +4311,21 @@ class yolo_cfg:
             f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No \n')
         f.close()
 
+    def create_test_bash_dnn_labelimg(self):
+        self.check_backup_path_weights()
+        f=open(self.save_cfg_path_test.replace('.cfg','dnn_labelimg.sh'),'w')
+        f.writelines('config_path_test='+str(self.save_cfg_path_test)+'\n')
+        f.writelines('obj_path='+str(self.names_path)+'\n')
+        if self.best_weights_path==None:
+            self.best_weights_path=os.path.join(self.backup_path,os.path.basename(self.save_cfg_path_test.replace('_test.cfg',''))+'_train_best.weights')
+        f.writelines('best_weights='+str(self.best_weights_path)+'\n')
+        f.writelines('image=going_to_labelimg\n')
+        f.writelines('imW='+str(self.WIDTH_NUM)+'\n')
+        f.writelines('imH='+str(self.HEIGHT_NUM)+'\n')
+        f.writelines('cd {}\n'.format(self.DNN_PATH.replace('yolo_dnn_multi_drone_hdmi.py','')))
+        f.writelines('python3 yolo_dnn_multi_drone_hdmi.py --image=$image --weightsPath=$best_weights --labelsPath=$obj_path --configPath=$config_path_test --imW=$imW --imH=$imH --video=0 --save=No --use_socket_receive_imgs --noview \n')
+        f.close()
+
     def create_test_bash_dnn_rtsp(self):
         self.check_backup_path_weights()
         f=open(self.save_cfg_path_test.replace('.cfg','dnn_rtsp.sh'),'w')
@@ -5149,6 +5175,7 @@ class yolo_cfg:
         self.test_yolodnn()
         self.test_yolodnn_rtmp()
         self.test_yolo_mp4()
+        self.test_yolodnn_labelimg()
         self.test_yolodnn_rtsp()
 
         self.test_yolov7_note=tk.Label(self.top,text='Yolov7\n-tiny',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
