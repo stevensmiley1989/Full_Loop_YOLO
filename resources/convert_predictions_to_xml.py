@@ -62,7 +62,11 @@ for i in tqdm(range(len(df))):
     end=df['end'][i]
     path_jpg=df['path_jpeg'][i]
     img_data=plt.imread(path_jpg)
-    height,width,depth=img_data.shape
+    if len(img_data.shape)==3:
+        height,width,depth=img_data.shape
+    elif len(img_data.shape)==2:
+        height,width=img_data.shape
+        depth=1
     print(height,width,depth)
     folder='JPEGImages'
     filename=path_jpg.split('/')[-1]
