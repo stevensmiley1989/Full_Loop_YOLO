@@ -284,7 +284,7 @@ class main_entry:
                         self.df_settings.at[i,'mp4_video_path']=line.split('=')[-1].replace("'",'"').split('"')[1]
                 if found==True:
                     i+=1
-        self.df_settings=self.df_settings.fillna(0)
+        self.df_settings=self.df_settings.fillna('0')
         self.files_keep.append('DEFAULT_SETTINGS')
         print(self.df_settings)
         self.checkd_buttons={}
