@@ -5059,6 +5059,7 @@ class yolo_cfg:
                 print('Creating self.path_Yolo: \n {}'.format(self.path_Yolo))
                 os.makedirs(self.path_Yolo)
         if self.var_overwrite.get()!='No':
+            print("STARTING PARALLEL PROCESSING FOR READING xml Annotations and WRITING txt Yolo Objs")
             import multiprocessing
             from multiprocessing import Process,Queue
             if multiprocessing.cpu_count()>1:
