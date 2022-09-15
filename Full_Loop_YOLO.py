@@ -4901,7 +4901,220 @@ class yolo_cfg:
         f=open(path_anno_dest_i,'a')
         f.writelines(yolo_i+'\n')
         f.close()
-    def read_XML(self,anno,i,count):
+    def grep_annos_labels(self):
+        self.get_all_annos()
+        count_str=self.pad(self.counts)
+        self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
+        self.df=pd.DataFrame(columns=['label_i','path_jpeg_dest_i','path_anno_i'])
+        if self.var_overwrite.get()!='No':
+            self.grep_result_file=os.path.join(os.path.dirname(self.path_Annotations),"grep_results_for_df.txt")
+            cmd_i=f'grep -r "<name>" {self.path_Annotations} > {self.grep_result_file}'
+            self.run_cmd(cmd_i)         
+            f=open(self.grep_result_file,'r')
+            f_read=f.readlines()
+            f.close()
+            self.df_gr=pd.DataFrame(columns=['path','label','grep_line'])
+            self.df_gr['grep_line']=f_read
+            self.df_gr['label_i']=[w.split('<name>')[1].split('</name>')[0] for w in self.df_gr['grep_line']]
+            self.df_gr['path_anno_i']=[os.path.abspath(w.split(':')[0].strip(' ')) for w in self.df_gr['grep_line']]
+
+            self.df_gr['img_i_name']=[os.path.basename(w).split('.')[0] for w in self.df_gr['path_anno_i']]
+            self.df_gr['path_jpeg_i']=[os.path.join(self.path_JPEGImages,w+'.jpg') for w in self.df_gr['img_i_name']]
+            self.df_gr['path_anno_dest_i']=[os.path.join(self.path_Yolo,w+'.xml') for w in self.df_gr['img_i_name']]
+            self.df_gr['path_jpeg_dest_i']=[os.path.join(self.path_Yolo,w+'.jpg') for w in self.df_gr['img_i_name']]
+            self.found_names={name:i for i,name in enumerate(self.df_gr['label_i'].unique())}
+            f=open(self.names_path,'w')
+            f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
+            f.close()
+            self.df_gr=self.df_gr.drop_duplicates(subset=['path_anno_i']).reset_index().drop('index',axis=1)
+            self.df_gr_filename=self.grep_result_file.replace('.txt','.csv')
+            self.df_gr.to_csv(self.df_gr_filename,index=None)
+            self.df=self.df_gr[['label_i','path_jpeg_dest_i','path_anno_i']]
+            self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
+            self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
+            self.df.to_pickle(self.df_filename,protocol=2)
+            self.df.to_csv(self.df_filename_csv,index=None)
+        if os.path.exists(self.df_filename) and self.var_overwrite.get()=='No':
+            print(self.df_filename)
+            print('found')
+            keep_columns=list(self.df.columns)
+            df_pkls=os.listdir(self.path_Yolo)
+            df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
+            for pkl_i in tqdm(df_pkls):
+                self.df_filename_csv=pkl_i.replace('.pkl','.csv')
+                if os.path.exists(self.df_filename_csv)==False:
+                    print('Creating: \n {}'.format(self.df_filename_csv))
+                    try:
+                        self.df_pkl=pd.read_pickle(pkl_i)
+                        self.df_pkl.to_csv(self.df_filename_csv,index=None)
+                    except:
+                        self.df_pkl=pd.read_csv(self.df_filename_csv,index_col=None)
+            self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
+            try:
+                self.df=pd.read_pickle(self.df_filename)
+                self.df.to_csv(self.df_filename_csv,index=None)
+            except:
+                self.df=pd.read_csv(self.df_filename_csv,index_col=None)
+            drop_columns=[col for col in self.df.columns if col not in keep_columns]
+            if len(drop_columns)>0:
+                self.df.drop(drop_columns,axis=1,inplace=True)
+            #self.found_names={w:i for i,w in enumerate(self.df['label_i'].unique())}
+            if os.path.exists(self.names_path):
+                f=open(self.names_path,'r')
+                f_read=f.readlines()
+                f.close()
+                self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
+            else:
+                print('READING self.path_Yolo again')
+                if os.path.exists(os.path.join(self.path_Yolo,'obj.names')):
+                    print('I exist')
+                    shutil.copy(os.path.join(self.path_Yolo,os.path.basename(self.names_path)),self.names_path)
+                    f=open(self.names_path,'r')
+                    f_read=f.readlines()
+                    f.close()
+                    self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
+                else:
+                    #input('ARE YOU SURE?')
+                    df_pkls=os.listdir(self.path_Yolo)
+                    df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('NEW_df_YOLO.pkl')!=-1]
+                    for pkl_i in tqdm(df_pkls):
+                        self.df_filename_csv=pkl_i.replace('.pkl','.csv')
+                        try:
+                            self.df_pkl=pd.read_pickle(pkl_i)
+                            self.df_pkl.to_csv(self.df_filename_csv,index=None)
+                        except:
+                            self.df_pkl=pd.read_csv(self.df_filename_csv,index_col=None)
+
+                        #self.df_pkl=pd.read_pickle(pkl_i)
+                        names_possible=list(self.df_pkl['label_i'].unique())
+                        for name in names_possible:
+                            if name not in self.found_names.keys():
+                                self.found_names[name]=len(self.found_names.keys())+0
+                    f=open(self.names_path,'w')
+                    f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
+                    f.close()
+                #break
+        else:
+            if os.path.exists(self.df_filename) and self.var_overwrite.get()=='Add' and self.var_overwite.get()=='No':
+                keep_columns=list(self.df.columns)
+                self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
+                try:
+                    self.df=pd.read_pickle(self.df_filename)
+                    self.df.to_csv(self.df_filename_csv,index=None)
+                except:
+                    self.df=pd.read_csv(self.df_filename_csv,index_col=None)
+                #self.df=pd.read_pickle(self.df_filename)
+                drop_columns=[col for col in self.df.columns if col not in keep_columns]
+                if len(drop_columns)>0:
+                    self.df.drop(drop_columns,axis=1,inplace=True)
+                #self.found_names={w:i for i,w in enumerate(self.df['label_i'].unique())}
+                if os.path.exists(self.names_path):
+                    f=open(self.names_path,'r')
+                    f_read=f.readlines()
+                    f.close()
+                    self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
+                    if os.path.exists(os.path.join(self.path_Yolo,os.path.basename(self.names_path)))==False:
+                        shutil.copy(self.names_path,self.path_Yolo)
+                else:
+                    if os.path.exists(os.path.join(self.path_Yolo,os.path.basename(self.names_path))):
+                        shutil.copy(os.path.join(self.path_Yolo,os.path.basename(self.names_path)),self.names_path)
+                        f=open(self.names_path,'r')
+                        f_read=f.readlines()
+                        f.close()
+                        self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
+                    else:
+                        df_pkls=os.listdir(self.path_Yolo)
+                        df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
+                        for pkl_i in tqdm(df_pkls):
+                            self.df_filename_csv=pkl_i.replace('.pkl','.csv')
+                            try:
+                                self.df_pkl=pd.read_pickle(pkl_i)
+                                self.df_pkl.to_csv(self.df_filename_csv,index=None)
+                            except:
+                                self.df_pkl=pd.read_csv(self.df_filename_csv,index_col=None)
+                            #self.df_pkl=pd.read_pickle(pkl_i)
+                            names_possible=list(self.df_pkl['label_i'].unique())
+                            for name in names_possible:
+                                if name not in self.found_names.keys():
+                                    self.found_names[name]=len(self.found_names.keys())+0
+                        f=open(self.names_path,'w')
+                        f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
+                        f.close()
+                i=len(self.df)
+            else:
+
+                if os.path.exists(os.path.join(os.path.dirname(self.path_Annotations),'Yolo_Objs'))==False:
+                    self.path_Yolo=os.path.join(os.path.dirname(self.path_Annotations),'Yolo_Objs')
+                    print(f'Generating new self.path_Yolo here instead: {self.path_Yolo}')
+                    os.makedirs(self.path_Yolo)
+                else:
+                    print('Removing self.path_Yolo: \n {}'.format(self.path_Yolo))
+                    os.system('rm -rf {}'.format(self.path_Yolo))
+                pass
+            if os.path.exists(self.path_Yolo)==False:
+                print('Creating self.path_Yolo: \n {}'.format(self.path_Yolo))
+                os.makedirs(self.path_Yolo)
+        if self.var_overwrite.get()!='No':
+            import multiprocessing
+            from multiprocessing import Process,Queue
+            if multiprocessing.cpu_count()>1:
+                NUM_PROCESS=multiprocessing.cpu_count()-1
+            else:
+                NUM_PROCESS=1
+            i=0
+            processes={}
+            df_queues={}
+            path_annos=[]
+
+            expected_count=len(list(self.df['path_jpeg_dest_i'].unique()))
+            print('expected_count=',expected_count)
+            CHUNK_NUM=125
+            time_start=time.time()
+            #for j,(path_anno_i,path_jpeg_i) in tqdm(enumerate(zip(self.Annotations,self.JPEGs))):
+            for j in range(0,len(self.df),CHUNK_NUM):
+                print('j=',j)
+                print('len(processes)=',len(processes))
+                path_annos=self.df['path_anno_i'].loc[j:j+CHUNK_NUM]
+                df_queues[len(processes)]=Queue()
+                df_queues[len(processes)].put(self.df.copy())
+                p=Process(target=self.read_multiple_XML,args=(path_annos,df_queues[len(processes)]))
+                PROCESS_COUNT=len(processes)
+                processes[PROCESS_COUNT]=p
+                p.start()
+                if (j%NUM_PROCESS==0 and j!=0 or j+CHUNK_NUM>expected_count):
+                    print('\Finished Reading {} Annotations of {} \n'.format(path_annos,len(self.df)))
+                    for (p_i,process_i),queue_i in zip(processes.items(),df_queues.values()):
+
+                    #for queue_i in df_queues.values():
+                        print(f'getting queue_i for i')
+                        queue_i.get()
+                        print(f'joining process loop {p_i}')
+                        process_i.join()
+                        print('joined')
+                    df_queues={}
+                    processes={}
+                if j+CHUNK_NUM>expected_count:
+                    print('kicking out')
+                    break
+            try:
+                for process_i in processes.values():
+                    print('joining process loop 2')
+                    process_i.join()
+                for queue_i in df_queues.values():
+                    if i==0 and queue_i.empty()==False:
+                        queue_i.get()
+                        i+=1
+                    elif queue_i.empty()==False:
+                        pass
+            except:
+                pass
+    
+    def read_multiple_XML(self,df_i,queue_i):
+        for anno in df_i:
+            self.read_XML(os.path.basename(anno))
+        queue_i.put('ready')
+
+    def read_XML(self,anno):
         #print('LENGTH OF DF: ',len(self.df))
         #for anno in tqdm(os.listdir(self.path_Annotations)):
         label='None'
@@ -4917,10 +5130,6 @@ class yolo_cfg:
             f.close()
             f=open(path_anno_dest_i,'w')
             f.close()
-            #img_i=plt.imread(path_jpeg_i)
-            #imgSize=img_i.shape
-            
-
             parser = etree.XMLParser(encoding=ENCODE_METHOD)
             xmltree = ElementTree.parse(path_anno_i, parser=parser).getroot()
             filename = xmltree.find('filename').text
@@ -4933,31 +5142,6 @@ class yolo_cfg:
             num_objs=len(num_objs)
             if num_objs==0:
                 print('No objects found')
-                #self.df.at[i,'xmin']=str(0)
-                #self.df.at[i,'xmax']=str(width_i)
-                #self.df.at[i,'ymin']=str(0)
-                #self.df.at[i,'ymax']=str(height_i)
-                #self.df.at[i,'width']=imgSize[1]
-                #self.df.at[i,'height']=imgSize[0]
-                self.df.at[i,'label_i']=label
-                #self.df.at[i,'path_jpeg_i']=path_jpeg_i
-                #self.df.at[i,'path_anno_i']=path_anno_i
-                self.df.at[i,'path_jpeg_dest_i']=path_jpeg_dest_i
-                #self.df.at[i,'path_anno_dest_i']=path_anno_dest_i
-                i+=1
-                count+=1
-                if count%self.increment==0 and len(self.df)>0:
-                    print('count=',count)
-                    self.df=self.df.drop_duplicates(keep='last').reset_index().drop('index',axis=1)
-                    self.df.to_pickle(self.df_filename,protocol=2)
-                    self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
-                    self.df.to_csv(self.df_filename_csv,index=None)
-                    count_str=self.pad(count)
-                    self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
-                    #self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
-                    self.df=pd.DataFrame(columns=['label_i','path_jpeg_dest_i'])
-                    i=0
-                    print(self.df_filename,'of {}'.format(self.total_annos))
             else:
                 for object_iter in xmltree.findall('object'):
                     bndbox = object_iter.find("bndbox")
@@ -4968,42 +5152,13 @@ class yolo_cfg:
                     ymin = int(float(bndbox.find('ymin').text))
                     xmax = int(float(bndbox.find('xmax').text))
                     ymax = int(float(bndbox.find('ymax').text))
-                    #self.df.at[i,'xmin']=str(xmin)
-                    #self.df.at[i,'xmax']=str(xmax)
-                    #self.df.at[i,'ymin']=str(ymin)
-                    #self.df.at[i,'ymax']=str(ymax)
-                    #self.df.at[i,'width']=imgSize[1]
-                    #self.df.at[i,'height']=imgSize[0]
-                    self.df.at[i,'label_i']=label
-                    #self.df.at[i,'path_jpeg_i']=path_jpeg_i
-                    #self.df.at[i,'path_anno_i']=path_anno_i
-                    self.df.at[i,'path_jpeg_dest_i']=path_jpeg_dest_i
-                    #self.df.at[i,'path_anno_dest_i']=path_anno_dest_i
-                    #Thread(target=self.write_Yolo,args=(xmin,xmax,ymin,ymax,imgSize,self.found_names[label],path_anno_dest_i,)).start()
                     self.write_Yolo(xmin,xmax,ymin,ymax,imgSize,self.found_names[label],path_anno_dest_i,)
-                    # classIndex,xcen,ycen,w,h=self.BndBox2Yolo(xmin,xmax,ymin,ymax,imgSize,self.found_names[label])
-                    # yolo_i=" ".join([str(yolo) for yolo in (int(classIndex),xcen,ycen,w,h)])
-                    # f=open(path_anno_dest_i,'a')
-                    # f.writelines(yolo_i+'\n')
-                    # f.close()
-                    i+=1
-                    count+=1
-                    if count%self.increment==0 and len(self.df)>0:
-                        print('count=',count)
-                        self.df=self.df.drop_duplicates(keep='last').reset_index().drop('index',axis=1)
-                        self.df.to_pickle(self.df_filename,protocol=2)
-                        self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
-                        self.df.to_csv(self.df_filename_csv,index=None)
-                        count_str=self.pad(count)
-                        self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
-                        #self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
-                        self.df=pd.DataFrame(columns=['label_i','path_jpeg_dest_i'])
-                        i=0
-                        print(self.df_filename,'of {}'.format(self.total_annos))
+
                 
             Thread(target=self.copy_files,args=(path_jpeg_i,path_jpeg_dest_i,)).start()
             Thread(target=self.copy_files,args=(path_anno_i,path_anno_dest_xml_i,)).start()
-            return i,count
+            return True
+
 
     def read_XML_VALID(self,anno):
         label='None'
@@ -5261,143 +5416,7 @@ class yolo_cfg:
         else:
             print('ERROR, JPEGImages directory does NOT exist')
     def convert_PascalVOC_to_YOLO(self):
-        self.found_names={}
-        i=0
-        #self.df=pd.DataFrame(columns=['xmin','xmax','ymin','ymax','width','height','label_i','cat_i','path_jpeg_i','path_anno_i','path_jpeg_dest_i','path_anno_dest_i'])
-        self.df=pd.DataFrame(columns=['label_i','path_jpeg_dest_i'])
-        self.get_all_annos()
-        count=self.counts
-        label='None'
-        for full_anno in tqdm(self.total_annos_list):
-            anno=os.path.basename(full_anno) #.split('/')[-1]
-            if count==self.counts:
-                count_str=self.pad(count)
-                self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
-                self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
-                print(self.df_filename,'of {}'.format(self.total_annos))
-                
-            if os.path.exists(self.df_filename) and self.var_overwrite.get()=='No':
-                print(self.df_filename)
-                print('found')
-                keep_columns=list(self.df.columns)
-                df_pkls=os.listdir(self.path_Yolo)
-                df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
-                for pkl_i in tqdm(df_pkls):
-                    self.df_filename_csv=pkl_i.replace('.pkl','.csv')
-                    if os.path.exists(self.df_filename_csv)==False:
-                        print('Creating: \n {}'.format(self.df_filename_csv))
-                        try:
-                            self.df_pkl=pd.read_pickle(pkl_i)
-                            self.df_pkl.to_csv(self.df_filename_csv,index=None)
-                        except:
-                            self.df_pkl=pd.read_csv(self.df_filename_csv,index_col=None)
-                self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
-                try:
-                    self.df=pd.read_pickle(self.df_filename)
-                    self.df.to_csv(self.df_filename_csv,index=None)
-                except:
-                    self.df=pd.read_csv(self.df_filename_csv,index_col=None)
-                drop_columns=[col for col in self.df.columns if col not in keep_columns]
-                if len(drop_columns)>0:
-                    self.df.drop(drop_columns,axis=1,inplace=True)
-                #self.found_names={w:i for i,w in enumerate(self.df['label_i'].unique())}
-                if os.path.exists(self.names_path):
-                    f=open(self.names_path,'r')
-                    f_read=f.readlines()
-                    f.close()
-                    self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
-                else:
-                    print('READING self.path_Yolo again')
-                    if os.path.exists(os.path.join(self.path_Yolo,'obj.names')):
-                        print('I exist')
-                        shutil.copy(os.path.join(self.path_Yolo,os.path.basename(self.names_path)),self.names_path)
-                        f=open(self.names_path,'r')
-                        f_read=f.readlines()
-                        f.close()
-                        self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
-                    else:
-                        input('ARE YOU SURE?')
-                        df_pkls=os.listdir(self.path_Yolo)
-                        df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
-                        for pkl_i in tqdm(df_pkls):
-                            self.df_filename_csv=pkl_i.replace('.pkl','.csv')
-                            try:
-                                self.df_pkl=pd.read_pickle(pkl_i)
-                                self.df_pkl.to_csv(self.df_filename_csv,index=None)
-                            except:
-                                self.df_pkl=pd.read_csv(self.df_filename_csv,index_col=None)
-
-                            #self.df_pkl=pd.read_pickle(pkl_i)
-                            names_possible=list(self.df_pkl['label_i'].unique())
-                            for name in names_possible:
-                                if name not in self.found_names.keys():
-                                    self.found_names[name]=len(self.found_names.keys())+0
-                        f=open(self.names_path,'w')
-                        f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
-                        f.close()
-                break
-            else:
-                if os.path.exists(self.df_filename) and self.var_overwrite.get()=='Add':
-                    keep_columns=list(self.df.columns)
-                    self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
-                    try:
-                        self.df=pd.read_pickle(self.df_filename)
-                        self.df.to_csv(self.df_filename_csv,index=None)
-                    except:
-                        self.df=pd.read_csv(self.df_filename_csv,index_col=None)
-                    #self.df=pd.read_pickle(self.df_filename)
-                    drop_columns=[col for col in self.df.columns if col not in keep_columns]
-                    if len(drop_columns)>0:
-                        self.df.drop(drop_columns,axis=1,inplace=True)
-                    #self.found_names={w:i for i,w in enumerate(self.df['label_i'].unique())}
-                    if os.path.exists(self.names_path):
-                        f=open(self.names_path,'r')
-                        f_read=f.readlines()
-                        f.close()
-                        self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
-                        if os.path.exists(os.path.join(self.path_Yolo,os.path.basename(self.names_path)))==False:
-                            shutil.copy(self.names_path,self.path_Yolo)
-                    else:
-                        if os.path.exists(os.path.join(self.path_Yolo,os.path.basename(self.names_path))):
-                            shutil.copy(os.path.join(self.path_Yolo,os.path.basename(self.names_path)),self.names_path)
-                            f=open(self.names_path,'r')
-                            f_read=f.readlines()
-                            f.close()
-                            self.found_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
-                        else:
-                            df_pkls=os.listdir(self.path_Yolo)
-                            df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
-                            for pkl_i in tqdm(df_pkls):
-                                self.df_filename_csv=pkl_i.replace('.pkl','.csv')
-                                try:
-                                    self.df_pkl=pd.read_pickle(pkl_i)
-                                    self.df_pkl.to_csv(self.df_filename_csv,index=None)
-                                except:
-                                    self.df_pkl=pd.read_csv(self.df_filename_csv,index_col=None)
-                                #self.df_pkl=pd.read_pickle(pkl_i)
-                                names_possible=list(self.df_pkl['label_i'].unique())
-                                for name in names_possible:
-                                    if name not in self.found_names.keys():
-                                        self.found_names[name]=len(self.found_names.keys())+0
-                            f=open(self.names_path,'w')
-                            f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
-                            f.close()
-                    i=len(self.df)
-                else:
-                    if i==0:
-                        if os.path.exists(os.path.join(os.path.dirname(self.path_Annotations),'Yolo_Objs'))==False:
-                            self.path_Yolo=os.path.join(os.path.dirname(self.path_Annotations),'Yolo_Objs')
-                            print(f'Generating new self.path_Yolo here instead: {self.path_Yolo}')
-                            os.makedirs(self.path_Yolo)
-                        else:
-                            print('Removing self.path_Yolo: \n {}'.format(self.path_Yolo))
-                            os.system('rm -rf {}'.format(self.path_Yolo))
-                    pass
-                if os.path.exists(self.path_Yolo)==False:
-                    print('Creating self.path_Yolo: \n {}'.format(self.path_Yolo))
-                    os.makedirs(self.path_Yolo)
-            #Thread(target=self.read_XML,args=(anno,i,count,)).start()
-            i,count=self.read_XML(anno,i,count)
+        self.grep_annos_labels()
         if len(self.df)>0:
             self.df=self.df.drop_duplicates(keep='last').reset_index().drop('index',axis=1)
             self.df.to_pickle(self.df_filename,protocol=2)  
@@ -5442,8 +5461,7 @@ class yolo_cfg:
         self.split_yolo_objs_button.grid(row=4,column=1,sticky='se')
         self.split_yolo_objs_button_note=tk.Label(self.root,text='2.b \n Split Train/Test Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.split_yolo_objs_button_note.grid(row=5,column=1,sticky='ne')
-
-        
+       
 
     def split_objs(self):
         self.TRAIN_SPLIT=int(self.TRAIN_SPLIT_VAR.get())
