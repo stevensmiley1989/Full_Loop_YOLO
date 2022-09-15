@@ -141,8 +141,9 @@ def SEARCH_LISTS(dic_anno_jpeg_path,list_targets,MAX_PER_CLASS,path_Desired):
     for i,(anno_i,jpeg_i) in enumerate(dic_anno_jpeg_path.items()):
         for j,target_j in enumerate(list_targets):
             mysearch=GENERATE_SEARCH(anno_i,jpeg_i,path_Desired,target_j,MAX_PER_CLASS)
-            print(mysearch.df_filename)
-            mysearches.append(mysearch)
+            #print(mysearch.df_filename)
+            if len(mysearch)>0:
+                mysearches.append(mysearch)
             if len(mysearches)==1:
                 df_all_results=mysearch.df
             else:
