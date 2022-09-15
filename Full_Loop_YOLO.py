@@ -5052,8 +5052,9 @@ class yolo_cfg:
                     print(f'Generating new self.path_Yolo here instead: {self.path_Yolo}')
                     os.makedirs(self.path_Yolo)
                 else:
-                    print('Removing self.path_Yolo: \n {}'.format(self.path_Yolo))
-                    os.system('rm -rf {}'.format(self.path_Yolo))
+                    print('Moving self.path_Yolo to BACKUP_OLD_MOVED: \n {}'.format(self.path_Yolo))
+                    #os.system('rm -rf {}'.format(self.path_Yolo))
+                    os.system('mv {} {}'.format(self.path_Yolo,self.path_Yolo+'_BACKUP_OLD_MOVED_at_'+str(time.time()).split('.')[0]))
                 pass
             if os.path.exists(self.path_Yolo)==False:
                 print('Creating self.path_Yolo: \n {}'.format(self.path_Yolo))
