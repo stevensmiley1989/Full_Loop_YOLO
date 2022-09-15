@@ -35,7 +35,7 @@ class GENERATE_SEARCH:
         time_start=time.time()
         self.number_files=os.listdir(self.path_Annotations)
         time_end=time.time()
-        self.WAIT_TIME=2*(time_end-time_start)
+        self.WAIT_TIME=max(2*(time_end-time_start),2)
         print(f'WAIT_TIME = {self.WAIT_TIME} for this directory {self.path_Annotations} ')
         self.search()
     def run_cmd(self,cmd_i):
@@ -64,17 +64,26 @@ class GENERATE_SEARCH:
                     terminated=True
             previous_length=current_length
         process_to_kill.terminate()
-        f=open(file,'r')
-        f_read=f.readlines()
-        f.close()
-        if current_length<MAX_PER_CLASS:
-            MAX_PER_CLASS=current_length
-        prefix=path_search.replace('/','').replace('-','').replace('_','')
-        self.search_results=file.replace('.txt',f'_MAX_PER_CLASS_{MAX_PER_CLASS}_checked_{prefix}.txt')
-        f=open(self.search_results,'w')
-        [f.writelines(w) for w in f_read[:MAX_PER_CLASS]]
-        f.close()
-        os.remove(file)
+        if os.path.exists(file):
+            f=open(file,'r')
+            f_read=f.readlines()
+            f.close()
+            if len(f_read)==0:
+                print('NOTHING FOUND HERE for f_read')
+                self.NOTHING_FOUND=True
+            else:
+                self.NOTHING_FOUND=False
+            if current_length<MAX_PER_CLASS:
+                MAX_PER_CLASS=current_length
+            prefix=path_search.replace('/','').replace('-','').replace('_','')
+            self.search_results=file.replace('.txt',f'_MAX_PER_CLASS_{MAX_PER_CLASS}_checked_{prefix}.txt')
+            f=open(self.search_results,'w')
+            if self.NOTHING_FOUND==False:
+                [f.writelines(w) for w in f_read[:MAX_PER_CLASS]]
+            else:
+                pass
+            f.close()
+            os.remove(file)
 
     def search(self):
         self.CLASS_FILE=f"{os.path.join(self.path_Desired,self.CLASS_I)}_Annotation_List.txt"
@@ -86,39 +95,52 @@ class GENERATE_SEARCH:
         self.create_csv()
     def create_csv(self):
         #df=pd.DataFrame(columns=['CLASS_I','path_Annotations','path_JPEGImages'])
-        f=open(self.search_results,'r')
-        f_read=f.readlines()
-        f.close()
-        #print(len(f_read))
-        f_read=[w.replace('\n','').replace(' ','') for w in f_read]
+        if self.NOTHING_FOUND==False:
+            f=open(self.search_results,'r')
+            f_read=f.readlines()
+            f.close()
+            #print(len(f_read))
+            f_read=[w.replace('\n','').replace(' ','') for w in f_read]
+        else:
+            f_read=[]
         df=pd.DataFrame(f_read,columns=['path_Annotations'])
         df['path_JPEGImages']=df['path_Annotations'].copy()
+        #print('CREATE_CSV 1')
         
         df['CLASS_I']=df['path_Annotations'].copy()
         if str(type(self.path_JPEGImages)).find('str')==-1:
             self.path_JPEGImages=self.path_Annotations.replace('Annotations','JPEGImages')
-        df['path_JPEGImages']=[os.path.join(self.path_JPEGImages,os.path.basename(w).replace('.xml','.jpg')) for w in df['path_Annotations']]
+        if self.NOTHING_FOUND==False:
+            df['path_JPEGImages']=[os.path.join(self.path_JPEGImages,os.path.basename(w).replace('.xml','.jpg')) for w in df['path_Annotations']]
+        else:
+            df['path_JPEGImages']=df['path_Annotations'].copy()
         df['CLASS_I']=self.CLASS_I
-        df['basename']=[os.path.basename(w) for w in df['path_Annotations']]
+        if self.NOTHING_FOUND==False:
+            df['basename']=[os.path.basename(w) for w in df['path_Annotations']]
+        else:
+            df['basename']=df['path_Annotations'].copy()
         self.df_filename=self.search_results.replace('.txt','.csv')
-        bad_list=[]
-        for row in range(len(df)):
-            jpeg_i=df['path_JPEGImages'].loc[row]
-            if not(os.path.exists(jpeg_i)):
-                if row not in bad_list:
-                    bad_list.append(row)
-        for row in range(len(df)):
-            anno_i=df['path_Annotations'].loc[row]
-            if not(os.path.exists(anno_i)):
-                if row not in bad_list:
-                    bad_list.append(row)    
-        self.df=df.copy()
-        self.df.drop(bad_list,inplace=True)
-        self.df=self.df.sample(frac=1.0,random_state=42)
-        self.df=self.df.reset_index().drop('index',axis=1)
+        if self.NOTHING_FOUND==False:
+            bad_list=[]
+            for row in range(len(df)):
+                jpeg_i=df['path_JPEGImages'].loc[row]
+                if not(os.path.exists(jpeg_i)):
+                    if row not in bad_list:
+                        bad_list.append(row)
+            for row in range(len(df)):
+                anno_i=df['path_Annotations'].loc[row]
+                if not(os.path.exists(anno_i)):
+                    if row not in bad_list:
+                        bad_list.append(row)    
+            self.df=df.copy()
+            self.df.drop(bad_list,inplace=True)
+            self.df=self.df.sample(frac=1.0,random_state=42)
+            self.df=self.df.reset_index().drop('index',axis=1)
+        else:
+            self.df=df.copy()
 
-        #REDUCE BY COUNT
-        self.df['COUNT']=self.df['path_Annotations'].copy()
+            #REDUCE BY COUNT
+            self.df['COUNT']=self.df['path_Annotations'].copy()
         
         if len(self.df['path_Annotations'])>0:
             count=0
@@ -133,7 +155,7 @@ class GENERATE_SEARCH:
                 if count>self.MAX_PER_CLASS:
                     break
             self.df=self.df.iloc[0:i]
-
+        #print('CREATE_CSV 2')
         self.df.to_csv(self.df_filename) 
 def SEARCH_LISTS(dic_anno_jpeg_path,list_targets,MAX_PER_CLASS,path_Desired):
     print('SEARCHING_LISTS')
@@ -141,9 +163,9 @@ def SEARCH_LISTS(dic_anno_jpeg_path,list_targets,MAX_PER_CLASS,path_Desired):
     for i,(anno_i,jpeg_i) in enumerate(dic_anno_jpeg_path.items()):
         for j,target_j in enumerate(list_targets):
             mysearch=GENERATE_SEARCH(anno_i,jpeg_i,path_Desired,target_j,MAX_PER_CLASS)
-            #print(mysearch.df_filename)
-            if len(mysearch)>0:
-                mysearches.append(mysearch)
+            print(mysearch.df_filename)
+
+            mysearches.append(mysearch)
             if len(mysearches)==1:
                 df_all_results=mysearch.df
             else:
