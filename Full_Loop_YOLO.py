@@ -1639,9 +1639,10 @@ class yolo_cfg:
         self.button_overwrite_no=ttk.Radiobutton(text='Keep existing as is',style='Normal.TRadiobutton',variable=self.var_overwrite,value='No',
                                      command=partial(self.select_yes_no,'No'))
         self.button_overwrite_no.grid(row=2,column=2,stick='nw')
-        self.button_overwrite_add=ttk.Radiobutton(text='Add to existing',style='Normal.TRadiobutton',variable=self.var_overwrite,value='Add',
-                                     command=partial(self.select_yes_no,'Add'))
-        self.button_overwrite_add.grid(row=3,column=2,stick='nw')
+        #REMOVING this option to keep it simple
+        # self.button_overwrite_add=ttk.Radiobutton(text='Add to existing',style='Normal.TRadiobutton',variable=self.var_overwrite,value='Add',
+        #                              command=partial(self.select_yes_no,'Add'))
+        # self.button_overwrite_add.grid(row=3,column=2,stick='nw')
 
 
 
