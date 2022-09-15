@@ -5061,6 +5061,8 @@ class yolo_cfg:
                 os.makedirs(self.path_Yolo)
         if self.var_overwrite.get()!='No':
             print("STARTING PARALLEL PROCESSING FOR READING xml Annotations and WRITING txt Yolo Objs")
+            time_start=time.time()
+            
             import multiprocessing
             from multiprocessing import Process,Queue
             if multiprocessing.cpu_count()>1:
@@ -5074,12 +5076,12 @@ class yolo_cfg:
 
             expected_count=len(list(self.df['path_jpeg_dest_i'].unique()))
             print('expected_count=',expected_count)
-            CHUNK_NUM=125
+            CHUNK_NUM=100
             time_start=time.time()
             #for j,(path_anno_i,path_jpeg_i) in tqdm(enumerate(zip(self.Annotations,self.JPEGs))):
             for j in range(0,len(self.df),CHUNK_NUM):
-                print('j=',j)
-                print('len(processes)=',len(processes))
+                #print('j=',j)
+                #print('len(processes)=',len(processes))
                 path_annos=self.df['path_anno_i'].loc[j:j+CHUNK_NUM]
                 df_queues[len(processes)]=Queue()
                 df_queues[len(processes)].put(self.df.copy())
@@ -5088,15 +5090,15 @@ class yolo_cfg:
                 processes[PROCESS_COUNT]=p
                 p.start()
                 if (j%NUM_PROCESS==0 and j!=0 or j+CHUNK_NUM>expected_count):
-                    print('\Finished Reading {} xml Annotations of {} & Writing txt Yolo Objs \n'.format(j,len(self.df)))
+                    print('\Started {} New Processes for Reading {} xml Annotations of {} & Writing txt Yolo Objs \n'.format(len(processes),min(j+CHUNK_NUM,len(self.df)),len(self.df)))
                     for (p_i,process_i),queue_i in zip(processes.items(),df_queues.values()):
 
                     #for queue_i in df_queues.values():
-                        print(f'Getting queue_i for i')
+                        #print(f'Getting queue_i')
                         queue_i.get()
-                        print(f'Joining process loop {p_i}')
+                        #print(f'Joining process loop {p_i}')
                         process_i.join()
-                        print('Joined')
+                        #print('Joined')
                     df_queues={}
                     processes={}
                 if j+CHUNK_NUM>expected_count:
@@ -5114,9 +5116,13 @@ class yolo_cfg:
                         pass
             except:
                 pass
+            time_finished=time.time()
+            print(f'STARTED at {time_start}')
+            print(f'ENDED at {time_finished}')
+            print(f'TOTAL TIME took {round(time_finished-time_start,2)} seconds.')
     
     def read_multiple_XML(self,df_i,queue_i):
-        for anno in df_i:
+        for anno in tqdm(df_i):
             self.read_XML(os.path.basename(anno))
         queue_i.put('ready')
 
