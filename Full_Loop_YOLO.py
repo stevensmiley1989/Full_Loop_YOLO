@@ -4910,10 +4910,13 @@ class yolo_cfg:
         if self.var_overwrite.get()!='No':
             self.grep_result_file=os.path.join(os.path.dirname(self.path_Annotations),"grep_results_for_df.txt")
             cmd_i=f'grep -r "<name>" {self.path_Annotations} > {self.grep_result_file}'
+            print('GREP STARTING')
+            print(cmd_i)
             self.run_cmd(cmd_i)         
             f=open(self.grep_result_file,'r')
             f_read=f.readlines()
             f.close()
+            print('GREP FINISHED')
             self.df_gr=pd.DataFrame(columns=['path','label','grep_line'])
             self.df_gr['grep_line']=f_read
             self.df_gr['label_i']=[w.split('<name>')[1].split('</name>')[0] for w in self.df_gr['grep_line']]
@@ -5083,23 +5086,23 @@ class yolo_cfg:
                 processes[PROCESS_COUNT]=p
                 p.start()
                 if (j%NUM_PROCESS==0 and j!=0 or j+CHUNK_NUM>expected_count):
-                    print('\Finished Reading {} Annotations of {} \n'.format(path_annos,len(self.df)))
+                    print('\Finished Reading {} xml Annotations of {} & Writing txt Yolo Objs \n'.format(j,len(self.df)))
                     for (p_i,process_i),queue_i in zip(processes.items(),df_queues.values()):
 
                     #for queue_i in df_queues.values():
-                        print(f'getting queue_i for i')
+                        print(f'Getting queue_i for i')
                         queue_i.get()
-                        print(f'joining process loop {p_i}')
+                        print(f'Joining process loop {p_i}')
                         process_i.join()
-                        print('joined')
+                        print('Joined')
                     df_queues={}
                     processes={}
                 if j+CHUNK_NUM>expected_count:
-                    print('kicking out')
+                    print('FINISHED')
                     break
             try:
                 for process_i in processes.values():
-                    print('joining process loop 2')
+                    print('Joining remaining processes')
                     process_i.join()
                 for queue_i in df_queues.values():
                     if i==0 and queue_i.empty()==False:
