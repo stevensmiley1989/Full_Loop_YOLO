@@ -57,6 +57,10 @@ f.close()
 start=0
 end=0
 j=0
+first_sample=os.path.dirname(f_read[0].rstrip('/n').strip(' '))
+PATH_JPEG_GT_DIR=os.path.join(os.path.dirname(first_sample),"JPEGImages")
+print(PATH_JPEG_GT_DIR)
+print(os.path.exists(PATH_JPEG_GT_DIR))
 df=pd.DataFrame(columns=['path_jpeg'])
 for i,line in enumerate(f_read):
     jpg_i=line.rstrip('/n').strip()
@@ -158,6 +162,33 @@ for i in tqdm(range(len(df))):
             f.writelines('\t\t</bndbox>\n')
             f.writelines('\t</object>\n')
     f.writelines('</annotation>\n')
+
+
+RAN_CUSTOM_METRICS=False
+if os.path.exists(PATH_JPEG_GT_DIR):
+    path_JPEGS_GT=os.path.abspath(PATH_JPEG_GT_DIR)
+    print("SUCCESS:",path_JPEGS_GT)
+    if os.path.exists(path_JPEGS_GT):
+        print("SUCCESS:",path_JPEGS_GT)
+        if os.path.exists(path_JPEGS_GT.replace('JPEGImages','Annotations')):
+            path_Anno_GT=os.path.abspath(path_JPEGS_GT.replace('JPEGImages','Annotations'))
+            print("SUCCESS:",path_Anno_GT)
+            if os.path.exists(path_anno):
+                print("SUCCESS:",path_anno)
+                path_Anno_Pred=path_anno
+                result_file=os.path.abspath(os.path.join(os.path.dirname(path_Anno_Pred),'metric_results.txt'))
+                if os.path.exists(result_file):
+                    os.remove(result_file)
+                if os.path.exists('resources/compute_mAP.py'):
+                    print("SUCCESS:",'resources/compute_mAP.py')
+                    cmd_i=f'python3 resources/compute_mAP.py --path_Anno_Pred="{path_Anno_Pred}" --path_JPEGS_GT="{path_JPEGS_GT}" --path_Anno_GT="{path_Anno_GT}" --obj_names_path="{path_objs_names}" --result_file="{result_file}"'
+                    os.system(cmd_i)
+                    RAN_CUSTOM_METRICS=True
+                else:
+                    print('FAILED:',os.listdir())
+                    print('cwd:',os.getcwd())
+if RAN_CUSTOM_METRICS==False:
+    print('Not able to generate custom metrics.')
     
 
 

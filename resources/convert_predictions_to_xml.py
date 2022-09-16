@@ -7,6 +7,7 @@ import argparse
 ap = argparse.ArgumentParser()
 ap.add_argument("--path_result_list_txt",type=str,default=None,help='The path to your Yolo predictions.txt list')
 ap.add_argument("--path_predictions_folder",type=str,default=None,help="The path to your Yolo predictions folder to output Annotations/JPEGImages")
+ap.add_argument("--path_compute_mAP",type=str,default="None")
 args=ap.parse_args()
 if args.path_result_list_txt!=None:
     path_result_list_txt=args.path_result_list_txt
@@ -43,6 +44,7 @@ f.close()
 start=0
 end=0
 j=0
+
 df=pd.DataFrame(columns=['start','end','path_jpeg'])
 for i,line in enumerate(f_read[:-1]):
     if line.find('Enter Image Path')!=-1:
@@ -61,13 +63,17 @@ for i in tqdm(range(len(df))):
     start=df['start'][i]
     end=df['end'][i]
     path_jpg=df['path_jpeg'][i]
+    first_sample=os.path.dirname(path_jpg)
+    PATH_JPEG_GT_DIR=os.path.join(os.path.dirname(first_sample),"JPEGImages")
+    #print(PATH_JPEG_GT_DIR)
+    #print(os.path.exists(PATH_JPEG_GT_DIR))
     img_data=plt.imread(path_jpg)
     if len(img_data.shape)==3:
         height,width,depth=img_data.shape
     elif len(img_data.shape)==2:
         height,width=img_data.shape
         depth=1
-    print(height,width,depth)
+    #print(height,width,depth)
     folder='JPEGImages'
     filename=path_jpg.split('/')[-1]
     path=os.path.join(path_jpegs,filename)
@@ -118,8 +124,32 @@ for i in tqdm(range(len(df))):
             f.writelines('\t\t</bndbox>\n')
             f.writelines('\t</object>\n')
     f.writelines('</annotation>\n')
-    
 
+RAN_CUSTOM_METRICS=False
+if os.path.exists(PATH_JPEG_GT_DIR):
+    path_JPEGS_GT=os.path.abspath(PATH_JPEG_GT_DIR)
+    print("SUCCESS:",path_JPEGS_GT)
+    if os.path.exists(path_JPEGS_GT):
+        print("SUCCESS:",path_JPEGS_GT)
+        if os.path.exists(path_JPEGS_GT.replace('JPEGImages','Annotations')):
+            path_Anno_GT=os.path.abspath(path_JPEGS_GT.replace('JPEGImages','Annotations'))
+            print("SUCCESS:",path_Anno_GT)
+            if os.path.exists(path_anno):
+                path_Anno_Pred=path_anno
+                result_file=os.path.abspath(os.path.join(os.path.dirname(path_Anno_Pred),'metric_results.txt'))
+                print("SUCCESS:",path_Anno_Pred)
+                if os.path.exists(result_file):
+                    os.remove(result_file)
+                if os.path.exists(args.path_compute_mAP):
+                    print("SUCCESS:",args.path_compute_mAP)
+                    cmd_i=f'python3 {args.path_compute_mAP} --path_Anno_Pred="{path_Anno_Pred}"  --path_JPEGS_GT="{path_JPEGS_GT}" --path_Anno_GT="{path_Anno_GT}" --result_file="{result_file}"'
+                    os.system(cmd_i)
+                    RAN_CUSTOM_METRICS=True
+                else:
+                    print('FAILED:',os.listdir())
+                    print('cwd:',os.getcwd())                    
+if RAN_CUSTOM_METRICS==False:
+    print('Not able to generate custom metrics.')
 
     
     
