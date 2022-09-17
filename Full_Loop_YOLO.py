@@ -2555,7 +2555,7 @@ class yolo_cfg:
         #cmd_i=" bash '{}'".format(self.tmp_test_path)
         self.test_yolo_pred_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.test_yolo_pred_objs_button.grid(row=11,column=2,sticky='se')
-        self.test_yolo_pred_objs_button_note=tk.Label(self.top,text='chips\n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.test_yolo_pred_objs_button_note=tk.Label(self.top,text='COCO mAP\n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.test_yolo_pred_objs_button_note.grid(row=12,column=2,sticky='ne')
 
     def test_yolo_predict_mAP(self):
@@ -4026,7 +4026,7 @@ class yolo_cfg:
         f.writelines("python3 test.py --data {} --weights {} --conf {} --img-size {} --batch 32 --iou {} --project {} --name predictions --exist-ok --save-txt --save-conf --verbose --task test --device 0\n".format(self.YAML_PATH, self.yolov7_path_weights,self.THRESH,self.WIDTH_NUM,self.IOU_THRESH,self.yolov7_path_project_tiny))
         f.writelines('cd {}\n'.format(self.CWD))
         f.writelines('python3 resources/convert_predictions_to_xml_yolov7.py --path_result_list_txt=$path_result_list_txt --path_predictions_folder=$path_predictions_folder --path_objs_names=$path_objs_names \n')
-        f.writelines('python3 resources/iou_chips.py --Prediction_xml $path_predictions_folder/Annotations --path_result_list_txt=$path_result_list_txt\n')
+        #f.writelines('python3 resources/iou_chips.py --Prediction_xml $path_predictions_folder/Annotations --path_result_list_txt=$path_result_list_txt\n')
         f.close()
 
     def create_predict_bash_mAP_yolov7_e6e(self):
@@ -4042,7 +4042,7 @@ class yolo_cfg:
         f.writelines("python3 test.py --data {} --weights {} --conf {} --img-size {} --batch 1 --iou {} --project {} --name predictions --exist-ok --save-txt --save-conf --verbose --task test --device 0\n".format(self.YAML_PATH, self.yolov7_path_weights_e6e,self.THRESH,self.WIDTH_NUM,self.IOU_THRESH,self.yolov7_path_project_e6e))
         f.writelines('cd {}\n'.format(self.CWD))
         f.writelines('python3 resources/convert_predictions_to_xml_yolov7.py --path_result_list_txt=$path_result_list_txt --path_predictions_folder=$path_predictions_folder --path_objs_names=$path_objs_names \n')
-        f.writelines('python3 resources/iou_chips.py --Prediction_xml $path_predictions_folder/Annotations --path_result_list_txt=$path_result_list_txt\n')
+        #f.writelines('python3 resources/iou_chips.py --Prediction_xml $path_predictions_folder/Annotations --path_result_list_txt=$path_result_list_txt\n')
         f.close()
 
     def create_predict_bash_mAP_yolov7_re(self):
@@ -4057,7 +4057,7 @@ class yolo_cfg:
         f.writelines("python3 test.py --data {} --weights {} --conf {} --img-size {} --batch 32 --iou {} --project {} --name predictions --exist-ok --save-txt --save-conf --verbose --task test --device 0\n".format(self.YAML_PATH, self.yolov7_path_weights_re,self.THRESH,self.WIDTH_NUM,self.IOU_THRESH,self.yolov7_path_project_re))
         f.writelines('cd {}\n'.format(self.CWD))
         f.writelines('python3 resources/convert_predictions_to_xml_yolov7.py --path_result_list_txt=$path_result_list_txt --path_predictions_folder=$path_predictions_folder --path_objs_names=$path_objs_names \n')
-        f.writelines('python3 resources/iou_chips.py --Prediction_xml $path_predictions_folder/Annotations --path_result_list_txt=$path_result_list_txt\n')
+        #f.writelines('python3 resources/iou_chips.py --Prediction_xml $path_predictions_folder/Annotations --path_result_list_txt=$path_result_list_txt\n')
         f.close()
 
     def create_tflite_bash(self):
@@ -4661,8 +4661,8 @@ class yolo_cfg:
         create_predictions=os.path.join(os.getcwd(),'resources/convert_predictions_to_xml.py')
         f.writelines('path_compute_mAP={}\n'.format(os.path.abspath(os.path.join(os.getcwd(),'resources/compute_mAP.py'))))
         f.writelines('python3 {} --path_result_list_txt {} --path_compute_mAP=$path_compute_mAP\n'.format(create_predictions, self.prediction_list_path))
-        create_chips=os.path.join(os.getcwd(),'resources/iou_chips.py')
-        f.writelines('python3 {} --Prediction_xml {}'.format(create_chips,os.path.join(self.prediction_list_path.split('.txt')[0],'Annotations')))
+        #create_chips=os.path.join(os.getcwd(),'resources/iou_chips.py')
+        #f.writelines('python3 {} --Prediction_xml {}'.format(create_chips,os.path.join(self.prediction_list_path.split('.txt')[0],'Annotations')))
         #f.writelines('python3 resources/iou_chips.py --Prediction_xml $path_predictions_folder/Annotations --path_result_list_txt=$path_result_list_txt\n')
         f.close()
         #os.system('sudo chmod 777 "{}"'.format(self.save_cfg_path_test.replace('.cfg','_images_with_predictions.sh')))
