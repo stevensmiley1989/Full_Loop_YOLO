@@ -5077,7 +5077,7 @@ class yolo_cfg:
 
             expected_count=len(list(self.df['path_jpeg_dest_i'].unique()))
             print('expected_count=',expected_count)
-            CHUNK_NUM=100
+            CHUNK_NUM=121
             time_start=time.time()
             #for j,(path_anno_i,path_jpeg_i) in tqdm(enumerate(zip(self.Annotations,self.JPEGs))):
             for j in range(0,len(self.df),CHUNK_NUM):
