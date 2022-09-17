@@ -17,7 +17,9 @@ from pycocotools.cocoeval import Params
 from pycocotools.coco import COCO
 import numpy as np
 from pathlib import Path
+import shutil
 import matplotlib.pyplot as plt
+import time
 def setDetParams(self):
     '''
     Copyright (c) 2014, Piotr Dollar and Tsung-Yi Lin
@@ -354,7 +356,7 @@ def create_predictions_json(path_Annotations,obj_names,images_found,coco_output,
 
 
 
-def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list):
+def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list,show_results):
     INFO = {
         "description": "Example Dataset",
         "url": "NA",
@@ -476,10 +478,23 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
 	# run evaluation for each image, accumulates per image results
 	# display the summary metrics of the evaluation
     save_dir=os.path.dirname(path_Anno_Pred)
+    save_dir=os.path.join(save_dir,'METRICS')
+   
+    if os.path.exists(save_dir)==False:
+        os.makedirs(save_dir)
+    else:
+        print('MOVING previous METRICS')
+        os.rename(save_dir,save_dir+'_OLDER_BACKEDUP_AT_'+str(time.time()).split('.')[0])
+        os.system(f'rm -rf {save_dir}')
+        os.makedirs(save_dir)
+    shutil.copy(valid_list,save_dir)
+
     cocoEval.evaluate()
     cocoEval.accumulate()
     cocoEval.summarize=summarize
     cocoEval.summarize(cocoEval,names=names,result_file=os.path.join(save_dir,'mAP_metrics.txt'))
+    shutil.move(GT_ANNOTATION,save_dir)
+    shutil.move(PRED_ANNOTATION,save_dir)
     cm=ConfusionMatrix(len(names))
     for k,v in tqdm(images_found.items()):
         #print(k,v)
@@ -495,11 +510,33 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
             pass
             #print('NOT FOUND in result_lists_plot_gt.keys(), but found in result_lits_pred.keys()',k)
             #cm.process_batch(result_lists_plot_pred[v],np.zeros_like(np.arange(6)))
-   
+    
     cm.plot(save_dir=save_dir, names=list(names.keys()))
     #cm.print_matrix()
     cm.plot_full(save_dir=save_dir, names=list(names.keys()))
     cm.get_probability_of_detection(save_dir=save_dir, names=list(names.keys()))
+    if show_results:
+        try:
+            os.system(f'xdg-open {save_dir}')
+        except:
+            pass
+        # try:
+        #     os.system(f'xdg-open {os.path.join(save_dir,"mAP_metrics.txt")}')
+        # except:
+        #     print('Trouble opening the mAP_metrics.txt')
+        # try:
+        #     os.system(f'xdg-open {os.path.join(save_dir,"Confusion_Matrix_Fractions.png")}')
+        # except:
+        #     print('Trouble opening the Confusion_Matrix_Fractions.png')
+        # try:
+        #     os.system(f'xdg-open {os.path.join(save_dir,"Confusion_Matrix_Numbers.png")}')
+        # except:
+        #     print('Trouble opening the Confusion_Matrix_Numbers.png')
+        # try:
+        #     os.system(f'xdg-open {os.path.join(save_dir,"probability_of_detection_metrics.txt")}')
+        # except:
+        #     print('Trouble opening the probability_of_detection_metrics.txt')
+        
     return cocoEval
 def box_iou_calc(boxes1, boxes2):
     # https://github.com/pytorch/vision/blob/master/torchvision/ops/boxes.py
@@ -612,7 +649,7 @@ class ConfusionMatrix:
                         yticklabels=names + ['background FN'] if labels else "auto").set_facecolor((1, 1, 1))
             fig.axes[0].set_xlabel('True')
             fig.axes[0].set_ylabel('Predicted')
-            fig.savefig(Path(save_dir) / 'confusion_matrix_GREEN.png', dpi=250)
+            fig.savefig(Path(save_dir) / 'Confusion_Matrix_Fractions.png', dpi=250)
         except Exception as e:
             pass
     def get_probability_of_detection(self, save_dir='', names=()):
@@ -641,12 +678,13 @@ class ConfusionMatrix:
             fig = plt.figure(figsize=(12, 9), tight_layout=True)
             sn.set(font_scale=1.0 if self.num_classes < 50 else 0.8)  # for label size
             labels = (0 < len(names) < 99) and len(names) == self.num_classes  # apply names to ticklabels
-            sn.heatmap(array, annot=self.num_classes < 30, annot_kws={"size": 8}, cmap='Greens', fmt='0.0f', square=True,
+            colormap=sn.color_palette('Greens')
+            sn.heatmap(array, annot=self.num_classes < 30, annot_kws={"size": 8}, cmap=colormap, fmt='0.0f', square=True,
                         xticklabels=names + ['background FP'] if labels else "auto",
                         yticklabels=names + ['background FN'] if labels else "auto").set_facecolor((1, 1, 1))
             fig.axes[0].set_xlabel('True')
             fig.axes[0].set_ylabel('Predicted')
-            fig.savefig(Path(save_dir) / 'confusion_matrix_GREEN_FULL.png', dpi=250)
+            fig.savefig(Path(save_dir) / 'Confusion_Matrix_Numbers.png', dpi=250)
         except Exception as e:
             pass
     def print(self):
@@ -661,6 +699,7 @@ if __name__ == '__main__':
     parser.add_argument('--obj_names_path', type=str, default='obj.names', help='path to obj.names')
     parser.add_argument('--result_file', type=str, default='metric_results.txt', help='path to dumping mAP results')
     parser.add_argument('--valid_list',type=str,default='valid.txt',help='location of the validation list')
+    parser.add_argument('--show_results',action='store_true',help='show results or not')
 
     opt = parser.parse_args()
     path_Anno_Pred=opt.path_Anno_Pred
@@ -669,6 +708,7 @@ if __name__ == '__main__':
     obj_names_path=opt.obj_names_path
     result_file=opt.result_file
     valid_list=opt.valid_list
+    show_results=opt.show_results
 
     if os.path.exists(path_Anno_Pred) and os.path.exists(path_Anno_GT) and os.path.exists(path_JPEGS_GT) and os.path.exists(valid_list):
         print('path_JPEGS_GT:',path_JPEGS_GT)
@@ -677,7 +717,7 @@ if __name__ == '__main__':
         print('obj_names_path:',obj_names_path)
         print('result_file',result_file)
         print('valid_list',valid_list)
-        mycocoEval=compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list)
+        mycocoEval=compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list,show_results)
     else:
         print(path_Anno_Pred, path_Anno_GT,path_JPEGS_GT)
         print('os.path.exists(path_Anno_Pred),os.path.exists(path_Anno_GT),os.path.exists(path_JPEGS_GT)')
