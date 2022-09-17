@@ -309,9 +309,10 @@ def create_groundtruths_json(path_Annotations,obj_names,images_found,coco_output
     #coco_output
     path_Annotation_OG=path_Annotations
     path_Annotations=os.listdir(path_Annotations)
-    path_Annotations=[os.path.abspath(os.path.join(path_Annotation_OG,w)) for w in path_Annotations if w.find('.xml')!=-1]
+    path_Annotations=[os.path.abspath(os.path.join(path_Annotation_OG,w)) for w in path_Annotations if w.find('.xml')!=-1 and os.path.basename(w).split('.')[0] in images_found.keys()]
     for _,path_anno_i in tqdm(enumerate(path_Annotations)):
         try:
+        #print(path_anno_i)
             gt_results,id_i,result_list_plot_gt=read_XML(path_anno_i,gt_results,names,images_found,id_i,result_list_plot_gt)
         except:
             print(f'issue with {path_anno_i}')
@@ -327,6 +328,7 @@ def create_predictions_json(path_Annotations,obj_names,images_found,coco_output,
     fo=open(obj_names,'r')
     fo_read=fo.readlines()
     fo.close()
+    #print('images_found',images_found)
     names={w.replace('\n',''):j for j,w in enumerate(fo_read)}
     pred_results = []
     result_list_plot_pred={}
@@ -335,6 +337,7 @@ def create_predictions_json(path_Annotations,obj_names,images_found,coco_output,
     path_Annotations=[os.path.abspath(os.path.join(path_Annotation_OG,w)) for w in path_Annotations if w.find('.xml')!=-1]
     for _,path_anno_i in tqdm(enumerate(path_Annotations)):
         try:
+        #print(path_anno_i)
             pred_results,id_i,result_list_plot_pred=read_XML(path_anno_i,pred_results,names,images_found,id_i,result_list_plot_pred)
         except:
             print(f'issue with {path_anno_i}')
@@ -351,7 +354,7 @@ def create_predictions_json(path_Annotations,obj_names,images_found,coco_output,
 
 
 
-def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file):
+def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list):
     INFO = {
         "description": "Example Dataset",
         "url": "NA",
@@ -368,14 +371,19 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
             "url": "NA"
         }
     ]
-
-    images_found=os.listdir(path_Anno_GT)
-    images_found=[os.path.basename(w).split('.')[0] for w in images_found if w.find('.xml')!=-1]
+    f=open(valid_list,'r')
+    f_read=f.readlines()
+    f.close()
+    images_found=[w for w in f_read]
+    #images_found=os.listdir(path_Anno_GT)
+    images_found=[os.path.basename(w).split('.')[0] for w in images_found]
     images_found={w:i for i,w in enumerate(images_found)}
     IMAGES=[]
     for w,i in tqdm(images_found.items()):
         img_i=os.path.join(path_JPEGS_GT,w+'.jpg')
         anno_i=os.path.join(path_Anno_GT,w+'.xml')
+        assert os.path.exists(anno_i)
+        assert os.path.exists(img_i)
         tree_i=read_XML_quick(anno_i)
         W=int(tree_i.find('size').find('width').text)
         H=int(tree_i.find('size').find('height').text)
@@ -625,6 +633,7 @@ if __name__ == '__main__':
     parser.add_argument('--path_JPEGS_GT', type=str, default='None', help='path to ground truth jpegs')
     parser.add_argument('--obj_names_path', type=str, default='obj.names', help='path to obj.names')
     parser.add_argument('--result_file', type=str, default='metric_results.txt', help='path to dumping mAP results')
+    parser.add_argument('--valid_list',type=str,default='valid.txt',help='location of the validation list')
 
     opt = parser.parse_args()
     path_Anno_Pred=opt.path_Anno_Pred
@@ -632,10 +641,11 @@ if __name__ == '__main__':
     path_JPEGS_GT=opt.path_JPEGS_GT
     obj_names_path=opt.obj_names_path
     result_file=opt.result_file
+    valid_list=opt.valid_list
 
-    if os.path.exists(path_Anno_Pred) and os.path.exists(path_Anno_GT) and os.path.exists(path_JPEGS_GT):
-        print(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file)
-        mycocoEval=compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file)
+    if os.path.exists(path_Anno_Pred) and os.path.exists(path_Anno_GT) and os.path.exists(path_JPEGS_GT) and os.path.exists(valid_list):
+        print(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list)
+        mycocoEval=compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list)
     else:
         print(path_Anno_Pred, path_Anno_GT,path_JPEGS_GT)
         print('os.path.exists(path_Anno_Pred),os.path.exists(path_Anno_GT),os.path.exists(path_JPEGS_GT)')

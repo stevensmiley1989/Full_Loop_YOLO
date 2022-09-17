@@ -181,7 +181,7 @@ if os.path.exists(PATH_JPEG_GT_DIR):
                     os.remove(result_file)
                 if os.path.exists('resources/compute_mAP.py'):
                     print("SUCCESS:",'resources/compute_mAP.py')
-                    cmd_i=f'python3 resources/compute_mAP.py --path_Anno_Pred="{path_Anno_Pred}" --path_JPEGS_GT="{path_JPEGS_GT}" --path_Anno_GT="{path_Anno_GT}" --obj_names_path="{path_objs_names}" --result_file="{result_file}"'
+                    cmd_i=f'python3 resources/compute_mAP.py --valid_list="{path_result_list_txt}" --path_Anno_Pred="{path_Anno_Pred}" --path_JPEGS_GT="{path_JPEGS_GT}" --path_Anno_GT="{path_Anno_GT}" --obj_names_path="{path_objs_names}" --result_file="{result_file}"'
                     os.system(cmd_i)
                     RAN_CUSTOM_METRICS=True
                 else:
