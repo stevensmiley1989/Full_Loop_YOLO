@@ -223,7 +223,7 @@ def read_XML_quick(path):
         ymax = int(bndbox.find('ymax').text)
         (x,y,w,h)=(int(xmin),int(ymin),int(xmax-xmin),int(ymax-ymin))
     return xmltree     
-def read_XML(path,result_list,names,images_found,id_i,result_list_plots):
+def read_XML(path,result_list,names,images_found,id_i,result_list_plots,gt=False):
     single_batch=[]
     imageId=os.path.basename(path).split('.')[0]
     imageId=images_found[imageId]
@@ -273,7 +273,7 @@ def read_XML(path,result_list,names,images_found,id_i,result_list_plots):
         xmax = int(bndbox.find('xmax').text)
         ymax = int(bndbox.find('ymax').text)
         (x,y,w,h)=(int(xmin),int(ymin),int(xmax-xmin),int(ymax-ymin)) 
-        try:
+        if gt==False:
             conf=object_iter.find('confidence').text
             result_list.append({"id":int(id_i),
                                 "image_id": imageId,
@@ -284,7 +284,7 @@ def read_XML(path,result_list,names,images_found,id_i,result_list_plots):
                                 "area":int(int(width_i)*int(height_i))})
             #result_list_plots.append([xmin,ymin,xmax,ymax,float(conf),label])
             single_batch.append([xmin,ymin,xmax,ymax,float(conf),label])
-        except:
+        else:
             conf='1'
             result_list.append({"id":int(id_i),
                                 "image_id": imageId,
@@ -313,7 +313,7 @@ def create_groundtruths_json(path_Annotations,obj_names,images_found,coco_output
     for _,path_anno_i in tqdm(enumerate(path_Annotations)):
         try:
         #print(path_anno_i)
-            gt_results,id_i,result_list_plot_gt=read_XML(path_anno_i,gt_results,names,images_found,id_i,result_list_plot_gt)
+            gt_results,id_i,result_list_plot_gt=read_XML(path_anno_i,gt_results,names,images_found,id_i,result_list_plot_gt,gt=True)
         except:
             print(f'issue with {path_anno_i}')
             pass
@@ -338,7 +338,7 @@ def create_predictions_json(path_Annotations,obj_names,images_found,coco_output,
     for _,path_anno_i in tqdm(enumerate(path_Annotations)):
         try:
         #print(path_anno_i)
-            pred_results,id_i,result_list_plot_pred=read_XML(path_anno_i,pred_results,names,images_found,id_i,result_list_plot_pred)
+            pred_results,id_i,result_list_plot_pred=read_XML(path_anno_i,pred_results,names,images_found,id_i,result_list_plot_pred,gt=False)
         except:
             print(f'issue with {path_anno_i}')
             pass
@@ -374,16 +374,38 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
     f=open(valid_list,'r')
     f_read=f.readlines()
     f.close()
-    images_found=[w for w in f_read]
+    images_found=[w.rstrip('\n').replace(' ','') for w in f_read]
     #images_found=os.listdir(path_Anno_GT)
     images_found=[os.path.basename(w).split('.')[0] for w in images_found]
     images_found={w:i for i,w in enumerate(images_found)}
+    #CHECK FOR BAD PATHS
+    bad_list=[]
+    for w,i in tqdm(images_found.items()):
+        if os.path.exists(os.path.join(path_JPEGS_GT,w+'.jpg'))==False:
+            print(os.path.join(path_JPEGS_GT,w+'.jpg'))
+            bad_list.append(w)
+        elif os.path.exists(os.path.join(path_Anno_GT,w+'.xml'))==False:
+            print(os.path.join(path_Anno_GT,w+'.xml'))
+            bad_list.append(w)
+    if len(bad_list)>0:
+        print(f'FOUND {len(bad_list)} bad images to remove from metrics')
+        for bad_item in bad_list:
+            print(f'removing: {bad_item}')
+            images_found.pop(bad_item)
+        images_found={w:i for i,w in enumerate(images_found)}
+
     IMAGES=[]
     for w,i in tqdm(images_found.items()):
         img_i=os.path.join(path_JPEGS_GT,w+'.jpg')
         anno_i=os.path.join(path_Anno_GT,w+'.xml')
-        assert os.path.exists(anno_i)
-        assert os.path.exists(img_i)
+        try:
+            assert os.path.exists(anno_i)
+        except:
+            print('Failed for:',anno_i)
+        try:
+            assert os.path.exists(img_i)
+        except:
+            print('Failed for:',img_i)
         tree_i=read_XML_quick(anno_i)
         W=int(tree_i.find('size').find('width').text)
         H=int(tree_i.find('size').find('height').text)
@@ -460,14 +482,19 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
     cocoEval.summarize(cocoEval,names=names,result_file=os.path.join(save_dir,'mAP_metrics.txt'))
     cm=ConfusionMatrix(len(names))
     for k,v in tqdm(images_found.items()):
+        #print(k,v)
         if v in result_lists_plot_pred.keys() and v in result_lists_plot_gt.keys():
+            #print(result_lists_plot_pred[v])
+            #print(result_lists_plot_gt[v])
             cm.process_batch(result_lists_plot_pred[v],result_lists_plot_gt[v])
         elif v in result_lists_plot_gt.keys():
+            pass
             #print('NOT FOUND in result_lists_plot_pred.keys(), but found in result_lits_gt.keys()',k)
-            cm.process_batch(np.zeros_like(np.arange(5)),result_lists_plot_gt[v])
+            #cm.process_batch(np.zeros_like(np.arange(5)),result_lists_plot_gt[v])
         else:
+            pass
             #print('NOT FOUND in result_lists_plot_gt.keys(), but found in result_lits_pred.keys()',k)
-            cm.process_batch(result_lists_plot_pred[v],np.zeros_like(np.arange(6)))
+            #cm.process_batch(result_lists_plot_pred[v],np.zeros_like(np.arange(6)))
    
     cm.plot(save_dir=save_dir, names=list(names.keys()))
     #cm.print_matrix()
@@ -499,7 +526,7 @@ def box_iou_calc(boxes1, boxes2):
     rb = np.minimum(boxes1[:, None, 2:], boxes2[:, 2:])  # [N,M,2]
 
     inter = np.prod(np.clip(rb - lt, a_min=0, a_max=None), 2)
-    return inter / (area1[:, None] + area2 - inter + 1e-7)  # iou = inter / (area1 + area2 - inter)
+    return inter / (area1[:, None] + area2 - inter)  # iou = inter / (area1 + area2 - inter)
 
 
 class ConfusionMatrix:
@@ -644,7 +671,12 @@ if __name__ == '__main__':
     valid_list=opt.valid_list
 
     if os.path.exists(path_Anno_Pred) and os.path.exists(path_Anno_GT) and os.path.exists(path_JPEGS_GT) and os.path.exists(valid_list):
-        print(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list)
+        print('path_JPEGS_GT:',path_JPEGS_GT)
+        print('path_Anno_GT:',path_Anno_GT)
+        print('path_Anno_Pred:',path_Anno_Pred)
+        print('obj_names_path:',obj_names_path)
+        print('result_file',result_file)
+        print('valid_list',valid_list)
         mycocoEval=compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list)
     else:
         print(path_Anno_Pred, path_Anno_GT,path_JPEGS_GT)
