@@ -64,7 +64,7 @@ for i in tqdm(range(len(df))):
     end=df['end'][i]
     path_jpg=df['path_jpeg'][i]
     first_sample=os.path.dirname(path_jpg)
-    PATH_JPEG_GT_DIR=os.path.join(os.path.dirname(first_sample),"JPEGImages")
+    PATH_JPEG_GT_DIR=first_sample #os.path.join(os.path.dirname(first_sample),"JPEGImages")
     #print(PATH_JPEG_GT_DIR)
     #print(os.path.exists(PATH_JPEG_GT_DIR))
     img_data=plt.imread(path_jpg)
@@ -131,8 +131,8 @@ if os.path.exists(PATH_JPEG_GT_DIR):
     print("SUCCESS:",path_JPEGS_GT)
     if os.path.exists(path_JPEGS_GT):
         print("SUCCESS:",path_JPEGS_GT)
-        if os.path.exists(path_JPEGS_GT.replace('JPEGImages','Annotations')):
-            path_Anno_GT=os.path.abspath(path_JPEGS_GT.replace('JPEGImages','Annotations'))
+        if os.path.exists(path_JPEGS_GT):
+            path_Anno_GT=path_JPEGS_GT#.replace('JPEGImages','Annotations'))
             print("SUCCESS:",path_Anno_GT)
             if os.path.exists(path_anno):
                 path_Anno_Pred=path_anno

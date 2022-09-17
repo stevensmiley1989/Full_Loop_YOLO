@@ -58,7 +58,7 @@ start=0
 end=0
 j=0
 first_sample=os.path.dirname(f_read[0].rstrip('/n').strip(' '))
-PATH_JPEG_GT_DIR=os.path.join(os.path.dirname(first_sample),"JPEGImages")
+PATH_JPEG_GT_DIR=first_sample#os.path.join(os.path.dirname(first_sample),"JPEGImages")
 print(PATH_JPEG_GT_DIR)
 print(os.path.exists(PATH_JPEG_GT_DIR))
 df=pd.DataFrame(columns=['path_jpeg'])
@@ -170,8 +170,8 @@ if os.path.exists(PATH_JPEG_GT_DIR):
     print("SUCCESS:",path_JPEGS_GT)
     if os.path.exists(path_JPEGS_GT):
         print("SUCCESS:",path_JPEGS_GT)
-        if os.path.exists(path_JPEGS_GT.replace('JPEGImages','Annotations')):
-            path_Anno_GT=os.path.abspath(path_JPEGS_GT.replace('JPEGImages','Annotations'))
+        if os.path.exists(path_JPEGS_GT):
+            path_Anno_GT=path_JPEGS_GT
             print("SUCCESS:",path_Anno_GT)
             if os.path.exists(path_anno):
                 print("SUCCESS:",path_anno)
