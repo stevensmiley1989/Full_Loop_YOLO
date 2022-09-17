@@ -852,6 +852,12 @@ class yolo_cfg:
         self.button_yolo_regular.grid(row=6,column=0,stick='ne')
 
         self.RECORDRAW_BUTTONS()
+        self.GENERATE_CUSTOM_DATASET_BUTTONS()
+        self.COMPUTE_METRICS_BUTTONS()
+
+    def COMPUTE_METRICS_BUTTONS(self):
+        self.popup_metrics_buttons=Button(self.root,text='Compute Metrics',command=self.popupWindow_mAP,bg=self.root_fg,fg=self.root_bg)
+        self.popup_metrics_buttons.grid(row=0,column=7,sticky='sw')
 
     def TEST_BUTTONS(self):
         self.popup_TEST_button=Button(self.root,text='TEST Script Buttons',command=self.popupWindow_TEST,bg=self.root_fg,fg=self.root_bg)
@@ -873,6 +879,42 @@ class yolo_cfg:
         global return_to_main
         return_to_main=True
         self.root.destroy()
+
+    def select_file_validlist(self):
+        filetypes=(('txt','*.txt'),('All files','*.*'))
+        if os.path.exists(self.path_JPEGS_GT_var.get()):
+            initialdir_i=self.path_JPEGS_GT_var.get()
+        elif os.path.exists(self.YOLO_MODEL_PATH):
+            initialdir_i=self.YOLO_MODEL_PATH
+        else:
+            initialdir_i=os.getcwd()
+        self.filename=fd.askopenfilename(title='Open a file',
+                                    initialdir=initialdir_i,
+                                    filetypes=filetypes)
+        if os.path.exists(self.filename):
+            print(self.filename)
+            self.valid_list_var.set(self.filename)
+        showinfo(title='Selected File',
+
+                 message=self.filename)
+
+    def select_file_objnames(self):
+        filetypes=(('names','*.names'),('All files','*.*'))
+        if os.path.exists(self.obj_names_path_var.get()):
+            initialdir_i=os.path.dirname(self.obj_names_path_var.get())
+        elif os.path.exists(self.YOLO_MODEL_PATH):
+            initialdir_i=self.YOLO_MODEL_PATH
+        else:
+            initialdir_i=os.getcwd()
+        self.filename=fd.askopenfilename(title='Open a file',
+                                    initialdir=initialdir_i,
+                                    filetypes=filetypes)
+        if os.path.exists(self.filename):
+            print(self.filename)
+            self.obj_names_path_var.set(self.filename)
+        showinfo(title='Selected File',
+                 message=self.filename)
+
     def select_file_mp4(self,file_i):
         filetypes=(('mp4','*.mp4'),('All files','*.*'))
         if os.path.exists(self.mp4_video_path):
@@ -958,7 +1000,7 @@ class yolo_cfg:
             self.open_testobjdata()
         showinfo(title='Selected File',
                  message=self.filename)
-                 
+
     def select_folder(self,folder_i,title_i,var_i=None):
             filetypes=(('All files','*.*'))
             if var_i:
@@ -1732,7 +1774,7 @@ class yolo_cfg:
         self.IMGAUG_buttons()
         self.CLASSIFY_CHIPS_buttons()
         self.send_text_buttons()
-        self.GENERATE_CUSTOM_DATASET_BUTTONS()
+        
         
 
 
@@ -5299,6 +5341,166 @@ class yolo_cfg:
         self.test_yolov7_E6E_note.grid(row=2,column=4,sticky='se')
         #TD TRAIN yolov7 E6E
         self.train_yolov7_e6e()
+
+    def popupWindow_mAP(self):
+        try:
+            self.top.destroy()
+        except:
+            pass
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=0,column=1,sticky='se')
+
+        #path_Anno_Pred
+        try:
+            self.path_Anno_Pred_var.get()
+            if self.path_Anno_Pred_var.get()=='None':
+                try:
+                    self.path_Anno_Pred_var.set(self.YOLO_MODEL_PATH)
+                except:
+                    self.path_Anno_Pred_var.set('None')
+        except:
+            self.path_Anno_Pred_var=tk.StringVar()
+            try:
+                self.path_Anno_Pred_var.set(self.YOLO_MODEL_PATH)
+            except:
+                self.path_Anno_Pred_var.set('None')
+        self.open_path_Anno_Pred_button=Button(self.top,image=self.icon_folder,command=partial(self.select_folder_mAP,self.path_Anno_Pred_var.get(),'path to Annotation Predictions',self.path_Anno_Pred_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_Anno_Pred_button.grid(row=3,column=1,sticky='se')
+        self.open_path_Anno_Pred_label=Button(self.top,textvariable=self.path_Anno_Pred_var,command=partial(self.open_something,self.path_Anno_Pred_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_Anno_Pred_label.grid(row=3,column=2,sticky='sw')    
+        self.path_Anno_Pred_note=tk.Label(self.top,text='path to Annotation Predictions',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.path_Anno_Pred_note.grid(row=3,column=0,sticky='se')
+
+        #path_Anno_GT
+        try:
+            self.path_Anno_GT_var.get()
+        except:
+            self.path_Anno_GT_var=tk.StringVar()
+            self.path_Anno_GT_var.set(self.path_Annotations)
+        self.open_path_Anno_GT_button=Button(self.top,image=self.icon_folder,command=partial(self.select_folder_mAP,self.path_Anno_GT_var.get(),'path to Annotation Ground Truth',self.path_Anno_GT_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_Anno_GT_button.grid(row=5,column=1,sticky='se')   
+        self.open_path_Anno_GT_label=Button(self.top,textvariable=self.path_Anno_GT_var,command=partial(self.open_something,self.path_Anno_GT_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_Anno_GT_label.grid(row=5,column=2,sticky='sw')       
+        self.path_Anno_GT_note=tk.Label(self.top,text='path to Annotation Ground Truth',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.path_Anno_GT_note.grid(row=5,column=0,sticky='se')
+
+        #path_JPEGS_GT
+        try:
+            self.path_JPEGS_GT_var.get()
+        except:
+            self.path_JPEGS_GT_var=tk.StringVar()
+            self.path_JPEGS_GT_var.set(self.path_JPEGImages)
+        self.open_path_JPEGS_GT_button=Button(self.top,image=self.icon_folder,command=partial(self.select_folder_mAP,self.path_JPEGS_GT_var.get(),'path to JPEGImages Ground Truth',self.path_JPEGS_GT_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_JPEGS_GT_button.grid(row=7,column=1,sticky='se')    
+        self.open_path_JPEGS_GT_label=Button(self.top,textvariable=self.path_JPEGS_GT_var,command=partial(self.open_something,self.path_JPEGS_GT_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_JPEGS_GT_label.grid(row=7,column=2,sticky='sw')  
+        self.path_JPEGS_GT_note=tk.Label(self.top,text='path to JPEGImages Ground Truth',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.path_JPEGS_GT_note.grid(row=7,column=0,sticky='se') 
+
+        #obj_names_path
+        try:
+            self.obj_names_path_var.get()
+            if self.obj_names_path_var.get()=='None':
+             try:
+                self.obj_names_path_var.set(self.names_path)
+             except:
+                self.obj_names_path_var.set('None')               
+        except:
+            self.obj_names_path_var=tk.StringVar()
+            try:
+                self.obj_names_path_var.set(self.names_path)
+            except:
+                self.obj_names_path_var.set('None')
+        self.obj_names_path_button=Button(self.top,image=self.icon_folder,command=self.select_file_objnames,bg=self.root_bg,fg=self.root_fg)
+        self.obj_names_path_button.grid(row=9,column=1,sticky='se')   
+        self.obj_names_path_label=Button(self.top,textvariable=self.obj_names_path_var,command=partial(self.open_something,self.obj_names_path_var),bg=self.root_bg,fg=self.root_fg)
+        self.obj_names_path_label.grid(row=9,column=2,sticky='sw')  
+        self.obj_names_note=tk.Label(self.top,text='path to obj.names',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.obj_names_note.grid(row=9,column=0,sticky='se') 
+
+        #valid_list
+        try:
+            self.valid_list_var.get()
+            if self.valid_list_var.get()=='None':
+                try:
+                    self.valid_list_var.set(self.valid_list_path)
+                except:
+                    self.valid_list_var.set('None')
+
+        except:
+            self.valid_list_var=tk.StringVar()
+            try:
+                self.valid_list_var.set(self.valid_list_path)
+            except:
+                self.valid_list_var.set('None')
+        self.valid_list_button=Button(self.top,image=self.icon_single_file,command=self.select_file_validlist,bg=self.root_bg,fg=self.root_fg)
+        self.valid_list_button.grid(row=11,column=1,sticky='se')   
+        self.valid_list_label=Button(self.top,textvariable=self.valid_list_var,command=partial(self.open_something,self.valid_list_var),bg=self.root_bg,fg=self.root_fg)
+        self.valid_list_label.grid(row=11,column=2,sticky='sw')  
+        self.valid_list_note=tk.Label(self.top,text='path to valid_list.txt/img_list.txt etc',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.valid_list_note.grid(row=11,column=0,sticky='se') 
+
+        self.submit_mAP_button=Button(self.top,text='Compute mAP metrics',command=self.SUBMIT_mAP,bg='green', fg=DEFAULT_SETTINGS.root_bg)
+        self.submit_mAP_button.grid(row=0,column=2,sticky='sw')
+
+    def open_something(self,var_to_open):
+        cmd_i=open_cmd+" "+var_to_open.get()
+        print('OPENING')
+        print(cmd_i)
+        self.run_cmd(cmd_i)
+
+    def select_folder_mAP(self,folder_i,title_i,var_i=None):
+            filetypes=(('All files','*.*'))
+            if var_i:
+                folder_i=var_i.get() 
+                initialdir=folder_i 
+                           
+                if os.path.exists(folder_i):
+                    self.foldername=fd.askdirectory(title=title_i,
+                                                initialdir=initialdir)
+                else:
+                    self.foldername=fd.askdirectory(title=title_i)
+                if self.foldername=='' or len(self.foldername)==0:
+                    showinfo(title='NOT FOUND! Using previous path',
+                            message=self.foldername)
+                elif self.foldername!='' and len(self.foldername)!=0:
+                    showinfo(title='Selected Folder',
+                        message=self.foldername)
+                    folder_i=self.foldername
+                    var_i.set(folder_i)
+
+
+    def SUBMIT_mAP(self):
+        cmd_i=""
+        path_Anno_Pred=self.path_Anno_Pred_var.get()    
+        path_Anno_GT=self.path_Anno_GT_var.get()
+        path_JPEGS_GT=self.path_JPEGS_GT_var.get()
+        obj_names_path=self.obj_names_path_var.get()
+        valid_list=self.valid_list_var.get()
+        path_compute_mAP=os.path.abspath('resources/compute_mAP.py')
+        if os.path.exists(path_Anno_Pred):
+            bash_mAP=os.path.join(os.path.dirname(path_Anno_Pred),'bash_mAP.sh')
+            f=open(bash_mAP,'w')
+            f.writelines(f'path_Anno_Pred={path_Anno_Pred}\n')
+            f.writelines(f'path_Anno_GT={path_Anno_GT}\n')
+            f.writelines(f'path_JPEGS_GT={path_JPEGS_GT}\n')
+            f.writelines(f'obj_names_path={obj_names_path}\n')
+            f.writelines(f'valid_list={valid_list}\n')
+            f.writelines(f'path_compute_mAP={path_compute_mAP}\n')
+            f.writelines(f'python3 $path_compute_mAP --valid_list=$valid_list --path_Anno_Pred=$path_Anno_Pred --path_JPEGS_GT=$path_JPEGS_GT --path_Anno_GT=$path_Anno_GT --obj_names_path=$obj_names_path --show_results\n')
+            f.close()
+            print(f'FINISHED WRITING bash_mAP at: {bash_mAP}')
+            cmd_i=f'bash {bash_mAP}'
+            print(f'STARTING bash_mAP')
+            self.run_cmd(cmd_i)
+            print('FINISHED bash_mAP')
+        else:
+            print(f'path_Anno_Pred does not exist.  Curent location is, \n{path_Anno_Pred}\n')
+        
+
 
         
     
