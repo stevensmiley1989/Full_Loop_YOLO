@@ -356,7 +356,7 @@ def create_predictions_json(path_Annotations,obj_names,images_found,coco_output,
 
 
 
-def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list,show_results):
+def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list,show_results,create_combine_gt_pred):
     INFO = {
         "description": "Example Dataset",
         "url": "NA",
@@ -448,6 +448,7 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
     fo_read=fo.readlines()
     fo.close()
     names={w.replace('\n',''):j for j,w in enumerate(fo_read)}
+    print('names:',names)
     CATEGORIES=[]
     for k,v in names.items():
         CATEGORIES.append(        {
@@ -496,21 +497,72 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
     shutil.move(GT_ANNOTATION,save_dir)
     shutil.move(PRED_ANNOTATION,save_dir)
     cm=ConfusionMatrix(len(names))
+    df=pd.DataFrame(columns=['path_JPEGS_GT','path_Anno_GT','path_Anno_Pred','acc','tp','fp','fn','tn','prediction_box','ground_truth_box','matrix'])
+    mdim=len(names)+1
     for k,v in tqdm(images_found.items()):
         #print(k,v)
+        img_i=os.path.join(path_JPEGS_GT,k+'.jpg')
+        anno_i=os.path.join(path_Anno_GT,k+'.xml')
+        pred_i=os.path.join(path_Anno_Pred,k+'.xml')
+        
         if v in result_lists_plot_pred.keys() and v in result_lists_plot_gt.keys():
             #print(result_lists_plot_pred[v])
             #print(result_lists_plot_gt[v])
             cm.process_batch(result_lists_plot_pred[v],result_lists_plot_gt[v])
+            matrix_i=cm.process_batch_for_analysis(result_lists_plot_pred[v],result_lists_plot_gt[v])
+            df.at[v,'path_JPEGS_GT']=img_i
+            df.at[v,'path_Anno_GT']=anno_i
+            df.at[v,'path_Anno_Pred']=pred_i
+            df.at[v,'prediction_box']=result_lists_plot_pred[v]
+            df.at[v,'ground_truth_box']=result_lists_plot_gt[v]
+            df.at[v,'matrix']=matrix_i
+            #print(matrix_i.shape)
+            try:
+                matrix_j=np.matrix(matrix_i).reshape(mdim,mdim)
+            except:
+                matrix_j=np.zeros((len(names.keys()) + 1, len(names.keys()) + 1)).reshape(mdim,mdim)
+            df.at[v,'acc']=100.0*(matrix_j.diagonal().sum()/matrix_j.sum())
+            df.at[v,'tp']=matrix_j.diagonal().sum()
+            df.at[v,'fp']=matrix_j.T[-1].sum()
+            df.at[v,'fn']=matrix_j[-1].sum()
+            df.at[v,'tn']=matrix_j.sum()-matrix_j.diagonal().sum()-matrix_j.T[-1].sum()-matrix_j[-1].sum()
         elif v in result_lists_plot_gt.keys():
+            matrix_i=np.zeros((len(names.keys()) + 1, len(names.keys()) + 1))
+            df.at[v,'path_JPEGS_GT']=img_i
+            df.at[v,'path_Anno_GT']=anno_i
+            df.at[v,'path_Anno_Pred']='None'
+            df.at[v,'prediction_box']=[]
+            df.at[v,'ground_truth_box']=result_lists_plot_gt[v]
+            df.at[v,'matrix']=matrix_i
+            df.at[v,'acc']=0.0
+            df.at[v,'tp']=0.0
+            df.at[v,'fp']=0.0
+            df.at[v,'fn']=np.matrix(result_lists_plot_gt[v]).shape[-1]
+            df.at[v,'tn']=0.0
             pass
             #print('NOT FOUND in result_lists_plot_pred.keys(), but found in result_lits_gt.keys()',k)
             #cm.process_batch(np.zeros_like(np.arange(5)),result_lists_plot_gt[v])
         else:
+            matrix_i=np.zeros((len(names.keys()) + 1, len(names.keys()) + 1))
+            df.at[v,'path_JPEGS_GT']=img_i
+            df.at[v,'path_Anno_GT']='None'
+            df.at[v,'path_Anno_Pred']=pred_i
+            df.at[v,'prediction_box']=result_lists_plot_pred[v]
+            df.at[v,'ground_truth_box']=[]
+            df.at[v,'matrix']=matrix_i
+            df.at[v,'acc']=0.0
+            df.at[v,'tp']=0.0
+            df.at[v,'fp']=0.0
+            df.at[v,'fn']=0.0
+            df.at[v,'tn']=0.0
             pass
             #print('NOT FOUND in result_lists_plot_gt.keys(), but found in result_lits_pred.keys()',k)
             #cm.process_batch(result_lists_plot_pred[v],np.zeros_like(np.arange(6)))
-    
+    df_filename=os.path.join(save_dir,'df_results.csv')
+    df.to_csv(df_filename,index=None)
+
+            
+
     cm.plot(save_dir=save_dir, names=list(names.keys()))
     #cm.print_matrix()
     cm.plot_full(save_dir=save_dir, names=list(names.keys()))
@@ -536,6 +588,45 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
         #     os.system(f'xdg-open {os.path.join(save_dir,"probability_of_detection_metrics.txt")}')
         # except:
         #     print('Trouble opening the probability_of_detection_metrics.txt')
+    if create_combine_gt_pred:
+        COMBINED_GT_PRED=os.path.join(save_dir,'Annotations')
+        os.makedirs(COMBINED_GT_PRED)
+        COMBINED_GT_PRED_JPEGS=os.path.join(save_dir,'JPEGImages')
+        os.makedirs(COMBINED_GT_PRED_JPEGS)
+        for row in tqdm(range(len(df))):
+            anno_i=df['path_Anno_GT'].loc[row]
+            anno_p=df['path_Anno_Pred'].loc[row]
+            jpeg_i=df['path_JPEGS_GT'].loc[row]
+            acc_i=df['acc'].loc[row]
+            if os.path.exists(anno_i):
+                shutil.copy(anno_i,COMBINED_GT_PRED)
+                anno_j=os.path.join(COMBINED_GT_PRED,os.path.basename(anno_i))
+                f=open(anno_j,'r')
+                f_read=f.readlines()
+                f.close()
+                f_read=[w for w in f_read if w.find('</annotation>')==-1]
+                f_read=[w.replace('<name>','<name>GROUND_TRUTH__') for w in f_read]
+                if os.path.exists(anno_p):
+                    f=open(anno_p,'r')
+                    f_pred=f.readlines()
+                    f.close()
+                    for j,line in enumerate(f_pred):
+                        if line.find('<object>')!=-1:
+                            break
+                    f_pred=f_pred[j:]
+                    f_comb=f_read+f_pred
+                else:
+                    f_comb=f_read+['</annotation>']
+                f=open(anno_j,'w')
+                f.writelines(f_comb)
+                f.close()
+                new_anno_j=os.path.join(COMBINED_GT_PRED,f'ACCURACY{np.round(acc_i,2)}__'.replace('.','p')+os.path.basename(anno_i))
+                os.rename(anno_j,new_anno_j)
+                if os.path.exists(jpeg_i):
+                    shutil.copy(jpeg_i,COMBINED_GT_PRED_JPEGS)
+                    jpeg_j=os.path.join(COMBINED_GT_PRED_JPEGS,os.path.basename(jpeg_i))
+                    new_jpeg_j=os.path.join(COMBINED_GT_PRED_JPEGS,f'ACCURACY{np.round(acc_i,2)}__'.replace('.','p')+os.path.basename(jpeg_i))
+                    os.rename(jpeg_j,new_jpeg_j)
         
     return cocoEval
 def box_iou_calc(boxes1, boxes2):
@@ -625,6 +716,59 @@ class ConfusionMatrix:
             if not all_matches.shape[0] or ( all_matches.shape[0] and all_matches[all_matches[:, 1] == i].shape[0] == 0 ):
                 detection_class = detection_classes[i]
                 self.matrix[detection_class, self.num_classes] += 1 #background FN
+    def process_batch_for_analysis(self, detections, labels: np.ndarray):
+        """
+        Return intersection-over-union (Jaccard index) of boxes.
+        Both sets of boxes are expected to be in (x1, y1, x2, y2) format.
+        Arguments:
+            detections (Array[N, 6]), x1, y1, x2, y2, conf, class
+            labels (Array[M, 5]), class, x1, y1, x2, y2
+        Returns:
+            None, updates confusion matrix accordingly
+        """
+        matrix = np.zeros((self.num_classes + 1, self.num_classes + 1))
+        gt_classes = labels[:, 0].astype(np.int16)
+
+        try:
+            detections = detections[detections[:, 4] > self.CONF_THRESHOLD]
+        except IndexError or TypeError:
+            #print('detections are empty, end of process')
+            for i, label in enumerate(labels):
+                gt_class = gt_classes[i]
+                matrix[self.num_classes, gt_class] += 1 #FN
+            return
+
+        detection_classes = detections[:, 5].astype(np.int16)
+
+        all_ious = box_iou_calc(labels[:, 1:], detections[:, :4])
+        want_idx = np.where(all_ious > self.IOU_THRESHOLD)
+
+        all_matches = [[want_idx[0][i], want_idx[1][i], all_ious[want_idx[0][i], want_idx[1][i]]]
+                       for i in range(want_idx[0].shape[0])]
+
+        all_matches = np.array(all_matches)
+        if all_matches.shape[0] > 0:  # if there is match
+            all_matches = all_matches[all_matches[:, 2].argsort()[::-1]]
+
+            all_matches = all_matches[np.unique(all_matches[:, 1], return_index=True)[1]]
+
+            all_matches = all_matches[all_matches[:, 2].argsort()[::-1]]
+
+            all_matches = all_matches[np.unique(all_matches[:, 0], return_index=True)[1]]
+
+        for i, label in enumerate(labels):
+            gt_class = gt_classes[i]
+            if all_matches.shape[0] > 0 and all_matches[all_matches[:, 0] == i].shape[0] == 1:
+                detection_class = detection_classes[int(all_matches[all_matches[:, 0] == i, 1][0])]
+                matrix[detection_class, gt_class] += 1 #TP
+            else:
+                matrix[self.num_classes, gt_class] += 1 #background FP
+
+        for i, detection in enumerate(detections):
+            if not all_matches.shape[0] or ( all_matches.shape[0] and all_matches[all_matches[:, 1] == i].shape[0] == 0 ):
+                detection_class = detection_classes[i]
+                matrix[detection_class, self.num_classes] += 1 #background FN
+        return matrix
 
     def return_matrix(self):
         return self.matrix
@@ -700,6 +844,7 @@ if __name__ == '__main__':
     parser.add_argument('--result_file', type=str, default='metric_results.txt', help='path to dumping mAP results')
     parser.add_argument('--valid_list',type=str,default='valid.txt',help='location of the validation list')
     parser.add_argument('--show_results',action='store_true',help='show results or not')
+    parser.add_argument('--create_combine_gt_pred',action='store_true',help='create JPEGImages/Annotations that merge the predictions with ground truth and sort by accuracy')
 
     opt = parser.parse_args()
     path_Anno_Pred=opt.path_Anno_Pred
@@ -709,6 +854,7 @@ if __name__ == '__main__':
     result_file=opt.result_file
     valid_list=opt.valid_list
     show_results=opt.show_results
+    create_combine_gt_pred=opt.create_combine_gt_pred
 
     if os.path.exists(path_Anno_Pred) and os.path.exists(path_Anno_GT) and os.path.exists(path_JPEGS_GT) and os.path.exists(valid_list):
         print('path_JPEGS_GT:',path_JPEGS_GT)
@@ -717,7 +863,7 @@ if __name__ == '__main__':
         print('obj_names_path:',obj_names_path)
         print('result_file',result_file)
         print('valid_list',valid_list)
-        mycocoEval=compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list,show_results)
+        mycocoEval=compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_file,valid_list,show_results,create_combine_gt_pred)
     else:
         print(path_Anno_Pred, path_Anno_GT,path_JPEGS_GT)
         print('os.path.exists(path_Anno_Pred),os.path.exists(path_Anno_GT),os.path.exists(path_JPEGS_GT)')

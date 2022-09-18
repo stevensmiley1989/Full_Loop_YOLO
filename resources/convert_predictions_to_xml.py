@@ -31,6 +31,8 @@ if os.path.exists(path_predictions_folder)==False:
 else:
     os.system('rm -rf {}'.format(path_predictions_folder))
     os.makedirs(path_predictions_folder)
+if os.path.exists(path_result_list_txt) and os.path.exists(path_predictions_folder):
+    shutil.copy(path_result_list_txt,path_predictions_folder)
 path_anno=os.path.join(path_predictions_folder,'Annotations')
 path_jpegs=os.path.join(path_predictions_folder,'JPEGImages')
 if os.path.exists(path_anno)==False:

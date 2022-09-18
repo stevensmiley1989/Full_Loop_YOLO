@@ -27,6 +27,7 @@ if args.path_objs_names!=None:
     print("--path_objs_names == {}".format(path_objs_names))
 else:
     print('WARNING! \n \t --path_objs_names \t None specified')
+
 f=open(path_objs_names,'r')
 f_read=f.readlines()
 f.close()
@@ -38,6 +39,8 @@ else:
     #os.system('rm -rf {}'.format(path_predictions_folder))
     #os.makedirs(path_predictions_folder)
     pass
+if os.path.exists(path_result_list_txt) and os.path.exists(path_predictions_folder):
+    shutil.copy(path_result_list_txt,path_predictions_folder)
 path_anno=os.path.join(path_predictions_folder,'Annotations')
 path_jpegs=os.path.join(path_predictions_folder,'JPEGImages')
 if os.path.exists(path_anno)==False:
