@@ -241,7 +241,6 @@ class main_entry:
         self.canvas_columnspan=50
         self.canvas_rowspan=50
         self.root_background_img=r"misc/gradient_green.jpg"
-        
         self.INITIAL_CHECK()
     def INITIAL_CHECK(self):
         self.get_update_background_img()
@@ -331,6 +330,8 @@ class main_entry:
         self.delete_label.grid(row=2,column=5,sticky='se')
         self.open_libs=Button(self.root,text='Open /libs',command=self.run_cmd_open_libs,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         self.open_libs.grid(row=3,column=5,sticky='se')
+        self.move_separate_button=Button(self.root,text='Move to HIDDEN',command=self.move_separate,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
+        self.move_separate_button.grid(row=4,column=5,sticky='se')
         # self.submit2_label=Button(self.root,text='Run Script',command=self.submit_script,bg=self.root_fg,fg=self.root_bg,font=('Arial',12))
         # self.submit2_label.grid(row=4,column=1,sticky='se')
         # self.select_file_script_label=Button(self.root,image=self.icon_folder,command=self.select_file_script,bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
@@ -510,6 +511,28 @@ class main_entry:
         self.cleanup()
         self.INITIAL_CHECK()
 
+    def move_separate(self):
+        checked_models=[]
+        for model_num,var in self.checkm_vars.items():
+            if var.get()==1:
+                checked_models.append(model_num)
+        checked_datasets=[]
+        for dataset,var in self.checkd_vars.items():
+            if var.get()==1:
+                checked_datasets.append(dataset)
+
+        df_temp=self.df_settings[(self.df_settings['Number Models'].isin(checked_models))&(self.df_settings['Annotations'].isin(checked_datasets))].copy()
+        if os.path.exists('libs/HIDDEN')==False:
+            os.makedirs('libs/HIDDEN')
+        self.files_move=list(df_temp['files'])
+        for file in tqdm(self.files_move):
+            if file not in 'libs/HIDDEN':
+                shutil.move(os.path.join('libs',file)+'.py','libs/HIDDEN')
+        self.df_settings.drop(df_temp.index,inplace=True)
+        self.files_keep=list(self.df_settings['files'])
+        self.files_keep.append('DEFAULT_SETTINGS')
+        self.dropdown_menu()
+        self.INITIAL_CHECK()
     def submit(self):
         global SAVED_SETTINGS_PATH
         global PROCEED 
