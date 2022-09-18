@@ -5388,7 +5388,7 @@ class yolo_cfg:
             except:
                 pass
             self.top=tk.Toplevel(self.root)
-            self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+            self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.0),int(self.root.winfo_screenheight()*0.95//1.5)) )
             self.top.configure(background = 'black')
             self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
             self.b.grid(row=0,column=1,sticky='se')
