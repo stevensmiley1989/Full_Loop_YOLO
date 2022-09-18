@@ -2103,9 +2103,20 @@ class yolo_cfg:
         self.frame_canvas.grid_propagate(False)
         self.canvas=tk.Canvas(self.frame_canvas,bg='black')
         self.canvas.grid(row=0,column=0,sticky='news')
-        self.vsbar=tk.Scrollbar(self.frame_canvas,orient="vertical",command=self.canvas.yview)
+        self.style3=ttk.Style()
+        self.style3.configure('Vertical.TScrollbar',
+                            background='green',
+                            foreground='black',
+                            arrowcolor='black',
+                            activebackground='yellow')
+        self.style3.configure('Horizontal.TScrollbar',
+                            background='green',
+                            foreground='black',
+                            arrowcolor='black',
+                            activebackground='yellow')
+        self.vsbar=ttk.Scrollbar(self.frame_canvas,orient="vertical",command=self.canvas.yview,style="Vertical.TScrollbar")
         self.vsbar.grid(row=0,column=1,sticky='nes')
-        self.hsbar=tk.Scrollbar(self.frame_canvas,orient="horizontal",command=self.canvas.xview)
+        self.hsbar=ttk.Scrollbar(self.frame_canvas,orient="horizontal",command=self.canvas.xview,style="Horizontal.TScrollbar")
         self.hsbar.grid(row=0,column=0,rowspan=100,sticky='new')
         self.canvas.configure(yscrollcommand=self.vsbar.set)
         self.canvas.configure(xscrollcommand=self.hsbar.set)
@@ -2258,6 +2269,8 @@ class yolo_cfg:
             self.DATASET_dropdownvars[k]=tk.StringVar()
             self.DATASET_dropdownvars[k].set(list_i[1])
             self.DATASET_dropdownoptions[k]=tk.OptionMenu(self.frame_table,self.DATASET_dropdownvars[k],*self.DATASET_dropdownlists[k])
+            self.DATASET_dropdownoptions[k].config(bg='green',fg='white')
+            self.DATASET_dropdownoptions[k]['menu'].config(fg='lime',bg='black')
             self.DATASET_dropdownoptions[k].grid(row=spacer+i,column=1,sticky='sw')
 
         self.frame_table.update_idletasks()
