@@ -2064,7 +2064,7 @@ class yolo_cfg:
         self.top.columnconfigure(0,weight=1)
         self.top.rowconfigure(0,weight=1)
         self.FMas=tk.Frame(self.top,bg='Black')
-        self.FMas.grid(sticky=(tk.N,tk.E,tk.S,tk.W))
+        self.FMas.grid(sticky=(tk.N,tk.E,tk.S,tk.W),padx=20,pady=20)
         self.FMas.columnconfigure(0,weight=1)
 
 
