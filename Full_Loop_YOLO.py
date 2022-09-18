@@ -915,6 +915,23 @@ class yolo_cfg:
         showinfo(title='Selected File',
                  message=self.filename)
 
+    def select_file_optionobjnames(self):
+        filetypes=(('names','*.names'),('All files','*.*'))
+        if os.path.exists(self.option_obj_names_path_var.get()):
+            initialdir_i=os.path.dirname(self.option_obj_names_path_var.get())
+        elif os.path.exists(self.YOLO_MODEL_PATH):
+            initialdir_i=self.YOLO_MODEL_PATH
+        else:
+            initialdir_i=os.getcwd()
+        self.filename=fd.askopenfilename(title='Open a file',
+                                    initialdir=initialdir_i,
+                                    filetypes=filetypes)
+        if os.path.exists(self.filename):
+            print(self.filename)
+            self.option_obj_names_path_var.set(self.filename)
+        showinfo(title='Selected File',
+                 message=self.filename)
+
     def select_file_mp4(self,file_i):
         filetypes=(('mp4','*.mp4'),('All files','*.*'))
         if os.path.exists(self.mp4_video_path):
@@ -4945,12 +4962,25 @@ class yolo_cfg:
         f=open(path_anno_dest_i,'a')
         f.writelines(yolo_i+'\n')
         f.close()
+    def open_popupwindow_labels(self):
+        self.popupWindow_objnames()
+        if os.path.exists(self.names_path):
+            fo=open(self.names_path,'r')
+            fo_read=fo.readlines()
+            fo.close()
+            self.found_names={w.replace('\n',''):j for j,w in enumerate(fo_read)}
+            f=open(self.names_path,'w')
+            f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
+            f.close()
+            shutil.copy(self.names_path,self.path_Yolo)
     def grep_annos_labels(self):
+        '''FIXED OBJ.NAMES for testing'''
         self.get_all_annos()
         count_str=self.pad(self.counts)
         self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
         self.df=pd.DataFrame(columns=['label_i','path_jpeg_dest_i','path_anno_i'])
         if self.var_overwrite.get()!='No':
+            
             self.grep_result_file=os.path.join(os.path.dirname(self.path_Annotations),"grep_results_for_df.txt")
             cmd_i=f'grep -r "<name>" {self.path_Annotations} > {self.grep_result_file}'
             print('GREP STARTING')
@@ -4970,9 +5000,19 @@ class yolo_cfg:
             self.df_gr['path_anno_dest_i']=[os.path.join(self.path_Yolo,w+'.xml') for w in self.df_gr['img_i_name']]
             self.df_gr['path_jpeg_dest_i']=[os.path.join(self.path_Yolo,w+'.jpg') for w in self.df_gr['img_i_name']]
             self.found_names={name:i for i,name in enumerate(self.df_gr['label_i'].unique())}
-            f=open(self.names_path,'w')
+            self.found_obj_names=os.path.join(os.path.dirname(self.names_path),'found_obj.names')
+            f=open(self.found_obj_names,'w')
             f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
             f.close()
+            if os.path.exists(self.names_path):
+                from multiprocessing import Queue,Process
+                f=open(self.names_path,'r')
+                f_read=f.readlines()
+                f.close()
+                self.current_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
+
+            
+                self.open_popupwindow_labels()
             self.df_gr=self.df_gr.drop_duplicates(subset=['path_anno_i']).reset_index().drop('index',axis=1)
             self.df_gr_filename=self.grep_result_file.replace('.txt','.csv')
             self.df_gr.to_csv(self.df_gr_filename,index=None)
@@ -5342,13 +5382,125 @@ class yolo_cfg:
         #TD TRAIN yolov7 E6E
         self.train_yolov7_e6e()
 
+    def popupWindow_objnames(self):
+            try:
+                self.top.destroy()
+            except:
+                pass
+            self.top=tk.Toplevel(self.root)
+            self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+            self.top.configure(background = 'black')
+            self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+            self.b.grid(row=0,column=1,sticky='se')
+
+            #current obj_names_path
+            try:
+                self.option_obj_names_path_var.get()
+                if self.option_obj_names_path_var.get()=='None':
+                 try:
+                    self.option_obj_names_path_var.set(self.names_path)
+                 except:
+                    self.option_obj_names_path_var.set('None')               
+            except:
+                self.option_obj_names_path_var=tk.StringVar()
+                try:
+                    self.option_obj_names_path_var.set(self.names_path)
+                except:
+                    self.option_obj_names_path_var.set('None')
+            self.option_obj_names_path_button=Button(self.top,image=self.icon_folder,command=self.select_file_optionobjnames,bg=self.root_bg,fg=self.root_fg)
+            self.option_obj_names_path_button.grid(row=1,column=1,sticky='se')   
+            self.option_obj_names_path_label=Button(self.top,textvariable=self.option_obj_names_path_var,command=partial(self.open_something,self.option_obj_names_path_var),bg=self.root_bg,fg=self.root_fg)
+            self.option_obj_names_path_label.grid(row=1,column=2,sticky='sw')  
+            self.option_obj_names_note=tk.Label(self.top,text='path to current obj.names',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+            self.option_obj_names_note.grid(row=1,column=0,sticky='se') 
+
+
+            #found obj_names_path
+            self.FOUND_NAMES=False
+            try:
+                self.found_obj_names_var.get()
+                if self.found_obj_names_var.get()==self.option_obj_names_path_var.get():
+                    self.FOUND_NAMES=False
+                    try:
+                        self.found_obj_names_var.set(self.found_obj_names)
+                    except:
+                        fo=open(self.names_path,'r')
+                        fo_read=fo.readlines()
+                        fo.close()
+                        self.found_names={w.replace('\n',''):j for j,w in enumerate(fo_read)}
+                        self.found_obj_names=os.path.join(os.path.dirname(self.names_path),'found_obj.names')
+                        f=open(self.found_obj_names,'w')
+                        f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
+                        f.close()
+                else:
+                    self.found_obj_names_var.set(self.found_obj_names)
+                    self.FOUND_NAMES=True
+           
+            except:
+                self.found_obj_names_var=tk.StringVar()
+                try:
+                    self.found_obj_names_var.set(self.found_obj_names)
+                except:
+                    fo=open(self.names_path,'r')
+                    fo_read=fo.readlines()
+                    fo.close()
+                    self.found_names={w.replace('\n',''):j for j,w in enumerate(fo_read)}
+                    self.found_obj_names=os.path.join(os.path.dirname(self.names_path),'found_obj.names')
+                    f=open(self.found_obj_names,'w')
+                    f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
+                    f.close()
+                    self.found_obj_names_var.set(self.found_obj_names)
+            
+            
+            if self.FOUND_NAMES:
+                self.TEXT_FOUND_OBJ_NAMES='path to newly found obj.names'
+                self.TEXT_FOUND_OPTION='found obj.names'
+            else:
+                self.TEXT_FOUND_OBJ_NAMES='path to a custom obj.names you can alter and select'
+                self.TEXT_FOUND_OPTION='changed obj.names'
+            self.found_obj_names_path_label=Button(self.top,textvariable=self.found_obj_names_var,command=partial(self.open_something,self.found_obj_names_var),bg=self.root_bg,fg=self.root_fg)
+            self.found_obj_names_path_label.grid(row=3,column=2,sticky='sw')  
+            self.found_obj_names_note=tk.Label(self.top,text=self.TEXT_FOUND_OBJ_NAMES,bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+            self.found_obj_names_note.grid(row=3,column=0,sticky='se') 
+
+
+            #path_obj_namses used if starting over
+            self.style3=ttk.Style()
+            self.style3.configure('Normal.TRadiobutton',
+                                background='green',
+                                foreground='black')
+            self.var_choice=tk.StringVar()
+            self.var_choice.set(self.TEXT_FOUND_OPTION)
+            self.obj_choice_current=ttk.Radiobutton(self.top,text='current obj.names',style='Normal.TRadiobutton',variable=self.var_choice,value='Current')
+            self.obj_choice_current.grid(row=2,column=2,stick='sw')
+
+            self.obj_choice_found=ttk.Radiobutton(self.top,text=self.TEXT_FOUND_OPTION,style='Normal.TRadiobutton',variable=self.var_choice,value=self.TEXT_FOUND_OPTION)
+            self.obj_choice_found.grid(row=4,column=2,stick='sw')
+
+    
+            self.submit_choice_button=Button(self.top,text='Submit Choice for obj.names?',command=self.SUBMIT_objnames,bg='green', fg=DEFAULT_SETTINGS.root_bg)
+            self.submit_choice_button.grid(row=0,column=2,sticky='sw')
+            self.root.wait_window(self.top)
+    
+    def SUBMIT_objnames(self):
+        if self.var_choice.get()==self.TEXT_FOUND_OPTION:
+            print(f'Using {self.TEXT_FOUND_OPTION}')
+            os.remove(self.option_obj_names_path_var.get())
+            shutil.move(self.found_obj_names_var.get(),self.option_obj_names_path_var.get())
+        else:
+            print('Using Current')
+            if os.path.exists(self.found_obj_names_var.get()):
+                os.remove(self.found_obj_names_var.get())
+        self.top.destroy()
+
+
     def popupWindow_mAP(self):
         try:
             self.top.destroy()
         except:
             pass
         self.top=tk.Toplevel(self.root)
-        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.0),int(self.root.winfo_screenheight()*0.95//1.5)) )
         self.top.configure(background = 'black')
         self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
         self.b.grid(row=0,column=1,sticky='se')
@@ -5443,6 +5595,11 @@ class yolo_cfg:
         self.valid_list_note=tk.Label(self.top,text='path to valid_list.txt/img_list.txt etc',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
         self.valid_list_note.grid(row=11,column=0,sticky='se') 
 
+        self.create_combine_jpeg_pred_vars=tk.IntVar()
+        self.create_combine_jpeg_pred_vars.set(0)
+        self.create_combine_jpeg_pred_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Create JPEGImages/Annotations of Combined Ground Truth & Predictions Sorted by Accuracy",variable=self.create_combine_jpeg_pred_vars,onvalue=1, offvalue=0)
+        self.create_combine_jpeg_pred_buttons.grid(row=12,column=2,sticky='sw')
+
         self.submit_mAP_button=Button(self.top,text='Compute mAP metrics',command=self.SUBMIT_mAP,bg='green', fg=DEFAULT_SETTINGS.root_bg)
         self.submit_mAP_button.grid(row=0,column=2,sticky='sw')
 
@@ -5481,6 +5638,8 @@ class yolo_cfg:
         obj_names_path=self.obj_names_path_var.get()
         valid_list=self.valid_list_var.get()
         path_compute_mAP=os.path.abspath('resources/compute_mAP.py')
+        create_combine_jpeg_pred_vars=self.create_combine_jpeg_pred_vars.get()
+        
         if os.path.exists(path_Anno_Pred):
             bash_mAP=os.path.join(os.path.dirname(path_Anno_Pred),'bash_mAP.sh')
             f=open(bash_mAP,'w')
@@ -5490,7 +5649,10 @@ class yolo_cfg:
             f.writelines(f'obj_names_path={obj_names_path}\n')
             f.writelines(f'valid_list={valid_list}\n')
             f.writelines(f'path_compute_mAP={path_compute_mAP}\n')
-            f.writelines(f'python3 $path_compute_mAP --valid_list=$valid_list --path_Anno_Pred=$path_Anno_Pred --path_JPEGS_GT=$path_JPEGS_GT --path_Anno_GT=$path_Anno_GT --obj_names_path=$obj_names_path --show_results\n')
+            if create_combine_jpeg_pred_vars==0:
+                f.writelines(f'python3 $path_compute_mAP --valid_list=$valid_list --path_Anno_Pred=$path_Anno_Pred --path_JPEGS_GT=$path_JPEGS_GT --path_Anno_GT=$path_Anno_GT --obj_names_path=$obj_names_path --show_results\n')
+            else:
+                f.writelines(f'python3 $path_compute_mAP --valid_list=$valid_list --path_Anno_Pred=$path_Anno_Pred --path_JPEGS_GT=$path_JPEGS_GT --path_Anno_GT=$path_Anno_GT --obj_names_path=$obj_names_path --show_results --create_combine_gt_pred\n')
             f.close()
             print(f'FINISHED WRITING bash_mAP at: {bash_mAP}')
             cmd_i=f'bash {bash_mAP}'
@@ -5658,6 +5820,11 @@ class yolo_cfg:
             else:
                 os.system('rm -rf "{}"'.format(self.base_path))
             self.generate_cfg()
+        if os.path.exists(self.names_path):
+            fo=open(self.names_path,'r')
+            fo_read=fo.readlines()
+            fo.close()
+            self.found_names={w.replace('\n',''):j for j,w in enumerate(fo_read)}
         f=open(self.names_path,'w')
         f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
         f.close()
@@ -5767,7 +5934,11 @@ class yolo_cfg:
         self.POINTS_label.grid(row=9,column=4,sticky='nw')
         self.create_yolo_scripts_buttons()
         self.load_yolo_scripts_buttons()
+        self.change_obj_names_buttons()
 
+    def change_obj_names_buttons(self):
+        self.change_obj_names_button=Button(self.root,text='Change obj.names',command=self.open_popupwindow_labels,bg=self.root_fg,fg=self.root_bg)
+        self.change_obj_names_button.grid(row=0,column=9,sticky='sw')
 
     def load_yolo_scripts_buttons(self):
         self.load_yolo_files_button=Button(self.root,image=self.icon_scripts,command=self.remaining_buttons,bg=self.root_bg,fg=self.root_fg)
