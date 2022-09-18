@@ -346,7 +346,10 @@ class main_entry:
         for dataset,var in self.checkd_vars.items():
             if var.get()==1:
                 checked_datasets.append(dataset)
-        df_temp=self.df_settings[(self.df_settings['Number Models'].isin(checked_models))&(self.df_settings['Annotations'].isin(checked_datasets))].copy()
+        if len(self.df_settings[(self.df_settings['Number Models'].isin(checked_models))&(self.df_settings['Annotations'].isin(checked_datasets))])==0:
+            df_temp=self.df_settings.copy()
+        else:
+            df_temp=self.df_settings[(self.df_settings['Number Models'].isin(checked_models))&(self.df_settings['Annotations'].isin(checked_datasets))].copy()
         self.files_keep=list(df_temp['files'])
         self.files_keep.append('DEFAULT_SETTINGS')
         self.dropdown_menu()
@@ -414,6 +417,8 @@ class main_entry:
             self.USER_SELECTION.set(self.SETTINGS_FILE_LIST[0])
         self.dropdown=tk.OptionMenu(self.root,self.USER_SELECTION,*self.SETTINGS_FILE_LIST)
         self.dropdown.grid(row=1,column=9,sticky='sw')
+        self.dropdown.config(bg='green',fg='black')
+        self.dropdown['menu'].config(fg='lime',bg='black')
         
         self.dropdown_label=Button(self.root,image=self.icon_single_file,command=self.run_cmd_libs,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         self.dropdown_label.grid(row=1,column=8,sticky='sw')
@@ -800,7 +805,9 @@ class yolo_cfg:
         self.random_VAR.set(self.random)
         self.random_options=['0','1']
         self.random_dropdown=tk.OptionMenu(self.root,self.random_VAR,*self.random_options)
-        self.random_dropdown.grid(row=17,column=0,sticky='se')       
+        self.random_dropdown.grid(row=17,column=0,sticky='se')    
+        self.random_dropdown.config(bg='green',fg='black')
+        self.random_dropdown['menu'].config(fg='lime',bg='black')   
         self.random_label=tk.Label(self.root,text='random',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.random_label.grid(row=18,column=0,sticky='ne')
 
@@ -1883,8 +1890,8 @@ class yolo_cfg:
         self.open_MOVMP4_label_var.set(self.path_MOVMP4)
         self.open_MOVMP4_button=Button(self.root,image=self.icon_single_file,command=partial(self.select_file_MOVMP4,self.path_MOVMP4),bg=self.root_bg,fg=self.root_fg)
         self.open_MOVMP4_button.grid(row=5,column=8,sticky='sw')
-        self.open_MOVMP4_note=tk.Label(self.root,text="MOV/MP4 File to \n Create JPEGImages of",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
-        self.open_MOVMP4_note.grid(row=6,column=7,columnspan=3,sticky='n')
+        self.open_MOVMP4_note=tk.Label(self.root,text="MOV/MP4 File to \n Create JPEGImages",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_MOVMP4_note.grid(row=4,column=8,columnspan=1,sticky='sw')
         self.fps_MOVMP4_VAR=tk.StringVar()
         self.fps_MOVMP4_options=['1/10','1/5','1/4','1/2','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40']
         self.fps_MOVMP4_VAR.set('1/2')
@@ -1897,6 +1904,8 @@ class yolo_cfg:
         self.create_MOVMP4_JPEGImages()
         self.fps_MOVMP4_dropdown=tk.OptionMenu(self.root,self.fps_MOVMP4_VAR,*self.fps_MOVMP4_options)
         self.fps_MOVMP4_dropdown.grid(row=5,column=9,sticky='nw')
+        self.fps_MOVMP4_dropdown.config(bg='green',fg='black')
+        self.fps_MOVMP4_dropdown['menu'].config(fg='lime',bg='black')
         self.fps_MOVMP4_dropdown_label=tk.Label(self.root,text='FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
         self.fps_MOVMP4_dropdown_label.grid(row=4,column=9,sticky='sw')   
 
@@ -2012,6 +2021,8 @@ class yolo_cfg:
             self.USE_RTSP_VAR.set('No')
             self.USE_RTSP_dropdown=tk.OptionMenu(self.root,self.USE_RTSP_VAR,*self.USE_RTSP_options,command=self.get_full_path_rtsp())
             self.USE_RTSP_dropdown.grid(row=13+spacer-2,column=3,sticky='sw')
+            self.USE_RTSP_dropdown.config(bg='green',fg='black')
+            self.USE_RTSP_dropdown['menu'].config(fg='lime',bg='black')
             self.USE_RTSP_label=tk.Label(self.root,text='RTSP Server?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
             self.USE_RTSP_label.grid(row=14+spacer-2,column=3,sticky='nw')   
         if self.RTSP_CLIENT and self.USE_RTSP_CLIENT_VAR==None: 
@@ -2269,7 +2280,7 @@ class yolo_cfg:
             self.DATASET_dropdownvars[k]=tk.StringVar()
             self.DATASET_dropdownvars[k].set(list_i[1])
             self.DATASET_dropdownoptions[k]=tk.OptionMenu(self.frame_table,self.DATASET_dropdownvars[k],*self.DATASET_dropdownlists[k])
-            self.DATASET_dropdownoptions[k].config(bg='green',fg='white')
+            self.DATASET_dropdownoptions[k].config(bg='green',fg='black')
             self.DATASET_dropdownoptions[k]['menu'].config(fg='lime',bg='black')
             self.DATASET_dropdownoptions[k].grid(row=spacer+i,column=1,sticky='sw')
 
@@ -2355,6 +2366,8 @@ class yolo_cfg:
         self.USE_CLASSIFY_CHIPS_VAR.set(self.CLASSIFY_CHIPS_LIST[0])
         self.USE_CLASSIFY_CHIPS_dropdown=tk.OptionMenu(self.top,self.USE_CLASSIFY_CHIPS_VAR,*self.CLASSIFY_CHIPS_LIST,command=self.return_CLASSIFY_CHIPS)
         self.USE_CLASSIFY_CHIPS_dropdown.grid(row=15+spacer-2,column=3,sticky='sw')
+        self.USE_CLASSIFY_CHIPS_dropdown.config(bg='green',fg='black')
+        self.USE_CLASSIFY_CHIPS_dropdown['menu'].config(bg='lime',fg='black')
 
     def return_CLASSIFY_CHIPS(self):
         print(self.USE_CLASSIFY_CHIPS_VAR.get())
@@ -2427,6 +2440,8 @@ class yolo_cfg:
         self.USE_SOCKET_RTSP_PORT_VAR.set(self.SOCKET_RTSP_PORTS[0])
         self.USE_SOCKET_RTSP_PORT_dropdown=tk.OptionMenu(self.top,self.USE_SOCKET_RTSP_PORT_VAR,*self.SOCKET_RTSP_PORTS,command=self.return_SOCKET_RTSP_PORT)
         self.USE_SOCKET_RTSP_PORT_dropdown.grid(row=19+spacer-2,column=3,sticky='sw')
+        self.USE_SOCKET_RTSP_PORT_dropdown.config(bg='green',fg='black')
+        self.USE_SOCKET_RTSP_PORT_dropdown['menu'].config(fg='lime',bg='black')
 
     def load_SOCKET_RTSP_hosts(self,spacer):
         try:
@@ -2449,6 +2464,8 @@ class yolo_cfg:
         self.USE_SOCKET_RTSP_HOST_VAR.set(self.SOCKET_RTSP_HOSTS[0])
         self.USE_SOCKET_RTSP_HOST_dropdown=tk.OptionMenu(self.top,self.USE_SOCKET_RTSP_HOST_VAR,*self.SOCKET_RTSP_HOSTS,command=self.return_SOCKET_RTSP_HOST)
         self.USE_SOCKET_RTSP_HOST_dropdown.grid(row=23+spacer-2,column=3,sticky='sw')
+        self.USE_SOCKET_RTSP_HOST_dropdown.config(bg='green',fg='black')
+        self.USE_SOCKET_RTSP_HOST_dropdown['menu'].config(fg='lime',bg='black')
 
     def check_int_from_str(self,str_i):
         success=True
@@ -2504,6 +2521,8 @@ class yolo_cfg:
         self.USE_RTSP_CLIENT_VAR.set(self.RTSP_CLIENTS[0])
         self.USE_RTSP_CLIENT_dropdown=tk.OptionMenu(self.top,self.USE_RTSP_CLIENT_VAR,*self.RTSP_CLIENTS,command=self.return_RTSP_CLIENT)
         self.USE_RTSP_CLIENT_dropdown.grid(row=15+spacer-2,column=3,sticky='sw')
+        self.USE_RTSP_CLIENT_dropdown.config(bg='green',fg='black')
+        self.USE_RTSP_CLIENT_dropdown['menu'].config(fg='lime',bg='black')
 
 
     def open_RTSP_CLIENT_List(self):
@@ -2567,6 +2586,8 @@ class yolo_cfg:
             self.USER_SELECTION_yt.set('720p')
             self.dropdown_yt=tk.OptionMenu(self.root,self.USER_SELECTION_yt,*self.SETTINGS_YOUTUBE_LIST)
             self.dropdown_yt.grid(row=11,column=3,sticky='sw')
+            self.dropdown_yt.config(bg='green',fg='black')
+            self.dropdown_yt['menu'].config(fg='lime',bg='black')
 
 
 
@@ -3184,9 +3205,9 @@ class yolo_cfg:
             if os.path.exists(os.path.join(self.CWD,'libs/tensorflow_yolov4_tflite_path.py')) and (self.WIDTH_NUM==self.HEIGHT_NUM) and os.path.exists(self.best_weights_path):
                 self.create_tflite_bash()
                 self.convert_tflite_button=Button(self.root,image=self.icon_test,command=self.run_create_tflite_bash,bg=self.root_bg,fg=self.root_fg)
-                self.convert_tflite_button.grid(row=10-7,column=13,sticky='se')
-                self.convert_tflite_button_note=tk.Label(self.root,text='Convert Yolov4 to TFLITE',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-                self.convert_tflite_button_note.grid(row=11-7,column=13,sticky='ne')
+                self.convert_tflite_button.grid(row=3,column=6,sticky='se')
+                self.convert_tflite_button_note=tk.Label(self.root,text='Convert Yolov4 \n to TFLITE',bg=self.root_bg,fg=self.root_fg,font=("Arial", 7))
+                self.convert_tflite_button_note.grid(row=4,column=6,sticky='ne')
 
     def calculate_epochs_yolov4(self):
         '''Calculates the number of epochs performed for training'''
@@ -3315,8 +3336,11 @@ class yolo_cfg:
         self.RAW_VIDEO_using_JETSON_NANO_VAR.set('False')
         self.RAW_VIDEO_using_JETSON_NANO_dropdown=tk.OptionMenu(self.top,self.RAW_VIDEO_using_JETSON_NANO_VAR,*self.using_JETSON_NANO_LIST)
         self.RAW_VIDEO_using_JETSON_NANO_dropdown.grid(row=8,column=2,sticky='sw')
+        self.RAW_VIDEO_using_JETSON_NANO_dropdown.config(bg='green',fg='black')
+        self.RAW_VIDEO_using_JETSON_NANO_dropdown['menu'].config(fg='lime',bg='black')
         self.RAW_VIDEO_using_JETSON_NANO_note=tk.Label(self.top,text='--using_JETSON_NANO',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
         self.RAW_VIDEO_using_JETSON_NANO_note.grid(row=8,column=1,sticky='se')
+
 
     def RECORD_RAW_VIDEO(self):
          # RAW VIDEO PATHS
@@ -3396,6 +3420,8 @@ class yolo_cfg:
         self.RAW_VIDEO_VAR.set(self.RAW_VIDEO_LIST[0])
         self.RAW_VIDEO_dropdown=tk.OptionMenu(self.top,self.RAW_VIDEO_VAR,*self.RAW_VIDEO_LIST)
         self.RAW_VIDEO_dropdown.grid(row=1,column=2,sticky='sw')
+        self.RAW_VIDEO_dropdown.config(bg='green',fg='black')
+        self.RAW_VIDEO_dropdown['menu'].config(fg='lime',bg='black')
         self.RAW_VIDEO_dropdown_note=tk.Label(self.top,text='--video',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
         self.RAW_VIDEO_dropdown_note.grid(row=1,column=1,sticky='se')
     
@@ -5954,9 +5980,11 @@ class yolo_cfg:
         self.POINTS_VAR.set('0: Custom')
         self.POINTS=self.POINTS_VAR.get().split(':')[0]
         self.POINTS_dropdown=tk.OptionMenu(self.root,self.POINTS_VAR,*self.POINTS_LIST)
-        self.POINTS_dropdown.grid(row=8,column=4,sticky='sw')
-        self.POINTS_label=tk.Label(self.root,text='POINTS',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
-        self.POINTS_label.grid(row=9,column=4,sticky='nw')
+        self.POINTS_dropdown.grid(row=8,column=3,sticky='se')
+        self.POINTS_dropdown.config(bg='green',fg='black')
+        self.POINTS_dropdown['menu'].config(fg='lime',bg='black')
+        self.POINTS_label=tk.Label(self.root,text='POINTS',bg=self.root_bg,fg=self.root_fg,font=('Arial',7),padx=20)
+        self.POINTS_label.grid(row=9,column=3,sticky='ne')
         self.create_yolo_scripts_buttons()
         self.load_yolo_scripts_buttons()
         self.change_obj_names_buttons()
@@ -6022,6 +6050,7 @@ if __name__=='__main__':
         return_to_main=False
         if use_preselected_setting==False:
             root_tk=tk.Tk()
+           
             main_yolo=main_entry(root_tk)
             main_yolo.root.mainloop()
             del main_yolo
