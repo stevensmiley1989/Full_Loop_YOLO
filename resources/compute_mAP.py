@@ -123,9 +123,12 @@ def summarize(self,names={'person':0},result_file='results.txt'):
         else:
             # dimension of recall: [TxKxAxM]
             s = self.eval['recall']
+
+
             if iouThr is not None:
                 t = np.where(iouThr == p.iouThrs)[0]
                 s = s[t]
+
             s = s[:,:,aind,mind]
         if len(s[s>-1])==0:
             mean_s = -1
@@ -138,12 +141,18 @@ def summarize(self,names={'person':0},result_file='results.txt'):
             if ap == 1:
                 num_classes=len(names)
                 rev_names={v:k for k,v in names.items()}
+                remove_negative=0
                 for i in range(0, num_classes):
                     line_i='category : {0} : {1}'.format(rev_names[i],np.mean(s[:,:,i,:]))
                     print(line_i)
                     my_results.append(line_i)
-                    avg_ap +=np.mean(s[:,:,i,:])
-                line_i='(all categories) mAP : {}'.format(avg_ap / num_classes)
+                    if np.mean(s[:,:,i,:]>0):
+                        avg_ap +=np.mean(s[:,:,i,:])
+                    else:
+                        remove_negative+=1
+                if num_classes-remove_negative==0:
+                    remove_negative=0 #prevent dividing by zero
+                line_i='(all categories) mAP : {}'.format(avg_ap / (num_classes-remove_negative))
                 print(line_i)
                 my_results.append(line_i)
         line_i=iStr.format(titleStr, typeStr, iouStr, areaRng, maxDets, mean_s)
@@ -224,7 +233,8 @@ def read_XML_quick(path):
         xmax = int(bndbox.find('xmax').text)
         ymax = int(bndbox.find('ymax').text)
         (x,y,w,h)=(int(xmin),int(ymin),int(xmax-xmin),int(ymax-ymin))
-    return xmltree     
+    return xmltree   
+
 def read_XML(path,result_list,names,images_found,id_i,result_list_plots,gt=False):
     single_batch=[]
     imageId=os.path.basename(path).split('.')[0]
@@ -593,6 +603,8 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
         os.makedirs(COMBINED_GT_PRED)
         COMBINED_GT_PRED_JPEGS=os.path.join(save_dir,'JPEGImages')
         os.makedirs(COMBINED_GT_PRED_JPEGS)
+        GT_ANNOTATIONS=os.path.join(save_dir,'GROUND_TRUTH_Annotations')
+        os.makedirs(GT_ANNOTATIONS)
         for row in tqdm(range(len(df))):
             anno_i=df['path_Anno_GT'].loc[row]
             anno_p=df['path_Anno_Pred'].loc[row]
@@ -601,9 +613,11 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
             if os.path.exists(anno_i):
                 shutil.copy(anno_i,COMBINED_GT_PRED)
                 anno_j=os.path.join(COMBINED_GT_PRED,os.path.basename(anno_i))
+
                 f=open(anno_j,'r')
                 f_read=f.readlines()
                 f.close()
+                f_read_og=f_read
                 f_read=[w for w in f_read if w.find('</annotation>')==-1]
                 f_read=[w.replace('<name>','<name>GROUND_TRUTH__') for w in f_read]
                 if os.path.exists(anno_p):
@@ -622,6 +636,7 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
                 f.close()
                 new_anno_j=os.path.join(COMBINED_GT_PRED,f'ACCURACY{np.round(acc_i,2)}__'.replace('.','p')+os.path.basename(anno_i))
                 os.rename(anno_j,new_anno_j)
+                shutil.copy(anno_i,os.path.join(GT_ANNOTATIONS,f'ACCURACY{np.round(acc_i,2)}__'.replace('.','p')+os.path.basename(anno_i)))
                 if os.path.exists(jpeg_i):
                     shutil.copy(jpeg_i,COMBINED_GT_PRED_JPEGS)
                     jpeg_j=os.path.join(COMBINED_GT_PRED_JPEGS,os.path.basename(jpeg_i))
@@ -629,6 +644,7 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
                     os.rename(jpeg_j,new_jpeg_j)
         
     return cocoEval
+
 def box_iou_calc(boxes1, boxes2):
     # https://github.com/pytorch/vision/blob/master/torchvision/ops/boxes.py
     """
