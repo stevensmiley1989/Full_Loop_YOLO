@@ -743,6 +743,10 @@ class yolo_cfg:
         self.TARGET_LIST_VAR=tk.StringVar()
         self.TARGET_LIST='car;truck;van;'
         self.TARGET_LIST_VAR.set(self.TARGET_LIST)
+        if self.TRAIN_SPLIT<0:
+            self.custom_inputs_valid=False #train_test_split off of custom_inputs
+        else:
+            self.custom_inputs_valid=True
         # self.root.withdraw()
         # self.top=tk.Toplevel(self.root,width=300,height=300)
         # self.canvas_generate=tk.Canvas(self.top,bg='white')
@@ -913,7 +917,11 @@ class yolo_cfg:
 
     def SHOWTABLE_BUTTONS(self):
         self.popup_SHOWTABLE_button=Button(self.root,text='Show df',command=self.popupWindow_showtable,bg=self.root_fg,fg=self.root_bg)
-        self.popup_SHOWTABLE_button.grid(row=14,column=2,sticky='sw')
+        self.popup_SHOWTABLE_button.grid(row=3,column=2,sticky='sw')
+
+    def CUSTOMINPUT_BUTTONS(self):
+        self.popup_custominput_button=Button(self.root,text='Provide Custom Train/Split Inputs',command=self.popupWindow_custominput,bg=self.root_fg,fg=self.root_bg)
+        self.popup_custominput_button.grid(row=4,column=3,sticky='sw')
 
     def return_to_main(self):
         global return_to_main
@@ -1871,7 +1879,7 @@ class yolo_cfg:
         self.remaining_buttons_clicked=True
         self.TRAIN_BUTTONS()
         self.TEST_BUTTONS()
-        self.SHOWTABLE_BUTTONS()
+        
         #self.test_yolo()
         #self.test_yolo_predict()
         #self.test_yolo_predict_mAP()
@@ -5416,7 +5424,7 @@ class yolo_cfg:
         self.get_all_annos()
         count_str=self.pad(self.counts)
         self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
-        self.df=pd.DataFrame(columns=['label_i','path_jpeg_dest_i','path_anno_i'])
+        self.df=pd.DataFrame(columns=['label_i','path_jpeg_dest_i','path_anno_i','train','valid','test'])
         if self.var_overwrite.get()!='No':
             
             self.grep_result_file=os.path.join(os.path.dirname(self.path_Annotations),"grep_results_for_df.txt")
@@ -5455,6 +5463,15 @@ class yolo_cfg:
             self.df_gr_filename=self.grep_result_file.replace('.txt','.csv')
             self.df_gr.to_csv(self.df_gr_filename,index=None)
             self.df=self.df_gr[['label_i','path_jpeg_dest_i','path_anno_i']]
+            if 'train' not in self.df.columns:
+                self.df['train']=self.df['path_jpeg_dest_i'].copy()
+                self.df['train']=0
+            if 'valid' not in self.df.columns:
+                self.df['valid']=self.df['path_jpeg_dest_i'].copy()
+                self.df['valid']=0  
+            if 'test' not in self.df.columns:
+                self.df['test']=self.df['path_jpeg_dest_i'].copy()
+                self.df['test']=0 
             self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
             self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
             self.df.to_pickle(self.df_filename,protocol=2)
@@ -6302,75 +6319,401 @@ class yolo_cfg:
         self.split_yolo_objs_button.grid(row=4,column=1,sticky='se')
         self.split_yolo_objs_button_note=tk.Label(self.root,text='2.b \n Split Train/Test Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.split_yolo_objs_button_note.grid(row=5,column=1,sticky='ne')
-       
+        self.SHOWTABLE_BUTTONS()
+        self.TOTAL_LIST=list(self.df['path_jpeg_dest_i'])
+        self.TOTAL_LIST_PATH=os.path.join(os.path.dirname(self.names_path),'TOTAL_LIST.INPUT')
+        if os.path.exists(self.TOTAL_LIST_PATH)==False:
+            f=open(self.TOTAL_LIST_PATH,'w')
+            f.writelines(w+'\n' for w in self.TOTAL_LIST)
+            f.close()
+        self.CUSTOMINPUT_BUTTONS()
+
+
+
+    def popupWindow_custominput(self):
+        self.check1=False
+        self.check2=False
+        self.check3=False
+        self.check4=False
+        try:
+            self.top.destroy()
+        except:
+            pass
+        self.top=tk.Toplevel(self.root)
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.0),int(self.root.winfo_screenheight()*0.95//1.5)) )
+        self.top.configure(background = 'black')
+        self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+        self.b.grid(row=0,column=1,sticky='se')
+
+        #path_train_input
+        try:
+            self.path_train_input_var.get()
+        except:
+            self.path_train_input_var=tk.StringVar()
+            try:
+                self.path_train_input_var.get()
+            except:
+                self.path_train_input_var.set('None')
+        self.open_path_train_input_button=Button(self.top,image=self.icon_folder,command=partial(self.select_file_INPUT,self.path_train_input_var,'TRAIN_LIST.INPUT'),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_train_input_button.grid(row=3,column=1,sticky='se')
+        self.open_path_train_input_label=Button(self.top,textvariable=self.path_train_input_var,command=partial(self.open_something,self.path_train_input_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_train_input_label.grid(row=3,column=2,sticky='sw')    
+        self.path_train_input_note=tk.Label(self.top,text='path to TRAIN_LIST.INPUT',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.path_train_input_note.grid(row=3,column=0,sticky='se')
+
+        #path_valid_input
+        try:
+            self.path_valid_input_var.get()
+        except:
+            self.path_valid_input_var=tk.StringVar()
+            try:
+                self.path_valid_input_var.get()
+            except:
+                self.path_valid_input_var.set('None')
+        self.open_path_valid_input_button=Button(self.top,image=self.icon_folder,command=partial(self.select_file_INPUT,self.path_valid_input_var,'VALID_LIST.INPUT'),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_valid_input_button.grid(row=5,column=1,sticky='se')
+        self.open_path_valid_input_label=Button(self.top,textvariable=self.path_valid_input_var,command=partial(self.open_something,self.path_valid_input_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_valid_input_label.grid(row=5,column=2,sticky='sw')    
+        self.path_valid_input_note=tk.Label(self.top,text='path to VALID_LIST.INPUT',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.path_valid_input_note.grid(row=5,column=0,sticky='se')
+
+        #path_test_input
+        try:
+            self.path_test_input_var.get()
+        except:
+            self.path_test_input_var=tk.StringVar()
+            try:
+                self.path_test_input_var.get()
+            except:
+                self.path_test_input_var.set('None')
+        self.open_path_test_input_button=Button(self.top,image=self.icon_folder,command=partial(self.select_file_INPUT,self.path_test_input_var,'TEST_LIST.INPUT'),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_test_input_button.grid(row=7,column=1,sticky='se')
+        self.open_path_test_input_label=Button(self.top,textvariable=self.path_test_input_var,command=partial(self.open_something,self.path_test_input_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_path_test_input_label.grid(row=7,column=2,sticky='sw')    
+        self.path_test_input_note=tk.Label(self.top,text='path to TEST_LIST.INPUT',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.path_test_input_note.grid(row=7,column=0,sticky='se')
+
+
+        self.submit_input_button=Button(self.top,text='SUBMIT INPUTS',command=self.SUBMIT_INPUTS,bg='green', fg=DEFAULT_SETTINGS.root_bg)
+        self.submit_input_button.grid(row=0,column=2,sticky='sw')
+
+    def SUBMIT_INPUTS(self):
+        test_path=self.path_test_input_var.get()
+        valid_path=self.path_valid_input_var.get()
+        train_path=self.path_train_input_var.get()
+        self.custom_inputs_valid=False
+        if train_path!='None' and os.path.exists(train_path):
+            self.check_input_list(train_path,train=True)
+            self.custom_inputs_valid=True
+        if valid_path!='None' and os.path.exists(valid_path):
+            self.check_input_list(valid_path,valid=True)
+            self.custom_inputs_valid=True
+        if test_path!='None' and os.path.exists(test_path):
+            self.check_input_list(test_path,test=True)
+            self.custom_inputs_valid=True
+        if (valid_path=='None' or os.path.exists(valid_path)==False) and (test_path=='None' or os.path.exists(test_path)==False):
+            self.df.loc[self.df['train']==1.0,'valid']=0.0
+            self.df.loc[self.df['train']==1.0,'test']=0.0
+            self.df.loc[self.df['train']==0.0,'valid']=1.0
+            self.df.loc[self.df['train']==0.0,'test']=0.0
+        elif (valid_path=='None' or os.path.exists(valid_path)==False):
+            self.df.loc[self.df['train']==1.0,'valid']=0.0
+            self.df.loc[self.df['test']==1.0,'valid']=0.0
+            self.df.loc[(self.df['train']==0.0) & (self.df['test']==0.0),'valid']=1.0 
+        elif (test_path=='None' or os.path.exists(test_path)==False):
+            self.df.loc[self.df['train']==1.0,'test']=0.0  
+            self.df.loc[self.df['valid']==1.0,'test']=0.0 
+            self.df.loc[(self.df['train']==0.0) & (self.df['valid']==0.0),'test']=1.0  
+        count_str=self.pad(self.counts) #must get all annos first
+        if len(self.df[self.df['valid']==1.0])==0 and len(self.df[self.df['test']==1.0])!=0:
+            self.df.loc[self.df['test']==1.0,'valid']=1.0
+            self.df.loc[self.df['valid']==1.0,'test']=0.0
+        self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
+        self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
+        self.df.to_pickle(self.df_filename,protocol=2)
+        self.df.to_csv(self.df_filename_csv,index=None)    
+   
+
+        #check1, have same items in train/valid/test
+        check1=self.df[(self.df['train']==1.0) & (self.df['valid']==1.0) & (self.df['test']==1.0)].copy()
+        self.check1_df=check1
+        if len(self.check1_df)>0:
+            self.check1=True
+        #check2, have same items in train/valid
+        check2=self.df[(self.df['train']==1.0) & (self.df['valid']==1.0) & (self.df['test']!=1.0)].copy()
+        self.check2_df=check2
+        if len(self.check2_df)>0:
+            self.check2=True
+        #check3, have same items in valid/test
+        check3=self.df[(self.df['train']==1.0) & (self.df['valid']!=1.0) & (self.df['test']==1.0)].copy()
+        self.check3_df=check3
+        if len(self.check3_df)>0:
+            self.check3=True
+        #check4, have same items in train/test
+        check4=self.df[(self.df['train']!=1.0) & (self.df['valid']==1.0) & (self.df['test']==1.0)].copy()
+        self.check4_df=check4
+        if len(self.check4_df)>0:
+            self.check4=True
+        #print('check1',check1)
+        #print('check2',check2)
+        #print('check3',check3)
+        #print('check4',check4)
+        self.check_path=os.path.join(os.path.dirname(self.names_path),'check_paths')
+        if os.path.exists(self.check_path)==False:
+            os.makedirs(self.check_path)
+        self.check1_path=os.path.join(self.check_path,'WARNING_check1.csv')
+        self.check2_path=os.path.join(self.check_path,'WARNING_check2.csv')
+        self.check3_path=os.path.join(self.check_path,'WARNING_check3.csv')
+        self.check4_path=os.path.join(self.check_path,'WARNING_check4.csv')
+        if os.path.exists(self.check1_path):
+            os.remove(self.check1_path)
+        if os.path.exists(self.check2_path):
+            os.remove(self.check2_path)
+        if os.path.exists(self.check3_path):
+            os.remove(self.check3_path)
+        if os.path.exists(self.check4_path):
+            os.remove(self.check4_path)
+        self.check1_path_list=os.path.join(self.check_path,'WARNING_check1.OUTPUT')
+        self.check2_path_list=os.path.join(self.check_path,'WARNING_check2.OUTPUT')
+        self.check3_path_list=os.path.join(self.check_path,'WARNING_check3.OUTPUT')
+        self.check4_path_list=os.path.join(self.check_path,'WARNING_check4.OUTPUT')
+        if os.path.exists(self.check1_path_list):
+            os.remove(self.check1_path_list)
+        if os.path.exists(self.check2_path_list):
+            os.remove(self.check2_path_list)
+        if os.path.exists(self.check3_path_list):
+            os.remove(self.check3_path_list)
+        if os.path.exists(self.check4_path_list):
+            os.remove(self.check4_path_list)
+        if self.check1 or self.check2 or self.check3 or self.check4:
+            cmd_i=open_cmd+' '+self.check_path
+            self.run_cmd(cmd_i)
+        if self.check1:
+            self.check1_df.to_csv(self.check1_path,index=None)
+            self.check1_list=list(self.check1_df['path_jpeg_dest_i'])
+            f=open(self.check1_path_list,'w')
+            f.writelines('WARNING, FOUND the following JPEGImages in all 3 of your TRAINING & VALIDATION & TEST LISTS:\n')
+            [f.writelines(w+'\n') for w in self.check1_list]
+            f.close()
+        if self.check2:
+            self.check2_df.to_csv(self.check2_path,index=None)
+            self.check2_list=list(self.check2_df['path_jpeg_dest_i'])
+            f=open(self.check2_path_list,'w')
+            f.writelines('WARNING, FOUND the following JPEGImages in both your TRAINING & VALIDATION LISTS:\n')
+            [f.writelines(w+'\n') for w in self.check2_list]
+            f.close()
+        if self.check3:
+            self.check3_df.to_csv(self.check3_path,index=None)
+            self.check3_list=list(self.check3_df['path_jpeg_dest_i'])
+            f=open(self.check3_path_list,'w')
+            f.writelines('WARNING, FOUND the following JPEGImages in both your VALIDATION & TEST LISTS:\n')
+            [f.writelines(w+'\n') for w in self.check3_list]
+            f.close()
+        if self.check4:
+            self.check4_df.to_csv(self.check4_path,index=None)
+            self.check4_list=list(self.check4_df['path_jpeg_dest_i'])
+            f=open(self.check4_path_list,'w')
+            f.writelines('WARNING, FOUND the following JPEGImages in both your TRAINING & TEST LISTS:\n')
+            [f.writelines(w+'\n') for w in self.check4_list]
+            f.close()
+        if self.custom_inputs_valid==True:
+            self.TRAIN_SPLIT=-1
+            self.TRAIN_SPLIT_VAR.set(self.TRAIN_SPLIT)
+            try:
+                self.TRAIN_SPLIT_label.destroy()
+                self.TRAIN_SPLIT_label=tk.Label(self.root,text='USING CUSTOM TRAIN SPLIT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+                self.TRAIN_SPLIT_label.grid(row=5,column=2,sticky='nw')
+            except:
+                pass
+            self.save_settings()   
+            self.split_objs()
+        self.top.destroy()
+
+    def select_file_INPUT(self,var,title_i):
+        filetypes=(('.INPUT','*.INPUT'),('All files','*.*'))
+        if os.path.exists(var.get()):
+            initialdir_i=os.path.dirname(var.get())
+        elif os.path.exists(self.YOLO_MODEL_PATH):
+            initialdir_i=self.YOLO_MODEL_PATH
+        else:
+            initialdir_i=os.getcwd()
+        self.filename=fd.askopenfilename(title=f'Select the {title_i} file',
+                                    initialdir=initialdir_i,
+                                    filetypes=filetypes)
+        if os.path.exists(self.filename):
+            print(self.filename)
+            var.set(self.filename)
+        showinfo(title='Selected File',
+                 message=self.filename)
+
+    def check_input_list(self,INPUT_LIST,train=False,valid=False,test=False):
+        f=open(INPUT_LIST,'r')
+        f_read=f.readlines()
+        f.close()
+        print('Ensure your INPUT_LIST.txt is of .jpg at the absolute path')
+        input_items=[w.rstrip('\n').replace(' ','') for w in f_read if w.find('.jpg')!=-1]
+        self.check_path=os.path.join(os.path.dirname(self.names_path),'check_paths')
+        if os.path.exists(self.check_path)==False:
+            os.makedirs(self.check_path)
+        WARNING_LIST=[]
+        found_items=[]
+        if len(input_items)>0:
+            
+            for item_i in tqdm(input_items):
+                if item_i not in self.TOTAL_LIST:
+                    WARNING_i=f'WARNING!  {item_i} NOT FOUND in self.TOTAL_LIST, skipping item.\n'
+                    print(WARNING_i)
+                    WARNING_LIST.append(WARNING_i)
+                else:
+                    found_items.append(item_i)
+        
+        if train:
+            self.df.loc[self.df['path_jpeg_dest_i'].isin(list(found_items)),'train']=1.0
+            self.df.loc[~self.df['path_jpeg_dest_i'].isin(list(found_items)),'train']=0.0
+            if len(WARNING_LIST)>0:
+                train_warning=os.path.join(self.check_path,'TRAIN_INPUT_WARNING.OUTPUT')
+                f=open(train_warning,'w')
+                f.writelines([w] for w in WARNING_LIST)
+                f.close()
+        elif valid:
+            self.df.loc[self.df['path_jpeg_dest_i'].isin(list(found_items)),'valid']=1.0
+            self.df.loc[~self.df['path_jpeg_dest_i'].isin(list(found_items)),'valid']=0.0
+            if len(WARNING_LIST)>0:
+                valid_warning=os.path.join(self.check_path,'VALID_INPUT_WARNING.OUTPUT')
+                f=open(valid_warning,'w')
+                f.writelines([w] for w in WARNING_LIST)
+                f.close()
+        elif test:
+            self.df.loc[self.df['path_jpeg_dest_i'].isin(list(found_items)),'test']=1.0
+            self.df.loc[~self.df['path_jpeg_dest_i'].isin(list(found_items)),'test']=0.0
+            if len(WARNING_LIST)>0:
+                test_warning=os.path.join(self.check_path,'TEST_INPUT_WARNING.OUTPUT')
+                f=open(test_warning,'w')
+                f.writelines([w] for w in WARNING_LIST)
+                f.close()
+        
+        count_str=self.pad(self.counts) #must get all annos first
+        self.df_filename=os.path.join(self.path_Yolo,"{}_df_YOLO.pkl".format(count_str))
+        self.df_filename_csv=self.df_filename.replace('.pkl','.csv')
+        self.df.to_pickle(self.df_filename,protocol=2)
+        self.df.to_csv(self.df_filename_csv,index=None)
+        if len(WARNING_LIST)>0:
+            cmd_i=open_cmd+' '+self.check_path
+            self.run_cmd(cmd_i)
+            
+
 
     def split_objs(self):
+
         self.TRAIN_SPLIT=int(self.TRAIN_SPLIT_VAR.get())
+        try:
+            self.TRAIN_SPLIT_label.destroy()
+            self.TRAIN_SPLIT_label=tk.Label(self.root,text='TRAIN SPLIT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.TRAIN_SPLIT_label.grid(row=5,column=2,sticky='nw')
+        except:
+            pass
+
         if self.TRAIN_SPLIT>99:
             self.TRAIN_SPLIT=99
             self.TRAIN_SPLIT_VAR.set(self.TRAIN_SPLIT)
         elif self.TRAIN_SPLIT<0:
-            self.TRAIN_SPLIT=1
-            self.TRAIN_SPLIT_VAR.set(self.TRAIN_SPLIT)           
-        self.TRAIN_LIST=[]
-        self.VAL_LIST=[]
-        f=open(self.names_path,'r')
-        f_read=f.readlines()
-        f.close()
-        self.unique_names=[w.replace('\n','').strip() for w in f_read]
-        self.yolo_files=[os.path.join(self.path_Yolo,w) for w in os.listdir(self.path_Yolo) if w.find('df_YOLO.pkl')!=-1 and w[0]!='.']
-        pprint(self.yolo_files)
-        self.label_counter={}
-        for unique_label in tqdm(self.unique_names):
-            unique_label_count_train=0
-            unique_label_count_val=0
-            for yolo_file_i in tqdm(self.yolo_files):
-                try:
-                    self.df=pd.read_pickle(yolo_file_i)
-                    self.df.to_csv(yolo_file_i.replace('.pkl','.csv'),index=None)
-                except:
-                    self.df=pd.read_csv(yolo_file_i.replace('.pkl','.csv'),index_col=None)
-                self.df=self.df.reset_index().drop('index',axis=1)
-                #pprint(self.df)
-                self.df_i=self.df[self.df['label_i']==unique_label].copy()
-                self.df_i=self.df_i.drop_duplicates().reset_index().drop('index',axis=1)
-                if len(self.df_i)>0:
-                    self.df_i=self.df_i.sample(frac=1,random_state=42) #shuffle all rows 
-                self.df_i=self.df_i.sort_values(by='path_jpeg_dest_i')
-                total_list_i=list(self.df_i['path_jpeg_dest_i'])
-                train_list_i=total_list_i[:int(self.TRAIN_SPLIT*len(self.df_i)/100.)]
-                val_list_i=total_list_i[int(self.TRAIN_SPLIT*len(self.df_i)/100.):]
-                self.TRAIN_LIST+=train_list_i
-                self.VAL_LIST+=val_list_i
-                unique_label_count_train+=len(train_list_i)
-                unique_label_count_val+=len(val_list_i)
-            self.label_counter[unique_label]=[unique_label_count_train,unique_label_count_val]
-        self.VAL_LIST=list(pd.DataFrame(self.VAL_LIST)[0].drop_duplicates())
-        self.TRAIN_LIST=list(pd.DataFrame(self.TRAIN_LIST)[0].drop_duplicates())
-        print(len(self.VAL_LIST)+len(self.TRAIN_LIST))
-        #self.VAL_LIST=set(self.VAL_LIST)-set(self.TRAIN_LIST)
-        if self.TRAIN_SPLIT<50:
-            self.TRAIN_LIST=set(self.TRAIN_LIST)-set(self.VAL_LIST)
-        else:
-            self.TRAIN_LIST=set(self.TRAIN_LIST)-set(self.VAL_LIST)
+            try:
+                self.TRAIN_SPLIT_label.destroy()
+                self.TRAIN_SPLIT_label=tk.Label(self.root,text='USING CUSTOM TRAIN SPLIT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+                self.TRAIN_SPLIT_label.grid(row=5,column=2,sticky='nw')
+            except:
+                pass
+            print('USING CUSTOM SPLIT')
+            self.TRAIN_SPLIT=-1
+            self.TRAIN_SPLIT_VAR.set(self.TRAIN_SPLIT)   
+        if self.TRAIN_SPLIT>0:        
+            self.TRAIN_LIST=[]
+            self.VAL_LIST=[]
+            self.TOTAL_LIST=[]
+            f=open(self.names_path,'r')
+            f_read=f.readlines()
+            f.close()
+            self.unique_names=[w.replace('\n','').strip() for w in f_read]
+            self.yolo_files=[os.path.join(self.path_Yolo,w) for w in os.listdir(self.path_Yolo) if w.find('df_YOLO.pkl')!=-1 and w[0]!='.']
+            pprint(self.yolo_files)
+            self.label_counter={}
+            for unique_label in tqdm(self.unique_names):
+                unique_label_count_train=0
+                unique_label_count_val=0
+                for yolo_file_i in tqdm(self.yolo_files):
+                    try:
+                        self.df=pd.read_pickle(yolo_file_i)
+                        self.df.to_csv(yolo_file_i.replace('.pkl','.csv'),index=None)
+                    except:
+                        self.df=pd.read_csv(yolo_file_i.replace('.pkl','.csv'),index_col=None)
+                    self.df=self.df.reset_index().drop('index',axis=1)
+                    if 'train' not in self.df.columns:
+                        self.df['train']=self.df['path_jpeg_dest_i'].copy()
+                        self.df['train']=0
+                    if 'valid' not in self.df.columns:
+                        self.df['valid']=self.df['path_jpeg_dest_i'].copy()
+                        self.df['valid']=0  
+                    if 'test' not in self.df.columns:
+                        self.df['test']=self.df['path_jpeg_dest_i'].copy()
+                        self.df['test']=0  
+                    self.df_filename=os.path.join(yolo_file_i)
+                    self.df_filename_csv=yolo_file_i.replace('.pkl','.csv')
+                    self.df.to_pickle(self.df_filename,protocol=2)
+                    self.df.to_csv(self.df_filename_csv,index=None)              
+                    #pprint(self.df)
+                    self.df_i=self.df[self.df['label_i']==unique_label].copy()
+                    self.df_i=self.df_i.drop_duplicates().reset_index().drop('index',axis=1)
+                    if len(self.df_i)>0:
+                        self.df_i=self.df_i.sample(frac=1,random_state=42) #shuffle all rows 
+                    self.df_i=self.df_i.sort_values(by='path_jpeg_dest_i')
+                    total_list_i=list(self.df_i['path_jpeg_dest_i'])
+                    train_list_i=total_list_i[:int(self.TRAIN_SPLIT*len(self.df_i)/100.)]
+                    val_list_i=total_list_i[int(self.TRAIN_SPLIT*len(self.df_i)/100.):]
+                    self.TOTAL_LIST+=total_list_i
+                    self.TRAIN_LIST+=train_list_i
+                    self.VAL_LIST+=val_list_i
+                    unique_label_count_train+=len(train_list_i)
+                    unique_label_count_val+=len(val_list_i)
+                self.label_counter[unique_label]=[unique_label_count_train,unique_label_count_val]
+            self.VAL_LIST=list(pd.DataFrame(self.VAL_LIST)[0].drop_duplicates())
+            self.TRAIN_LIST=list(pd.DataFrame(self.TRAIN_LIST)[0].drop_duplicates())
+            print(len(self.VAL_LIST)+len(self.TRAIN_LIST))
             #self.VAL_LIST=set(self.VAL_LIST)-set(self.TRAIN_LIST)
+            if self.TRAIN_SPLIT<50:
+                self.TRAIN_LIST=set(self.TRAIN_LIST)-set(self.VAL_LIST)
+            else:
+                self.TRAIN_LIST=set(self.TRAIN_LIST)-set(self.VAL_LIST)
+                #self.VAL_LIST=set(self.VAL_LIST)-set(self.TRAIN_LIST)
 
-        print('\nIMAGE COUNTS')
-        print('len(self.VAL_LIST) =',len(self.VAL_LIST))
-        print('len(self.TRAIN_LIST) =',len(self.TRAIN_LIST))
-        print('len(self.VAL_LIST)+len(self.TRAIN_LIST) = ',len(self.VAL_LIST)+len(self.TRAIN_LIST))
-        #print('len(self.df["path_jpeg_dest_i"].unique()) =',len(self.df["path_jpeg_dest_i"].unique()))
+            print('\nIMAGE COUNTS')
+            print('len(self.VAL_LIST) =',len(self.VAL_LIST))
+            print('len(self.TRAIN_LIST) =',len(self.TRAIN_LIST))
+            print('len(self.VAL_LIST)+len(self.TRAIN_LIST) = ',len(self.VAL_LIST)+len(self.TRAIN_LIST))
+            #print('len(self.df["path_jpeg_dest_i"].unique()) =',len(self.df["path_jpeg_dest_i"].unique()))
+
+            print('\nOBJECT COUNTS')
+            for label,(count_train,count_val) in self.label_counter.items():
+                print("LABEL={}; TRAIN={}; VALID={}".format(label,count_train,count_val))
+            print(list(self.TRAIN_LIST)[0])
+            #print(self.df.loc[self.df['path_jpeg_dest_i'].isin(list(self.TRAIN_LIST)),'train'])
+            self.df.loc[self.df['path_jpeg_dest_i'].isin(list(self.TRAIN_LIST)),'train']=1.0
+            self.df.loc[~self.df['path_jpeg_dest_i'].isin(list(self.TRAIN_LIST)),'train']=0.0
+            self.df.loc[self.df['path_jpeg_dest_i'].isin(list(self.VAL_LIST)),'valid']=1.0
+            self.df.loc[~self.df['path_jpeg_dest_i'].isin(list(self.VAL_LIST)),'valid']=0.0
+            self.df.loc[(~self.df['path_jpeg_dest_i'].isin(list(self.VAL_LIST))) & (~self.df['path_jpeg_dest_i'].isin(list(self.TRAIN_LIST))),'test']=1.0
+            self.df_filename=os.path.join(yolo_file_i)
+            self.df_filename_csv=yolo_file_i.replace('.pkl','.csv')
+            self.df.to_pickle(self.df_filename,protocol=2)
+            self.df.to_csv(self.df_filename_csv,index=None)  
+        else:
+            self.TRAIN_LIST=list(self.df[self.df['train']==1.0]['path_jpeg_dest_i'])
+            self.VAL_LIST=list(self.df[self.df['valid']==1.0]['path_jpeg_dest_i'])
         f=open(self.train_list_path,'w')
         done=[f.writelines(line+'\n') for line in self.TRAIN_LIST]
         f.close()
         f=open(self.valid_list_path,'w')
         done=[f.writelines(line+'\n') for line in self.VAL_LIST]
         f.close()
-        print('\nOBJECT COUNTS')
-        for label,(count_train,count_val) in self.label_counter.items():
-            print("LABEL={}; TRAIN={}; VALID={}".format(label,count_train,count_val))
-
-        
         self.THRESH_VAR=tk.StringVar()
         self.THRESH_VAR.set(self.THRESH)
         self.THRESH_entry=tk.Entry(self.root,textvariable=self.THRESH_VAR)
@@ -6396,6 +6739,7 @@ class yolo_cfg:
         self.create_yolo_scripts_buttons()
         self.load_yolo_scripts_buttons()
         self.change_obj_names_buttons()
+        self.save_settings()   
 
     def change_obj_names_buttons(self):
         self.change_obj_names_button=Button(self.root,text='Change obj.names',command=self.open_popupwindow_labels,bg=self.root_fg,fg=self.root_bg)
