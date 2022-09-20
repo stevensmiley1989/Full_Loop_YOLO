@@ -118,6 +118,7 @@ Python 3 + Tkinter
     python3 Full_Loop_YOLO.py
 ~~~~~~~
 '''
+from termios import TABDLY
 from pandastable import Table, TableModel
 import os
 from pprint import pprint
@@ -149,6 +150,7 @@ from tkinter import N, ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import NO, showinfo
 from tkinter.tix import Balloon
+import datetime
 DEFAULT_ENCODING = 'utf-8'
 XML_EXT = '.xml'
 ENCODE_METHOD = DEFAULT_ENCODING
@@ -1815,6 +1817,9 @@ class yolo_cfg:
     def send_text_buttons(self):
         self.ck2=tk.Checkbutton(self.root,text='Send Text Message/Email Alerts',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
         self.ck2.grid(row=14,column=3,sticky='n')
+    def send_text_buttons_training(self):
+        self.ck2=tk.Checkbutton(self.top,text='Send Text Message/Email Alerts\n\t after training? \n (FYI, only valid for Multi-Training selections)',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
+        self.ck2.grid(row=18,column=0,sticky='sw')
     def select_yes_no(self,selected):
         if str(selected)=='Yes':
             self.var_overwrite.set('Yes')
@@ -1999,6 +2004,14 @@ class yolo_cfg:
         self.epochs_yolov_entry.grid(row=5,column=2,sticky='sw')
         self.epochs_yolov_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.epochs_yolov_label.grid(row=6,column=2,sticky='nw')
+        self.style4=ttk.Style()
+        self.style4.configure('Normal.TCheckbutton',
+                             background='green',
+                             foreground='black')
+        self.multi_train_yolov4_var=tk.IntVar()
+        self.multi_train_yolov4_var.set(0)
+        self.multi_train_yolov4_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov4_var,onvalue=1, offvalue=0)
+        self.multi_train_yolov4_buttons.grid(row=14-7,column=2,sticky='sw')
 
     def train_yolov4_madness(self):
         if self.epochs_VAR.get()!=self.epochs:
@@ -2957,10 +2970,12 @@ class yolo_cfg:
             self.epochs_yolov7_entry.grid(row=12-7,column=10-7,sticky='sw')
             self.epochs_yolov7_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_yolov7_label.grid(row=13-7,column=10-7,sticky='nw')
-            #self.test_yolov7_mp4()
-            #self.test_yolov7_webcam()
-            #self.test_yolov7_webcam_RTMP()
-            #self.test_yolov7_mAP()
+
+            self.multi_train_yolov7_var=tk.IntVar()
+            self.multi_train_yolov7_var.set(0)
+            self.multi_train_yolov7_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov7_var,onvalue=1, offvalue=0)
+            self.multi_train_yolov7_buttons.grid(row=14-7,column=10-7,sticky='sw')
+
     def train_yolov7_madness(self):
         self.clear_cache_yolov7()
         self.create_test_bash_mp4_yolov7()
@@ -2981,17 +2996,16 @@ class yolo_cfg:
             self.train_yolov7_e6_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.train_yolov7_e6_objs_button_note.grid(row=11-7,column=11-7,sticky='ne')
 
-
-           
-
             self.epochs_yolov7_e6_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_e6_VAR)
             self.epochs_yolov7_e6_entry.grid(row=12-7,column=11-7,sticky='sw')
             self.epochs_yolov7_e6_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_yolov7_e6_label.grid(row=13-7,column=11-7,sticky='nw')
-            #self.test_yolov7_mp4_e6()
-            #self.test_yolov7_webcam_e6()
-            #self.test_yolov7_webcam_e6_RTMP()
-            #self.test_yolov7_mAP_e6()
+
+            self.multi_train_yolov7_e6_var=tk.IntVar()
+            self.multi_train_yolov7_e6_var.set(0)
+            self.multi_train_yolov7_e6_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov7_e6_var,onvalue=1, offvalue=0)
+            self.multi_train_yolov7_e6_buttons.grid(row=14-7,column=11-7,sticky='sw')
+
     def clear_cache_yolov7(self):
         self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
         if os.path.exists(os.path.join(self.YOLO_MODEL_PATH,'train.cache')):
@@ -3000,6 +3014,10 @@ class yolo_cfg:
         if os.path.exists(os.path.join(self.YOLO_MODEL_PATH,'valid.cache')):
             print('Deleting {}'.format(os.path.join(self.YOLO_MODEL_PATH,'valid.cache')))
             os.remove(os.path.join(self.YOLO_MODEL_PATH,'valid.cache'))
+        if os.path.exists(os.path.join(self.YOLO_MODEL_PATH,'test.cache')):
+            print('Deleting {}'.format(os.path.join(self.YOLO_MODEL_PATH,'test.cache')))
+            os.remove(os.path.join(self.YOLO_MODEL_PATH,'test.cache'))
+
     def train_yolov7_e6_madness(self):
         self.clear_cache_yolov7()
         self.create_test_bash_mp4_yolov7_e6()
@@ -3026,6 +3044,11 @@ class yolo_cfg:
             self.epochs_yolov7_re_entry.grid(row=12-7,column=12-7,sticky='sw')
             self.epochs_yolov7_re_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_yolov7_re_label.grid(row=13-7,column=12-7,sticky='nw')
+
+            self.multi_train_yolov7_re_var=tk.IntVar()
+            self.multi_train_yolov7_re_var.set(0)
+            self.multi_train_yolov7_re_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov7_re_var,onvalue=1, offvalue=0)
+            self.multi_train_yolov7_re_buttons.grid(row=14-7,column=12-7,sticky='sw')
             #self.test_yolov7_mp4_re()
             #self.test_yolov7_webcam_re()
             #self.test_yolov7_webcam_re_RTMP()
@@ -3043,10 +3066,11 @@ class yolo_cfg:
             self.epochs_yolov7_x_entry.grid(row=12-7,column=13-7,sticky='sw')
             self.epochs_yolov7_x_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_yolov7_x_label.grid(row=13-7,column=13-7,sticky='nw')
-            #self.test_yolov7_mp4_re()
-            #self.test_yolov7_webcam_re()
-            #self.test_yolov7_webcam_re_RTMP()
-            #self.test_yolov7_mAP_re()
+
+            self.multi_train_yolov7_x_var=tk.IntVar()
+            self.multi_train_yolov7_x_var.set(0)
+            self.multi_train_yolov7_x_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov7_x_var,onvalue=1, offvalue=0)
+            self.multi_train_yolov7_x_buttons.grid(row=14-7,column=13-7,sticky='sw')
 
     def train_yolov7_re_madness(self):
         self.clear_cache_yolov7()
@@ -5401,7 +5425,12 @@ class yolo_cfg:
             input_i='0'+input_i
         return input_i
     def copy_files(self,file_source,file_dest):
-        shutil.copy(file_source,file_dest)
+        if os.path.exists(file_dest):
+            os.remove(file_dest)
+        if os.path.exists(file_source):
+            shutil.copy(file_source,file_dest)
+        else:
+            print(f'file_source {file_source} DOES NOT EXIST')
     def write_Yolo(self,xmin,xmax,ymin,ymax,imgSize,className,path_anno_dest_i):
         classIndex,xcen,ycen,w,h=self.BndBox2Yolo(xmin,xmax,ymin,ymax,imgSize,className)
         yolo_i=" ".join([str(yolo) for yolo in (int(classIndex),xcen,ycen,w,h)])
@@ -5456,9 +5485,14 @@ class yolo_cfg:
                 f_read=f.readlines()
                 f.close()
                 self.current_names={w.replace('\n',''):j for j,w in enumerate(f_read)}
-
-            
-                self.open_popupwindow_labels()
+                try:
+                    loop_status_i=self.train_load_repeat.get()
+                    if loop_status_i!='On':
+                        loop_status_i='None'
+                except:
+                    loop_status_i='None'
+                if loop_status_i=='None':
+                    self.open_popupwindow_labels()
             self.df_gr=self.df_gr.drop_duplicates(subset=['path_anno_i']).reset_index().drop('index',axis=1)
             self.df_gr_filename=self.grep_result_file.replace('.txt','.csv')
             self.df_gr.to_csv(self.df_gr_filename,index=None)
@@ -5743,13 +5777,17 @@ class yolo_cfg:
                         bndbox = object_iter.find("bndbox")
                         label = object_iter.find('name').text
                         if label not in self.found_names.keys():
-                            print('Did not see this label {}\n'.format(label))
+                            ERROR_i='Your model does not support this label "{}" found in this desired file:\n{}\n\n'.format(label,path_anno_i)
+                            print(ERROR_i)
                             if label.replace('augmentation_','') in self.found_names.keys():
                                 print('Removing the augmentation_ from the label found')
                                 label=label.replace('augmentation_','')
                             else:
                                 print('ERROR FOUND WITH LABEL')
                                 self.ERROR_FOUND=True
+                                f=open(self.check_path_ERROR_LABEL,'a')
+                                f.writelines(ERROR_i)
+                                f.close()
                             
                         xmin = int(float(bndbox.find('xmin').text))
                         ymin = int(float(bndbox.find('ymin').text))
@@ -5805,6 +5843,51 @@ class yolo_cfg:
             self.var_overwrite.set('Yes')
             self.convert_PascalVOC_to_YOLO()
             self.split_objs()
+    def send_training_update(self,main_message_i,img_path_i):
+        if self.sec.get()=='y':
+            self.destination_list_final=''
+            for w_var in self.phone_dic_trigger_var.values():
+                var_i=w_var.get()
+                if var_i!='None':
+                    self.destination_list_final=self.destination_list_final+";"+var_i
+            self.destination_list_final='"'+self.destination_list_final.lstrip(';')+'"' 
+            if os.path.exists('resources/send_image_to_cell.py'):
+                if os.path.exists(img_path_i):
+                    cmd_i='python3 resources/send_image_to_cell.py'+' --destinations={} --main_message="{}" --img_path="{}" --default_prefix="SUCCESS"\n'.format(self.destination_list_final,main_message_i,img_path_i)
+                else:
+                    cmd_i='python3 resources/send_image_to_cell.py'+' --destinations={} --main_message="{}" --img_path="resources/icons/cancel.png" --default_prefix="FAILED"\n'.format(self.destination_list_final,main_message_i.replace('Finished','Failed'))
+                Thread(target=self.run_cmd,args=(cmd_i,)).start()
+    def multi_train_load(self):
+        self.train_load_repeat.set('None')
+        if self.multi_train_yolov4_var.get()==1:
+            self.train_yolov4()
+            main_message_i=f'Finished Training Yolov4 at {str(datetime.datetime.now())}'
+            img_path_i=os.path.join(self.darknet_path,'chart_'+os.path.basename(self.best_weights_path).split('.')[0]+'.png')
+            self.send_training_update(main_message_i,img_path_i)
+        if os.path.exists('libs/yolov7_path.py'):
+            if self.multi_train_yolov7_var.get()==1:
+                self.train_yolov7_cmd()
+                main_message_i=f'Finished Training Yolov7-tiny at {str(datetime.datetime.now())}'
+                img_path_i=os.path.join(self.yolov7_path_name,'results.png')
+                self.send_training_update(main_message_i,img_path_i)
+            if self.multi_train_yolov7_x_var.get()==1:
+                self.train_yolov7_x_cmd()
+                main_message_i=f'Finished Training Yolov7x at {str(datetime.datetime.now())}'
+                img_path_i=os.path.join(self.yolov7_path_name_x,'results.png')
+                self.send_training_update(main_message_i,img_path_i)
+            if self.multi_train_yolov7_re_var.get()==1:
+                self.train_yolov7_re_cmd()
+                main_message_i=f'Finished Training Yolov7 at {str(datetime.datetime.now())}'
+                img_path_i=os.path.join(self.yolov7_path_name_re,'results.png')
+                self.send_training_update(main_message_i,img_path_i)
+            if self.multi_train_yolov7_e6_var.get()==1:
+                self.train_yolov7_e6_cmd()
+                main_message_i=f'Finished Training Yolov7e6 at {str(datetime.datetime.now())}'
+                img_path_i=os.path.join(self.yolov7_path_name_e6,'results.png')
+                self.send_training_update(main_message_i,img_path_i)
+        else:
+            pass
+
 
     def popupWindow_TRAIN(self):
         try:
@@ -5812,18 +5895,31 @@ class yolo_cfg:
         except:
             pass
         self.top=tk.Toplevel(self.root)
-        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.5),int(self.root.winfo_screenheight()*0.95//1.5)) )
+        self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1),int(self.root.winfo_screenheight()*0.95//2.0)) )
         self.top.configure(background = 'black')
         self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
-        self.b.grid(row=0,column=0,sticky='se')
+        self.b.grid(row=0,column=0,sticky='sw')
         self.test_yolov4_note=tk.Label(self.top,text='{}'.format(self.var_yolo_choice.get().replace('-','\n-')),bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
         self.test_yolov4_note.grid(row=2,column=2,sticky='s')
+
+        #send updates via text/email
+        self.send_text_buttons_training()
 
         #TD Loop Loading Objects
         self.train_load_repeat=tk.StringVar()
         self.train_load_repeat.set('None')
-        self.loop_load_check=tk.Checkbutton(self.top,text='{}'.format('Train/Load Repeat?'),variable=self.train_load_repeat,onvalue="On",offvalue='None',bg='white',fg='blue')
-        self.loop_load_check.grid(row=1,column=2,sticky='s')
+        self.style4=ttk.Style()
+        self.style4.configure('Normal.TCheckbutton',
+                             background='green',
+                             foreground='black')
+        self.loop_load_check=ttk.Checkbutton(self.top,style='Normal.TCheckbutton',text='{}'.format('''Train/Load Repeat?
+        Only valid for training 1 model type at a time.
+        \n Allows you to continue updating data the model trains on.  \n i.e. with a webscraper to self-supervise learn from.'''),variable=self.train_load_repeat,onvalue="On",offvalue='None')
+        self.loop_load_check.grid(row=0,column=10,sticky='sw',pady='20',padx='20')
+
+        #TD train multiple models in series
+        self.multi_load_buttons=Button(self.top,text='Run Selected Multi-Trains in Series?',command=self.multi_train_load,bg=self.root_bg,fg=self.root_fg)
+        self.multi_load_buttons.grid(row=14-7,column=0,sticky='sw')   
 
         #TD TRAIN yolov4
         self.train_yolo()
@@ -6225,13 +6321,119 @@ class yolo_cfg:
         except:
             print('Invalid sleep time of {}\n should be int/float'.format(sleep_time_i))
             self.sleep_time_chips_VAR.set('30')
+        
     def cleanup_RTSP(self):
         self.USE_RTSP_CLIENT_VAR.set(self.USE_RTSP_CLIENT_VAR.get())
         self.SOCKET_PREFIX=self.SOCKET_PREFIX_VAR.get()
         self.top.destroy()
+    def check_for_xml(self,path_i):
+        if os.path.exists(path_i):
+            contents=os.listdir(path_i)
+            contents=[w for w in contents if w.find('.xml')!=-1]
+            if len(contents)>0:
+                return path_i
+            else:
+                print('trying to search for Annotations above specified directory')
+                if os.path.exists(os.path.join(os.path.dirname(path_i),'Annotations')):
+                    path_j=os.path.join(os.path.dirname(path_i),'Annotations')
+                    contents=os.listdir(path_j)
+                    contents=[w for w in contents if w.find('.xml')!=-1]
+                    if len(contents)>0:
+                        return path_j
+                    else:
+                        return 'NOT_VALID'
+        else:
+            return 'NOT_VALID'
+    def convert_PascalVOC_to_YOLO_TEST(self,test_path):
+        self.ERROR_FOUND=False
+        self.check_path=os.path.join(os.path.dirname(self.names_path),'check_paths')
+        if os.path.exists(self.check_path)==False:
+            os.makedirs(self.check_path)
+        self.check_path_ERROR_LABEL=os.path.join(self.check_path,'check_labels_for_predictions.OUTPUT')
+        if os.path.exists(self.check_path_ERROR_LABEL):
+            os.remove(self.check_path_ERROR_LABEL)
+        if os.path.exists(str(self.path_predJPEGImages)):
+            self.path_predAnnotations=self.check_for_xml(self.path_predJPEGImages)
+            if os.path.exists(self.path_predAnnotations):
+                print('FOUND PREDICTION ANNOTATIONS DIRECTORY')
+                print(self.path_predAnnotations)
+                self.path_predYolo=os.path.join(os.path.dirname(self.path_predAnnotations),'Yolo_Objs')
+                if os.path.exists(self.path_predYolo)==False:
+                    os.makedirs(self.path_predYolo)
+                #self.Yolo_pred_stuff=os.listdir(self.path_Yolo_pred)
+                f=open(test_path,'r')
+                f_read=f.readlines()
+                f.close()
+                test_list=[os.path.basename(w.rstrip('\n').replace(' ','')).split('.')[0] for w in f_read]
+                #self.predAnnos=os.listdir(self.path_predAnnotations)
+                self.predAnnos=[os.path.join(self.path_predAnnotations,w+'.xml') for w in test_list]
+                #self.predJPEGs=os.listdir(self.path_predJPEGImages)
+                self.predJPEGs=[os.path.join(self.path_predJPEGImages,w+'.jpg') for w in test_list]
+                #tmp=[shutil.copy(os.path.join(self.path_predAnnotations,w),self.path_predYolo) for w in self.predAnnos]
+                #tmp=[shutil.copy(os.path.join(self.path_predJPEGImages,w),self.path_predYolo) for w in self.predJPEGs]
+                #self.found_names
+                for jpg_i in tqdm(self.predJPEGs):
+                    if os.path.exists(os.path.join(self.path_predYolo,os.path.basename(jpg_i)))==False:
+                        shutil.copy(jpg_i,self.path_predYolo)
+                for anno in tqdm(self.predAnnos):
+                    self.read_XML_VALID(anno)
+                    if self.ERROR_FOUND==True:
+
+                        break
+
+                if self.ERROR_FOUND==False:                
+                    self.predYolo=os.listdir(self.path_predYolo)
+
+                    self.TEST_LIST=[os.path.join(self.path_predYolo,w) for w in self.predYolo if w.find('.jpg')!=-1 and w.split('.')[0] in test_list]
+                    self.test_list_path=os.path.join(os.path.dirname(self.valid_list_path),'test.txt')
+                    f=open(self.test_list_path,'w')
+                    done=[f.writelines(line+'\n') for line in self.TEST_LIST]
+                    f.close()
+                    self.img_list_path=self.test_list_path
+                    os.system(f'xdg-open {self.test_list_path}')
+                else:
+                    ERROR_i='\nERROR was found with given label in annotation, you can only predict off the images without metrics.'  
+                    ERROR_i+=f'\n There could be more in this directory,\n{os.path.dirname(anno)}\n, but stopped at the first found.'
+                    ERROR_i+='\n  Options to proceed with your desired directory of images are:\n'
+                    ERROR_i+='\t 1) use MOSAIC_Chip_Sorter.py to create New Dataset that conforms to your model by removing the labels, using the "16. Change Labels" button.  Caution to backup the dataset before changing.\n'
+                    ERROR_i+='\t 2) manually adjust the files with sed replace in the command line or however else you desire.\n'
+                    print(ERROR_i)
+                    f=open(self.check_path_ERROR_LABEL,'a')
+                    f.writelines(ERROR_i)
+                    f.close()
+                    cmd_i=open_cmd+' '+self.check_path
+                    self.run_cmd(cmd_i)
+                    cmd_i=open_cmd+' '+self.check_path_ERROR_LABEL
+                    self.run_cmd(cmd_i)
+            else:
+                ERROR_i=f'No Annotations directory found with JPEGImages directory at\n {self.path_predAnnotations}\n'
+                print(ERROR_i)
+                f=open(self.check_path_ERROR_LABEL,'a')
+                f.writelines(ERROR_i)
+                f.close()
+                cmd_i=open_cmd+' '+self.check_path
+                self.run_cmd(cmd_i)
+                cmd_i=open_cmd+' '+self.check_path_ERROR_LABEL
+                self.run_cmd(cmd_i)
+        else:
+            ERROR_i=f'ERROR, JPEGImages directory does NOT exist at\n {self.path_predJPEGImages}\n'
+            print(ERROR_i)
+            f=open(self.check_path_ERROR_LABEL,'a')
+            f.writelines(ERROR_i)
+            f.close()
+            cmd_i=open_cmd+' '+self.check_path
+            self.run_cmd(cmd_i)
+            cmd_i=open_cmd+' '+self.check_path_ERROR_LABEL
+            self.run_cmd(cmd_i)
 
     def convert_PascalVOC_to_YOLO_VALID(self):
         self.ERROR_FOUND=False
+        self.check_path=os.path.join(os.path.dirname(self.names_path),'check_paths')
+        if os.path.exists(self.check_path)==False:
+            os.makedirs(self.check_path)
+        self.check_path_ERROR_LABEL=os.path.join(self.check_path,'check_labels_for_predictions.OUTPUT')
+        if os.path.exists(self.check_path_ERROR_LABEL):
+            os.remove(self.check_path_ERROR_LABEL)
         if os.path.exists(str(self.path_predJPEGImages)):
             self.path_predAnnotations=self.path_predJPEGImages.replace('JPEGImages','Annotations')
             if os.path.exists(self.path_predAnnotations):
@@ -6248,10 +6450,12 @@ class yolo_cfg:
                 #tmp=[shutil.copy(os.path.join(self.path_predJPEGImages,w),self.path_predYolo) for w in self.predJPEGs]
                 #self.found_names
                 for jpg_i in tqdm(self.predJPEGs):
-                    shutil.copy(jpg_i,self.path_predYolo)
+                    if os.path.exists(os.path.join(self.path_predYolo,os.path.basename(jpg_i)))==False:
+                        shutil.copy(jpg_i,self.path_predYolo)
                 for anno in tqdm(self.predAnnos):
                     self.read_XML_VALID(anno)
                     if self.ERROR_FOUND==True:
+
                         break
 
                 if self.ERROR_FOUND==False:                
@@ -6263,11 +6467,39 @@ class yolo_cfg:
                     f.close()
                     self.img_list_path=self.valid_list_path
                 else:
-                    print('ERROR was found with given label in annotation, you can only predict off the images without metrics')
+                    ERROR_i='\nERROR was found with given label in annotation, you can only predict off the images without metrics.'  
+                    ERROR_i+=f'\n There could be more in this directory,\n{os.path.dirname(anno)}\n, but stopped at the first found.'
+                    ERROR_i+='\n  Options to proceed with your desired directory of images are:\n'
+                    ERROR_i+='\t 1) use MOSAIC_Chip_Sorter.py to create New Dataset that conforms to your model by removing the labels, using the "16. Change Labels" button.  Caution to backup the dataset before changing.\n'
+                    ERROR_i+='\t 2) manually adjust the files with sed replace in the command line or however else you desire.\n'
+                    print(ERROR_i)
+                    f=open(self.check_path_ERROR_LABEL,'a')
+                    f.writelines(ERROR_i)
+                    f.close()
+                    cmd_i=open_cmd+' '+self.check_path
+                    self.run_cmd(cmd_i)
+                    cmd_i=open_cmd+' '+self.check_path_ERROR_LABEL
+                    self.run_cmd(cmd_i)
             else:
-                print('No Annotations directory found with JPEGImages directory')
+                ERROR_i=f'No Annotations directory found with JPEGImages directory at\n {self.path_predAnnotations}\n'
+                print(ERROR_i)
+                f=open(self.check_path_ERROR_LABEL,'a')
+                f.writelines(ERROR_i)
+                f.close()
+                cmd_i=open_cmd+' '+self.check_path
+                self.run_cmd(cmd_i)
+                cmd_i=open_cmd+' '+self.check_path_ERROR_LABEL
+                self.run_cmd(cmd_i)
         else:
-            print('ERROR, JPEGImages directory does NOT exist')
+            ERROR_i=f'ERROR, JPEGImages directory does NOT exist at\n {self.path_predJPEGImages}\n'
+            print(ERROR_i)
+            f=open(self.check_path_ERROR_LABEL,'a')
+            f.writelines(ERROR_i)
+            f.close()
+            cmd_i=open_cmd+' '+self.check_path
+            self.run_cmd(cmd_i)
+            cmd_i=open_cmd+' '+self.check_path_ERROR_LABEL
+            self.run_cmd(cmd_i)
     def convert_PascalVOC_to_YOLO(self):
         self.grep_annos_labels()
         if len(self.df)>0:
@@ -6317,7 +6549,7 @@ class yolo_cfg:
 
         self.split_yolo_objs_button=Button(self.root,image=self.icon_divide,command=self.split_objs,bg=self.root_bg,fg=self.root_fg)
         self.split_yolo_objs_button.grid(row=4,column=1,sticky='se')
-        self.split_yolo_objs_button_note=tk.Label(self.root,text='2.b \n Split Train/Test Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.split_yolo_objs_button_note=tk.Label(self.root,text='2.b \n Split Train/Valid Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.split_yolo_objs_button_note.grid(row=5,column=1,sticky='ne')
         self.SHOWTABLE_BUTTONS()
         self.TOTAL_LIST=list(self.df['path_jpeg_dest_i'])
@@ -6411,6 +6643,56 @@ class yolo_cfg:
         if test_path!='None' and os.path.exists(test_path):
             self.check_input_list(test_path,test=True)
             self.custom_inputs_valid=True
+            count=0
+            count_MAX=2
+            while count<count_MAX: 
+                f=open(test_path,'r')
+                f_read=f.readlines()
+                f.close()
+                
+                if len(f_read)>0:
+                    if f_read[0].find('.jpg')!=-1 or f_read[0].find('.xml')!=-1 or f_read[0].find('.txt')!=-1:
+                        print(f'FOUND:\n {f_read[0]}')
+                        if os.path.exists(os.path.dirname(f_read[0].split('.')[0])):
+                            folder_i=os.path.dirname(f_read[0].split('.')[0])
+                            try:
+                                self.open_predjpeg_label_var.set(folder_i)
+                                self.open_predjpeg_label.destroy()
+                                del self.open_predjpeg_label
+                            except:
+                                print('COULD NOT delte self.open_predjpeg_label_var')
+                                pass
+                            try:
+                                cmd_i=open_cmd+" '{}'".format(self.open_predjpeg_label_var.get())
+                                self.open_predjpeg_label=Button(self.root,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+                                self.open_predjpeg_label.grid(row=10+11,column=5,columnspan=50,sticky='sw')
+                            except:
+                                print('COULD NOT self.open_predjpeg_label')
+                                pass
+                            try:
+                                self.path_predJPEGImages=folder_i
+                                print(self.path_predJPEGImages)   
+
+                                self.img_list_path=test_path
+
+                                self.convert_PascalVOC_to_YOLO_TEST(test_path)
+                            except:
+                                print('COULD NOT create img_list.txt')
+                                pass
+                            count=count_MAX
+                        else:
+                            print(f"This does not exist though {os.path.dirname(f_read[0].split('.')[0])}")
+                            count+=1
+                            f_new=[os.path.join(os.path.dirname(test_path),os.path.basename(w.rstrip('\n').replace(' ',''))) for w in f_read]
+                            f_new=[w for w in f_new if os.path.exists(w)]
+                            if len(f_new)==len(f_read):
+                                f=open(test_path,'w')
+                                [f.writelines(w+'\n') for w in f_new]
+                                f.close()
+                                print('Trying this again with a fix.')
+                else:
+                    count=count_MAX
+
         if (valid_path=='None' or os.path.exists(valid_path)==False) and (test_path=='None' or os.path.exists(test_path)==False):
             self.df.loc[self.df['train']==1.0,'valid']=0.0
             self.df.loc[self.df['train']==1.0,'test']=0.0
@@ -6557,39 +6839,46 @@ class yolo_cfg:
             os.makedirs(self.check_path)
         WARNING_LIST=[]
         found_items=[]
+        if 'basename' not in self.df.columns:
+            self.df['basename']=[os.path.basename(w).split('.')[0] for w in self.df['path_jpeg_dest_i']]
+        self.TOTAL_LIST_BASE=[os.path.basename(w).split('.')[0] for w in self.TOTAL_LIST]
         if len(input_items)>0:
             
             for item_i in tqdm(input_items):
-                if item_i not in self.TOTAL_LIST:
-                    WARNING_i=f'WARNING!  {item_i} NOT FOUND in self.TOTAL_LIST, skipping item.\n'
-                    print(WARNING_i)
+                item_j=os.path.basename(item_i).split('.')[0]
+                if item_j not in self.TOTAL_LIST_BASE:
+                    WARNING_i=f'WARNING!  \n{item_i}\n NOT FOUND in self.TOTAL_LIST, skipping item.\n\n'
+                    #print(WARNING_i)
                     WARNING_LIST.append(WARNING_i)
                 else:
-                    found_items.append(item_i)
+                    found_items.append(item_j)
         
         if train:
-            self.df.loc[self.df['path_jpeg_dest_i'].isin(list(found_items)),'train']=1.0
-            self.df.loc[~self.df['path_jpeg_dest_i'].isin(list(found_items)),'train']=0.0
+            self.df.loc[self.df['basename'].isin(list(found_items)),'train']=1.0
+            self.df.loc[~self.df['basename'].isin(list(found_items)),'train']=0.0
             if len(WARNING_LIST)>0:
                 train_warning=os.path.join(self.check_path,'TRAIN_INPUT_WARNING.OUTPUT')
                 f=open(train_warning,'w')
-                f.writelines([w] for w in WARNING_LIST)
+                print(WARNING_LIST[0])
+                [f.writelines(w) for w in WARNING_LIST]
                 f.close()
         elif valid:
-            self.df.loc[self.df['path_jpeg_dest_i'].isin(list(found_items)),'valid']=1.0
-            self.df.loc[~self.df['path_jpeg_dest_i'].isin(list(found_items)),'valid']=0.0
+            self.df.loc[self.df['basename'].isin(list(found_items)),'valid']=1.0
+            self.df.loc[~self.df['basename'].isin(list(found_items)),'valid']=0.0
             if len(WARNING_LIST)>0:
                 valid_warning=os.path.join(self.check_path,'VALID_INPUT_WARNING.OUTPUT')
                 f=open(valid_warning,'w')
-                f.writelines([w] for w in WARNING_LIST)
+                print(WARNING_LIST[0])
+                [f.writelines(w) for w in WARNING_LIST]
                 f.close()
         elif test:
-            self.df.loc[self.df['path_jpeg_dest_i'].isin(list(found_items)),'test']=1.0
-            self.df.loc[~self.df['path_jpeg_dest_i'].isin(list(found_items)),'test']=0.0
+            self.df.loc[self.df['basename'].isin(list(found_items)),'test']=1.0
+            self.df.loc[~self.df['basename'].isin(list(found_items)),'test']=0.0
             if len(WARNING_LIST)>0:
                 test_warning=os.path.join(self.check_path,'TEST_INPUT_WARNING.OUTPUT')
                 f=open(test_warning,'w')
-                f.writelines([w] for w in WARNING_LIST)
+                print(WARNING_LIST[0])
+                [f.writelines(w) for w in WARNING_LIST]
                 f.close()
         
         count_str=self.pad(self.counts) #must get all annos first
@@ -6619,7 +6908,8 @@ class yolo_cfg:
         elif self.TRAIN_SPLIT<0:
             try:
                 self.TRAIN_SPLIT_label.destroy()
-                self.TRAIN_SPLIT_label=tk.Label(self.root,text='USING CUSTOM TRAIN SPLIT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+                self.custom_split_count=np.round(len(self.df[self.df['train']==1])/len(self.df['train']),2)
+                self.TRAIN_SPLIT_label=tk.Label(self.root,text=f'USING CUSTOM TRAIN SPLIT of {self.custom_split_count}',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
                 self.TRAIN_SPLIT_label.grid(row=5,column=2,sticky='nw')
             except:
                 pass
@@ -6708,6 +6998,12 @@ class yolo_cfg:
         else:
             self.TRAIN_LIST=list(self.df[self.df['train']==1.0]['path_jpeg_dest_i'])
             self.VAL_LIST=list(self.df[self.df['valid']==1.0]['path_jpeg_dest_i'])
+            if len(list(self.VAL_LIST))==0:
+                print('Required to have at least 1 valid.  Putting a train sample to prevent issues.')
+                self.df.at[0,'valid']=1.0
+                self.df.to_pickle(self.df_filename,protocol=2)
+                self.df.to_csv(self.df_filename_csv,index=None)  
+                self.VAL_LIST=list(self.df[self.df['valid']==1.0]['path_jpeg_dest_i'])
         f=open(self.train_list_path,'w')
         done=[f.writelines(line+'\n') for line in self.TRAIN_LIST]
         f.close()
