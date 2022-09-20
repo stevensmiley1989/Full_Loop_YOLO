@@ -514,60 +514,62 @@ def compute_map(path_JPEGS_GT,path_Anno_GT,path_Anno_Pred,obj_names_path,result_
         img_i=os.path.join(path_JPEGS_GT,k+'.jpg')
         anno_i=os.path.join(path_Anno_GT,k+'.xml')
         pred_i=os.path.join(path_Anno_Pred,k+'.xml')
-        
-        if v in result_lists_plot_pred.keys() and v in result_lists_plot_gt.keys():
-            #print(result_lists_plot_pred[v])
-            #print(result_lists_plot_gt[v])
-            cm.process_batch(result_lists_plot_pred[v],result_lists_plot_gt[v])
-            matrix_i=cm.process_batch_for_analysis(result_lists_plot_pred[v],result_lists_plot_gt[v])
-            df.at[v,'path_JPEGS_GT']=img_i
-            df.at[v,'path_Anno_GT']=anno_i
-            df.at[v,'path_Anno_Pred']=pred_i
-            df.at[v,'prediction_box']=result_lists_plot_pred[v]
-            df.at[v,'ground_truth_box']=result_lists_plot_gt[v]
-            df.at[v,'matrix']=matrix_i
-            #print(matrix_i.shape)
-            try:
-                matrix_j=np.matrix(matrix_i).reshape(mdim,mdim)
-            except:
-                matrix_j=np.zeros((len(names.keys()) + 1, len(names.keys()) + 1)).reshape(mdim,mdim)
-            df.at[v,'acc']=100.0*(matrix_j.diagonal().sum()/matrix_j.sum())
-            df.at[v,'tp']=matrix_j.diagonal().sum()
-            df.at[v,'fp']=matrix_j.T[-1].sum()
-            df.at[v,'fn']=matrix_j[-1].sum()
-            df.at[v,'tn']=matrix_j.sum()-matrix_j.diagonal().sum()-matrix_j.T[-1].sum()-matrix_j[-1].sum()
-        elif v in result_lists_plot_gt.keys():
-            matrix_i=np.zeros((len(names.keys()) + 1, len(names.keys()) + 1))
-            df.at[v,'path_JPEGS_GT']=img_i
-            df.at[v,'path_Anno_GT']=anno_i
-            df.at[v,'path_Anno_Pred']='None'
-            df.at[v,'prediction_box']=[]
-            df.at[v,'ground_truth_box']=result_lists_plot_gt[v]
-            df.at[v,'matrix']=matrix_i
-            df.at[v,'acc']=0.0
-            df.at[v,'tp']=0.0
-            df.at[v,'fp']=0.0
-            df.at[v,'fn']=np.matrix(result_lists_plot_gt[v]).shape[-1]
-            df.at[v,'tn']=0.0
-            pass
-            #print('NOT FOUND in result_lists_plot_pred.keys(), but found in result_lits_gt.keys()',k)
-            #cm.process_batch(np.zeros_like(np.arange(5)),result_lists_plot_gt[v])
-        else:
-            matrix_i=np.zeros((len(names.keys()) + 1, len(names.keys()) + 1))
-            df.at[v,'path_JPEGS_GT']=img_i
-            df.at[v,'path_Anno_GT']='None'
-            df.at[v,'path_Anno_Pred']=pred_i
-            df.at[v,'prediction_box']=result_lists_plot_pred[v]
-            df.at[v,'ground_truth_box']=[]
-            df.at[v,'matrix']=matrix_i
-            df.at[v,'acc']=0.0
-            df.at[v,'tp']=0.0
-            df.at[v,'fp']=0.0
-            df.at[v,'fn']=0.0
-            df.at[v,'tn']=0.0
-            pass
-            #print('NOT FOUND in result_lists_plot_gt.keys(), but found in result_lits_pred.keys()',k)
-            #cm.process_batch(result_lists_plot_pred[v],np.zeros_like(np.arange(6)))
+        try:
+            if v in result_lists_plot_pred.keys() and v in result_lists_plot_gt.keys():
+                #print(result_lists_plot_pred[v])
+                #print(result_lists_plot_gt[v])
+                cm.process_batch(result_lists_plot_pred[v],result_lists_plot_gt[v])
+                matrix_i=cm.process_batch_for_analysis(result_lists_plot_pred[v],result_lists_plot_gt[v])
+                df.at[v,'path_JPEGS_GT']=img_i
+                df.at[v,'path_Anno_GT']=anno_i
+                df.at[v,'path_Anno_Pred']=pred_i
+                df.at[v,'prediction_box']=result_lists_plot_pred[v]
+                df.at[v,'ground_truth_box']=result_lists_plot_gt[v]
+                df.at[v,'matrix']=matrix_i
+                #print(matrix_i.shape)
+                try:
+                    matrix_j=np.matrix(matrix_i).reshape(mdim,mdim)
+                except:
+                    matrix_j=np.zeros((len(names.keys()) + 1, len(names.keys()) + 1)).reshape(mdim,mdim)
+                df.at[v,'acc']=100.0*(matrix_j.diagonal().sum()/matrix_j.sum())
+                df.at[v,'tp']=matrix_j.diagonal().sum()
+                df.at[v,'fp']=matrix_j.T[-1].sum()
+                df.at[v,'fn']=matrix_j[-1].sum()
+                df.at[v,'tn']=matrix_j.sum()-matrix_j.diagonal().sum()-matrix_j.T[-1].sum()-matrix_j[-1].sum()
+            elif v in result_lists_plot_gt.keys():
+                matrix_i=np.zeros((len(names.keys()) + 1, len(names.keys()) + 1))
+                df.at[v,'path_JPEGS_GT']=img_i
+                df.at[v,'path_Anno_GT']=anno_i
+                df.at[v,'path_Anno_Pred']='None'
+                df.at[v,'prediction_box']=[]
+                df.at[v,'ground_truth_box']=result_lists_plot_gt[v]
+                df.at[v,'matrix']=matrix_i
+                df.at[v,'acc']=0.0
+                df.at[v,'tp']=0.0
+                df.at[v,'fp']=0.0
+                df.at[v,'fn']=np.matrix(result_lists_plot_gt[v]).shape[-1]
+                df.at[v,'tn']=0.0
+                pass
+                #print('NOT FOUND in result_lists_plot_pred.keys(), but found in result_lits_gt.keys()',k)
+                #cm.process_batch(np.zeros_like(np.arange(5)),result_lists_plot_gt[v])
+            else:
+                matrix_i=np.zeros((len(names.keys()) + 1, len(names.keys()) + 1))
+                df.at[v,'path_JPEGS_GT']=img_i
+                df.at[v,'path_Anno_GT']='None'
+                df.at[v,'path_Anno_Pred']=pred_i
+                df.at[v,'prediction_box']=result_lists_plot_pred[v]
+                df.at[v,'ground_truth_box']=[]
+                df.at[v,'matrix']=matrix_i
+                df.at[v,'acc']=0.0
+                df.at[v,'tp']=0.0
+                df.at[v,'fp']=0.0
+                df.at[v,'fn']=0.0
+                df.at[v,'tn']=0.0
+                pass
+                #print('NOT FOUND in result_lists_plot_gt.keys(), but found in result_lits_pred.keys()',k)
+                #cm.process_batch(result_lists_plot_pred[v],np.zeros_like(np.arange(6)))
+        except:
+            print(f'Issue with {k} {v}')
     df_filename=os.path.join(save_dir,'df_results.csv')
     df.to_csv(df_filename,index=None)
 
