@@ -158,6 +158,7 @@ from resources import switch_basepath
 from resources import create_img_list
 from resources import create_imgs_from_video
 import socket
+import re
 global return_to_main,use_preselected_setting
 return_to_main=True
 use_preselected_setting=False
@@ -757,6 +758,20 @@ class yolo_cfg:
         # self.root.deiconify()
 
         self.remaining_buttons_clicked=True
+        self.train_yolo_gpu=tk.StringVar()
+        self.train_yolo_gpu.set('0')
+
+        self.train_yolov7_gpu=tk.StringVar()
+        self.train_yolov7_gpu.set('0')
+
+        self.train_yolov7_re_gpu=tk.StringVar()
+        self.train_yolov7_re_gpu.set('0')
+
+        self.train_yolov7_x_gpu=tk.StringVar()
+        self.train_yolov7_x_gpu.set('0')
+
+        self.train_yolov7_e6_gpu=tk.StringVar()
+        self.train_yolov7_e6_gpu.set('0')
 
 
     #Buttons
@@ -2000,6 +2015,18 @@ class yolo_cfg:
             self.epochs_entry.grid(row=21,column=0,sticky='se')
             self.epochs_label=tk.Label(self.root,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_label.grid(row=22,column=0,sticky='ne')
+
+        try:
+            self.train_yolo_gpu_entry.destroy()
+            self.train_yolo_gpu_label.destroy()
+        except:
+            pass
+
+        self.train_yolo_gpu_entry=tk.Entry(self.top,textvariable=self.train_yolo_gpu)
+        self.train_yolo_gpu_entry.grid(row=10,column=2,sticky='sw')
+        self.train_yolo_gpu_label=tk.Label(self.top,text='gpus (i.e., 0,1,2)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.train_yolo_gpu_label.grid(row=11,column=2,sticky='nw')
+
         self.epochs_yolov_entry=tk.Entry(self.top,textvariable=self.epochs_VAR)
         self.epochs_yolov_entry.grid(row=5,column=2,sticky='sw')
         self.epochs_yolov_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
@@ -2074,6 +2101,8 @@ class yolo_cfg:
 
 
     def train_yolov4(self):
+        if self.train_yolo_gpu.get()!='0':
+            self.create_train_bash() #new add 9/20/22
         self.move_yolov4_chart()
         self.train_yolov4_madness()
         
@@ -3014,12 +3043,22 @@ class yolo_cfg:
             self.train_yolov7_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.train_yolov7_objs_button_note.grid(row=11-7,column=10-7,sticky='ne')
 
+            try:
+                self.train_yolov7_gpu_entry.destroy()
+                self.train_yolov7_gpu_label.destroy()
+            except:
+                pass
 
+            self.train_yolov7_gpu_entry=tk.Entry(self.top,textvariable=self.train_yolov7_gpu)
+            self.train_yolov7_gpu_entry.grid(row=10,column=10-7,sticky='sw')
+            self.train_yolov7_gpu_label=tk.Label(self.top,text='gpus (i.e., 0,1,2)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.train_yolov7_gpu_label.grid(row=11,column=10-7,sticky='nw')
 
             self.epochs_yolov7_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_VAR)
             self.epochs_yolov7_entry.grid(row=12-7,column=10-7,sticky='sw')
             self.epochs_yolov7_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_yolov7_label.grid(row=13-7,column=10-7,sticky='nw')
+
 
             self.multi_train_yolov7_var=tk.IntVar()
             self.multi_train_yolov7_var.set(0)
@@ -3032,6 +3071,7 @@ class yolo_cfg:
         self.create_train_bash_yolov7()
         self.save_settings()
     def train_yolov7_cmd(self):
+        self.train_yolov7_madness()
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7)
         if self.train_load_repeat.get()=='None':
             self.move_train_valid_list(self.yolov7_path_name)
@@ -3046,6 +3086,18 @@ class yolo_cfg:
             self.train_yolov7_e6_objs_button.grid(row=10-7,column=11-7,sticky='se')
             self.train_yolov7_e6_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.train_yolov7_e6_objs_button_note.grid(row=11-7,column=11-7,sticky='ne')
+
+
+            try:
+                self.train_yolov7_e6_gpu_entry.destroy()
+                self.train_yolov7_e6_gpu_label.destroy()
+            except:
+                pass
+
+            self.train_yolov7_e6_gpu_entry=tk.Entry(self.top,textvariable=self.train_yolov7_e6_gpu)
+            self.train_yolov7_e6_gpu_entry.grid(row=10,column=11-7,sticky='sw')
+            self.train_yolov7_e6_gpu_label=tk.Label(self.top,text='gpus (i.e., 0,1,2)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.train_yolov7_e6_gpu_label.grid(row=11,column=11-7,sticky='nw')
 
             self.epochs_yolov7_e6_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_e6_VAR)
             self.epochs_yolov7_e6_entry.grid(row=12-7,column=11-7,sticky='sw')
@@ -3097,6 +3149,17 @@ class yolo_cfg:
             self.epochs_yolov7_re_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_yolov7_re_label.grid(row=13-7,column=12-7,sticky='nw')
 
+            try:
+                self.train_yolov7_re_gpu_entry.destroy()
+                self.train_yolov7_re_gpu_label.destroy()
+            except:
+                pass
+
+            self.train_yolov7_re_gpu_entry=tk.Entry(self.top,textvariable=self.train_yolov7_re_gpu)
+            self.train_yolov7_re_gpu_entry.grid(row=10,column=12-7,sticky='sw')
+            self.train_yolov7_re_gpu_label=tk.Label(self.top,text='gpus (i.e., 0,1,2)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.train_yolov7_re_gpu_label.grid(row=11,column=12-7,sticky='nw')
+
             self.multi_train_yolov7_re_var=tk.IntVar()
             self.multi_train_yolov7_re_var.set(0)
             self.multi_train_yolov7_re_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov7_re_var,onvalue=1, offvalue=0)
@@ -3113,6 +3176,16 @@ class yolo_cfg:
             self.test_mp4_yolov7_x_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolov7_x_objs_button_note.grid(row=11-7,column=13-7,sticky='ne')
 
+            try:
+                self.train_yolov7_x_gpu_entry.destroy()
+                self.train_yolov7_x_gpu_label.destroy()
+            except:
+                pass
+
+            self.train_yolov7_x_gpu_entry=tk.Entry(self.top,textvariable=self.train_yolov7_x_gpu)
+            self.train_yolov7_x_gpu_entry.grid(row=10,column=13-7,sticky='sw')
+            self.train_yolov7_x_gpu_label=tk.Label(self.top,text='gpus (i.e., 0,1,2)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.train_yolov7_x_gpu_label.grid(row=11,column=13-7,sticky='nw')
 
             self.epochs_yolov7_x_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_x_VAR)
             self.epochs_yolov7_x_entry.grid(row=12-7,column=13-7,sticky='sw')
@@ -3666,7 +3739,9 @@ class yolo_cfg:
             self.create_tflite_bash()
             cmd_i=" bash '{}'".format(self.tensorflow_yolov4_tflite_bash_PATH)
             self.run_cmd(cmd_i)
-
+    def cntNum(self,str):
+            count = len(re.findall(r'[0-9]+', str))
+            return count
     def create_train_bash_yolov7(self):
         self.epochs_yolov7=self.epochs_yolov7_VAR.get()
         self.TRAIN_YOLOV7=os.path.join(os.path.dirname(self.data_path),'train_custom_Yolov7-tiny.sh')
@@ -3677,10 +3752,19 @@ class yolo_cfg:
             batch_size=8
         else:
             batch_size=16
-        if os.path.exists(self.last_weights_path_yolov7)==False:
-            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.yolov7_path_name,self.yolov7_path_hyp,self.epochs_yolov7))
+        gpu_string=self.train_yolov7_gpu.get()
+        gpu_string=self.split_gpu_string(gpu_string)
+        if len(gpu_string)==1:
+            if os.path.exists(self.last_weights_path_yolov7)==False:
+                f.writelines("python3 train.py --workers 8 --device {} --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.yolov7_path_name,self.yolov7_path_hyp,self.epochs_yolov7))
+            else:
+                f.writelines("python3 train.py --workers 8 --device {} --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.last_weights_path_yolov7,self.yolov7_path_name,self.yolov7_path_hyp,self.epochs_yolov7))           
+        
         else:
-            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.last_weights_path_yolov7,self.yolov7_path_name,self.yolov7_path_hyp,self.epochs_yolov7))           
+            if os.path.exists(self.last_weights_path_yolov7)==False:
+                f.writelines("python3 -m torch.distributed.launch --nproc_per_node {} --master_port 9527 train.py --workers 8 --device {} --sync-bn --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(self.cntNum(gpu_string),gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.yolov7_path_name,self.yolov7_path_hyp,self.epochs_yolov7))
+            else:
+                f.writelines("python3 -m torch.distributed.launch --nproc_per_node {} --master_port 9527  train.py --workers 8 --device {} --sync-bn --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(self.cntNum(gpu_string),gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg,self.last_weights_path_yolov7,self.yolov7_path_name,self.yolov7_path_hyp,self.epochs_yolov7))           
         f.close()
 
     def create_train_bash_yolov7_e6(self):
@@ -3690,11 +3774,19 @@ class yolo_cfg:
         f=open(self.TRAIN_YOLOV7_e6,'w')
         f.writelines('cd {} \n'.format(self.yolov7_path))
         self.last_weights_path_yolov7_e6=os.path.join(os.path.dirname(self.data_path),'yolov7-e6/weights/last.pt')
-        if os.path.exists(self.last_weights_path_yolov7_e6)==False:
-            f.writelines("python3 train_aux.py --workers 8 --device 0 --batch-size 2 --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6,self.yolov7_path_name_e6,self.yolov7_path_hyp_e6,self.epochs_yolov7_e6))
+        batch_size=2
+        gpu_string=self.train_yolov7_e6_gpu.get()
+        gpu_string=self.split_gpu_string(gpu_string)
+        if len(gpu_string)==1:
+            if os.path.exists(self.last_weights_path_yolov7_e6)==False:
+                f.writelines("python3 train.py --workers 8 --device {} --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6,self.yolov7_path_name_e6,self.yolov7_path_hyp_e6,self.epochs_yolov7_e6))
+            else:
+                f.writelines("python3 train.py --workers 8 --device {} --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6,self.last_weights_path_yolov7_e6,self.yolov7_path_name_e6,self.yolov7_path_hyp_e6,self.epochs_yolov7_e6))       
         else:
-            f.writelines("python3 train_aux.py --workers 8 --device 0 --batch-size 2 --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6,self.last_weights_path_yolov7_e6,self.yolov7_path_name_e6,self.yolov7_path_hyp_e6,self.epochs_yolov7_e6))           
-
+            if os.path.exists(self.last_weights_path_yolov7_e6)==False:
+                f.writelines("python3 -m torch.distributed.launch --nproc_per_node {} --master_port 9527 train.py --workers 8 --device {} --sync-bn --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(self.cntNum(gpu_string),gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6,self.last_weights_path_yolov7_e6,self.yolov7_path_name_e6,self.yolov7_path_hyp_e6,self.epochs_yolov7_e6))   
+            else:
+                f.writelines("python3 -m torch.distributed.launch --nproc_per_node {} --master_port 9527 train.py --workers 8 --device {} --sync-bn --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(self.cntNum(gpu_string),gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_e6,self.last_weights_path_yolov7_e6,self.yolov7_path_name_e6,self.yolov7_path_hyp_e6,self.epochs_yolov7_e6))            
         f.close()
 
     def create_train_bash_yolov7_re(self):
@@ -3708,12 +3800,21 @@ class yolo_cfg:
             batch_size=2
         else:
             batch_size=8
-        if os.path.exists(self.last_weights_path_yolov7_re)==False:
-            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re,self.epochs_yolov7_re))
+        gpu_string=self.train_yolov7_re_gpu.get()
+        gpu_string=self.split_gpu_string(gpu_string)
+        if len(gpu_string)==1:
+            if os.path.exists(self.last_weights_path_yolov7_re)==False:
+                f.writelines("python3 train.py --workers 8 --device {} --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re,self.epochs_yolov7_re))
+            else:
+                f.writelines("python3 train.py --workers 8 --device {} --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.last_weights_path_yolov7_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re,self.epochs_yolov7_re))           
         else:
-            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.last_weights_path_yolov7_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re,self.epochs_yolov7_re))           
+            if os.path.exists(self.last_weights_path_yolov7_re)==False:
+                f.writelines("python3 -m torch.distributed.launch --nproc_per_node {} --master_port 9527 train.py --workers 8 --device {} --sync-bn --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(self.cntNum(gpu_string),gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re,self.epochs_yolov7_re))
+            else:
+                f.writelines("python3 -m torch.distributed.launch --nproc_per_node {} --master_port 9527 train.py --workers 8 --device {} --sync-bn --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(self.cntNum(gpu_string),gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_re,self.last_weights_path_yolov7_re,self.yolov7_path_name_re,self.yolov7_path_hyp_re,self.epochs_yolov7_re))           
         f.close()
 
+ 
     def create_train_bash_yolov7_x(self):
         #python train_aux.py --workers 8 --device 0 --batch-size 16 --data data/coco.yaml --img 1280 1280 --cfg cfg/training/yolov7-w6.yaml --weights '' --name yolov7-w6 --hyp data/hyp.scratch.p6.yaml
         self.epochs_yolov7_x=self.epochs_yolov7_x_VAR.get()
@@ -3725,10 +3826,19 @@ class yolo_cfg:
             batch_size=2
         else:
             batch_size=8
-        if os.path.exists(self.last_weights_path_yolov7_x)==False:
-            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_x,self.yolov7_path_name_x,self.yolov7_path_hyp_x,self.epochs_yolov7_x))
+        gpu_string=self.train_yolov7_x_gpu.get()
+        gpu_string=self.split_gpu_string(gpu_string)
+        if len(gpu_string)==1:
+            if os.path.exists(self.last_weights_path_yolov7_x)==False:
+                f.writelines("python3 train.py --workers 8 --device {} --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_x,self.yolov7_path_name_x,self.yolov7_path_hyp_x,self.epochs_yolov7_x))
+            else:
+                f.writelines("python3 train.py --workers 8 --device {} --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_x,self.last_weights_path_yolov7_x,self.yolov7_path_name_x,self.yolov7_path_hyp_x,self.epochs_yolov7_x))           
         else:
-            f.writelines("python3 train.py --workers 8 --device 0 --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_x,self.last_weights_path_yolov7_x,self.yolov7_path_name_x,self.yolov7_path_hyp_x,self.epochs_yolov7_x))           
+            if os.path.exists(self.last_weights_path_yolov7_x)==False:
+                f.writelines("python3 -m torch.distributed.launch --nproc_per_node {} --master_port 9527 train.py --workers 8 --device {} --sync-bn --batch-size {} --data {} --img {} {} --cfg {} --weights '' --exist-ok --name {} --hyp {} --epochs {}\n".format(self.cntNum(gpu_string),gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_x,self.yolov7_path_name_x,self.yolov7_path_hyp_x,self.epochs_yolov7_x))
+            else:
+                f.writelines("python3 -m torch.distributed.launch --nproc_per_node {} --master_port 9527 train.py --workers 8 --device {} --sync-bn --batch-size {} --data {} --img {} {} --cfg {} --weights {} --exist-ok --name {} --hyp {} --epochs {}\n".format(self.cntNum(gpu_string),gpu_string,batch_size,self.YAML_PATH,self.WIDTH_NUM,self.HEIGHT_NUM,self.yolov7_path_cfg_x,self.last_weights_path_yolov7_x,self.yolov7_path_name_x,self.yolov7_path_hyp_x,self.epochs_yolov7_x))           
+         
         f.close()
 
     def create_test_bash_mp4_yolov7(self):
@@ -4836,6 +4946,24 @@ class yolo_cfg:
                         self.best_weights_path=None 
                         self.tiny_conv29_path=self.tiny_conv29_path                     
 
+    def split_gpu_string(self,gpu_string):
+        num_gpus=len(gpu_string.split(','))
+        if num_gpus==0:
+            try:
+                int(gpu_string.split(',')[0])
+                return gpu_string.split(',')[0]
+            except:
+                print('could not interpret your input, falling back to GPU=0')
+                return '0'
+        else:
+            try:
+                for gpu_i in gpu_string.split(','):
+                    int(gpu_i)
+                return gpu_string.rstrip('\n').replace(' ','')
+            except:
+                print('could not interpret your input, falling back to GPU=0')
+                return '0'
+
 
     def create_train_bash(self):
         self.check_backup_path_weights()
@@ -4845,7 +4973,12 @@ class yolo_cfg:
         f.writelines('config_path='+str(self.save_cfg_path_train)+'\n')
         f.writelines('tiny_weights='+str(self.tiny_conv29_path)+'\n')
         f.writelines('cd {}\n'.format(self.darknet_path))
-        f.writelines('$darknet detector train $data_path $config_path $tiny_weights -map\n')
+        gpu_string=self.train_yolo_gpu.get()
+        gpu_string=self.split_gpu_string(gpu_string)
+        if gpu_string=='0':
+            f.writelines('$darknet detector train $data_path $config_path $tiny_weights -map\n')
+        else:
+            f.writelines(f'$darknet detector train $data_path $config_path $tiny_weights -map -gpus={gpu_string}\n')
         f.close()
         #os.system('sudo chmod 777 "{}"'.format(self.save_cfg_path_train.replace('.cfg','.sh')))
     def create_test_bash_dnn(self):
@@ -5960,8 +6093,7 @@ class yolo_cfg:
         self.top.configure(background = 'black')
         self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
         self.b.grid(row=0,column=0,sticky='sw')
-        self.test_yolov4_note=tk.Label(self.top,text='{}'.format(self.var_yolo_choice.get().replace('-','\n-')),bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
-        self.test_yolov4_note.grid(row=2,column=2,sticky='s')
+
 
         #send updates via text/email
         self.send_text_buttons_training()
@@ -5982,26 +6114,31 @@ class yolo_cfg:
         self.multi_load_buttons=Button(self.top,text='Run Selected Multi-Trains in Series?',command=self.multi_train_load,bg=self.root_bg,fg=self.root_fg)
         self.multi_load_buttons.grid(row=14-7,column=0,sticky='sw')   
 
+
+        self.train_yolov4_note=tk.Label(self.top,text='{}'.format(self.var_yolo_choice.get().replace('-','\n-')),bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.train_yolov4_note.grid(row=2,column=2,sticky='se')
         #TD TRAIN yolov4
         self.train_yolo()
 
-        self.test_yolov7_note=tk.Label(self.top,text='Yolov7\n-tiny',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
-        self.test_yolov7_note.grid(row=2,column=3,sticky='se')
+
+
+        self.train_yolov7_note=tk.Label(self.top,text='Yolov7\n-tiny',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.train_yolov7_note.grid(row=2,column=3,sticky='se')
         #TD TRAIN yolov7 tiny
         self.train_yolov7()
 
-        self.test_yolov7_re_note=tk.Label(self.top,text='Yolov7\n',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
-        self.test_yolov7_re_note.grid(row=2,column=5,sticky='se')
+        self.train_yolov7_re_note=tk.Label(self.top,text='Yolov7\n',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.train_yolov7_re_note.grid(row=2,column=5,sticky='se')
         #TD TRAIN yolov7 re
         self.train_yolov7_re()
 
-        self.test_yolov7_x_note=tk.Label(self.top,text='Yolov7x\n',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
-        self.test_yolov7_x_note.grid(row=2,column=6,sticky='se')
+        self.train_yolov7_x_note=tk.Label(self.top,text='Yolov7x\n',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.train_yolov7_x_note.grid(row=2,column=6,sticky='se')
         #TD TRAIN yolov7 x
         self.train_yolov7_x()
 
-        self.test_yolov7_e6_note=tk.Label(self.top,text='Yolov7\n-e6',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
-        self.test_yolov7_e6_note.grid(row=2,column=4,sticky='se')
+        self.train_yolov7_e6_note=tk.Label(self.top,text='Yolov7\n-e6',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
+        self.train_yolov7_e6_note.grid(row=2,column=4,sticky='se')
         #TD TRAIN yolov7 e6
         self.train_yolov7_e6()
 
