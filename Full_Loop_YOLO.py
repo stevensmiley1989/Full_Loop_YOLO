@@ -2025,13 +2025,63 @@ class yolo_cfg:
             self.generate_cfg()
             self.remaining_buttons()
         self.save_settings()       
+    def move_yolov4_chart(self):
+        img_path_i=os.path.join(self.darknet_path,'chart_'+os.path.basename(self.best_weights_path).split('_best.')[0]+'.png')
+        if os.path.exists(img_path_i):
+            new_img_path=os.path.abspath(os.path.join(os.path.dirname(self.best_weights_path),os.path.basename(img_path_i)))
+            if os.path.exists(new_img_path):
+                old_img_path=new_img_path.split('.')[0]+'_OLDER_'+str(time.time()).split('.')[0]+'.png'
+                shutil.move(new_img_path,old_img_path)
+                shutil.move(img_path_i,os.path.dirname(self.best_weights_path))
+            else:
+                shutil.move(img_path_i,os.path.dirname(self.best_weights_path))
+
+    def move_train_valid_list(self,model_path):
+        print(f'\n MODEL_PATH={model_path}')
+        if os.path.exists(model_path)==False:
+            os.makedirs(model_path)
+        '''Purpose is to move the train.txt list to 
+        the training directory of the model for future reference.'''
+        try:
+            if os.path.exists(self.train_list_path):
+                print(f'FOUND self.train_list_path: {self.train_list_path}')
+                backup_train_path=os.path.join(model_path,os.path.basename(self.train_list_path))
+                print(f'backup_train_path={backup_train_path}')
+                if os.path.exists(backup_train_path):
+                    old_backup_train_path=backup_train_path.split('.')[0]+"_OLDER_"+str(time.time()).split('.')[0]+backup_train_path.split('.')[1]
+                    shutil.move(backup_train_path,old_backup_train_path)
+                    shutil.copy(self.train_list_path,backup_train_path)
+                else:
+                    shutil.copy(self.train_list_path,backup_train_path)
+        except:
+            print('Not able to backup train.txt list from self.train_list_path to training model directory for future reference.')
+
+        '''Purpose is to move the valid.txt list to 
+        the training directory of the model for future reference.'''
+        try:
+            if os.path.exists(self.valid_list_path):
+                print(f'FOUND self.valid_list_path: {self.valid_list_path}')
+                backup_valid_path=os.path.join(model_path,os.path.basename(self.valid_list_path))
+                print(f'backup_valid_path={backup_valid_path}')
+                if os.path.exists(backup_valid_path):
+                    old_backup_valid_path=backup_valid_path.split('.')[0]+"_OLDER_"+str(time.time()).split('.')[0]+backup_valid_path.split('.')[1]
+                    shutil.move(backup_valid_path,old_backup_valid_path)
+                    shutil.copy(self.valid_list_path,backup_valid_path)
+                else:
+                    shutil.copy(self.valid_list_path,backup_valid_path)
+        except:
+            print('Not able to backup valid.txt list from self.valid_list_path to training model directory for future reference.')
+
 
     def train_yolov4(self):
-        
+        self.move_yolov4_chart()
         self.train_yolov4_madness()
+        
         cmd_i=" bash '{}'".format(self.save_cfg_path_train.replace('.cfg','.sh'))
         if self.train_load_repeat.get()=='None':
+            self.move_train_valid_list(self.backup_path)
             self.run_cmd(cmd_i)
+            self.move_yolov4_chart()
         else:
             self.loop_train_load(cmd_i,'train_yolov4_madness')
 
@@ -2984,6 +3034,7 @@ class yolo_cfg:
     def train_yolov7_cmd(self):
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7)
         if self.train_load_repeat.get()=='None':
+            self.move_train_valid_list(self.yolov7_path_name)
             self.run_cmd(cmd_i)
         else:
             self.loop_train_load(cmd_i,'train_yolov7_madness')
@@ -3028,6 +3079,7 @@ class yolo_cfg:
         self.train_yolov7_e6_madness()
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_e6)
         if self.train_load_repeat.get()=='None':
+            self.move_train_valid_list(self.yolov7_path_name_e6)
             self.run_cmd(cmd_i)
         else:
             self.loop_train_load(cmd_i,'train_yolov7_e6_madness')
@@ -3087,6 +3139,7 @@ class yolo_cfg:
         self.train_yolov7_re_madness()
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_re)
         if self.train_load_repeat.get()=='None':
+            self.move_train_valid_list(self.yolov7_path_name_re)
             self.run_cmd(cmd_i)
         else:
             self.loop_train_load(cmd_i,'train_yolov7_re_madness')
@@ -3096,6 +3149,7 @@ class yolo_cfg:
         self.train_yolov7_x_madness()
         cmd_i=" bash '{}'".format(self.TRAIN_YOLOV7_x)
         if self.train_load_repeat.get()=='None':
+            self.move_train_valid_list(self.yolov7_path_name_x)
             self.run_cmd(cmd_i)
         else:
             self.loop_train_load(cmd_i,'train_yolov7_x_madness')
@@ -5809,30 +5863,37 @@ class yolo_cfg:
                     self.epochs+=1
                     self.epochs=str(self.epochs)
                     self.epochs_VAR.set(self.epochs)
+                    self.move_train_valid_list(self.backup_path)
                     self.train_yolov4_madness()
+                    self.move_yolov4_chart()
+                    
             if madness.find('train_yolov7_madness')!=-1:
                     self.epochs_yolov7=int(self.epochs_yolov7_VAR.get())
                     self.epochs_yolov7+=1
                     self.epochs_yolov7=str(self.epochs_yolov7)
                     self.epochs_yolov7_VAR.set(self.epochs_yolov7)
+                    self.move_train_valid_list(self.yolov7_path_name)
                     self.train_yolov7_madness()
             elif madness.find('train_yolov7_re_madness')!=-1:
                     self.epochs_yolov7_re=int(self.epochs_yolov7_re_VAR.get())
                     self.epochs_yolov7_re+=1
                     self.epochs_yolov7_re=str(self.epochs_yolov7_re)
                     self.epochs_yolov7_re_VAR.set(self.epochs_yolov7_re)
+                    self.move_train_valid_list(self.yolov7_path_name_re)
                     self.train_yolov7_re_madness()
             elif madness.find('train_yolov7_e6_madness')!=-1:
                     self.epochs_yolov7_e6=int(self.epochs_yolov7_e6_VAR.get())
                     self.epochs_yolov7_e6+=1
                     self.epochs_yolov7_e6=str(self.epochs_yolov7_e6)
                     self.epochs_yolov7_e6_VAR.set(self.epochs_yolov7_e6)
+                    self.move_train_valid_list(self.yolov7_path_name_e6)
                     self.train_yolov7_e6_madness()
             elif madness.find('train_yolov7_x_madness')!=-1:
                     self.epochs_yolov7_x=int(self.epochs_yolov7_x_VAR.get())
                     self.epochs_yolov7_x+=1
                     self.epochs_yolov7_x=str(self.epochs_yolov7_x)
                     self.epochs_yolov7_x_VAR.set(self.epochs_yolov7_x)
+                    self.move_train_valid_list(self.yolov7_path_name_x)
                     self.train_yolov7_x_madness()
             else:
                 pass
@@ -5862,7 +5923,7 @@ class yolo_cfg:
         if self.multi_train_yolov4_var.get()==1:
             self.train_yolov4()
             main_message_i=f'Finished Training Yolov4 at {str(datetime.datetime.now())}'
-            img_path_i=os.path.join(self.darknet_path,'chart_'+os.path.basename(self.best_weights_path).split('.')[0]+'.png')
+            img_path_i=os.path.join(self.darknet_path,'chart_'+os.path.basename(self.best_weights_path).split('_best.')[0]+'.png')
             self.send_training_update(main_message_i,img_path_i)
         if os.path.exists('libs/yolov7_path.py'):
             if self.multi_train_yolov7_var.get()==1:
@@ -6390,7 +6451,7 @@ class yolo_cfg:
                     done=[f.writelines(line+'\n') for line in self.TEST_LIST]
                     f.close()
                     self.img_list_path=self.test_list_path
-                    os.system(f'xdg-open {self.test_list_path}')
+                    os.system(f'{open_cmd} {self.test_list_path}')
                 else:
                     ERROR_i='\nERROR was found with given label in annotation, you can only predict off the images without metrics.'  
                     ERROR_i+=f'\n There could be more in this directory,\n{os.path.dirname(anno)}\n, but stopped at the first found.'
