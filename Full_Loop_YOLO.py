@@ -154,7 +154,7 @@ import datetime
 DEFAULT_ENCODING = 'utf-8'
 XML_EXT = '.xml'
 ENCODE_METHOD = DEFAULT_ENCODING
-from resources import switch_basepath
+#from resources import switch_basepath
 from resources import create_img_list
 from resources import create_imgs_from_video
 import socket
@@ -1342,7 +1342,7 @@ class yolo_cfg:
             self.model_i_path=os.path.join(self.MODEL_PATHS,'{}_w{}_h{}_d{}_c{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes))
         else:
             self.model_i_path=os.path.join(self.MODEL_PATHS,'{}_w{}_h{}_d{}_c{}_r{}'.format(self.PREFIX,self.WIDTH_NUM,self.HEIGHT_NUM,self.num_div,self.num_classes,self.random))
-        switch_basepath.switch_config(self.prefix_foldername)
+        #switch_basepath.switch_config(self.prefix_foldername) #edit sjs9/21
         if self.path_predJPEGImages==None:
             self.path_predJPEGImages=self.path_JPEGImages
         if self.path_MOVMP4==None:
@@ -1953,7 +1953,7 @@ class yolo_cfg:
         self.open_MOVMP4_note=tk.Label(self.root,text="MOV/MP4 File to \n Create JPEGImages",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_MOVMP4_note.grid(row=4,column=8,columnspan=1,sticky='sw')
         self.fps_MOVMP4_VAR=tk.StringVar()
-        self.fps_MOVMP4_options=['1/10','1/5','1/4','1/2','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40']
+        self.fps_MOVMP4_options=['1/60','1/30','1/10','1/5','1/4','1/2','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40']
         self.fps_MOVMP4_VAR.set('1/2')
 
 
@@ -2053,15 +2053,23 @@ class yolo_cfg:
             self.remaining_buttons()
         self.save_settings()       
     def move_yolov4_chart(self):
-        img_path_i=os.path.join(self.darknet_path,'chart_'+os.path.basename(self.best_weights_path).split('_best.')[0]+'.png')
-        if os.path.exists(img_path_i):
-            new_img_path=os.path.abspath(os.path.join(os.path.dirname(self.best_weights_path),os.path.basename(img_path_i)))
-            if os.path.exists(new_img_path):
-                old_img_path=new_img_path.split('.')[0]+'_OLDER_'+str(time.time()).split('.')[0]+'.png'
-                shutil.move(new_img_path,old_img_path)
-                shutil.move(img_path_i,os.path.dirname(self.best_weights_path))
+        if str(type(self.best_weights_path)).find('str')!=-1:
+            split_name='_best.'
+            if self.best_weights_path.find(split_name)!=-1:
+                img_path_i=os.path.join(self.darknet_path,'chart_'+os.path.basename(self.best_weights_path).split(split_name)[0]+'.png')
+                if os.path.exists(img_path_i):
+                    new_img_path=os.path.abspath(os.path.join(os.path.dirname(self.best_weights_path),os.path.basename(img_path_i)))
+                    if os.path.exists(new_img_path):
+                        old_img_path=new_img_path.split('.')[0]+'_OLDER_'+str(time.time()).split('.')[0]+'.png'
+                        shutil.move(new_img_path,old_img_path)
+                        shutil.move(img_path_i,os.path.dirname(self.best_weights_path))
+                    else:
+                        shutil.move(img_path_i,os.path.dirname(self.best_weights_path))
             else:
-                shutil.move(img_path_i,os.path.dirname(self.best_weights_path))
+                print('self.best_weights_path')
+                print(self.best_weights_path)
+            
+
 
     def move_train_valid_list(self,model_path):
         print(f'\n MODEL_PATH={model_path}')
@@ -6056,8 +6064,11 @@ class yolo_cfg:
         if self.multi_train_yolov4_var.get()==1:
             self.train_yolov4()
             main_message_i=f'Finished Training Yolov4 at {str(datetime.datetime.now())}'
-            img_path_i=os.path.join(self.darknet_path,'chart_'+os.path.basename(self.best_weights_path).split('_best.')[0]+'.png')
-            self.send_training_update(main_message_i,img_path_i)
+            if str(type(self.best_weights_path)).find('str')!=-1:
+                img_path_i=os.path.join(self.darknet_path,'chart_'+os.path.basename(self.best_weights_path).split('_best.')[0]+'.png')
+                self.send_training_update(main_message_i,img_path_i)
+            else:
+                self.send_training_update(main_message_i,'None')
         if os.path.exists('libs/yolov7_path.py'):
             if self.multi_train_yolov7_var.get()==1:
                 self.train_yolov7_cmd()
@@ -7020,11 +7031,15 @@ class yolo_cfg:
         self.filename=fd.askopenfilename(title=f'Select the {title_i} file',
                                     initialdir=initialdir_i,
                                     filetypes=filetypes)
-        if os.path.exists(self.filename):
-            print(self.filename)
-            var.set(self.filename)
-        showinfo(title='Selected File',
-                 message=self.filename)
+        if str(type(self.filename)).find('str')!=-1:
+            if os.path.exists(self.filename):
+                print(self.filename)
+                var.set(self.filename)
+            showinfo(title='Selected File',
+                    message=self.filename)
+        else:
+            print('Not a valid filename\n')
+            print(str(self.filename))
 
     def check_input_list(self,INPUT_LIST,train=False,valid=False,test=False):
         f=open(INPUT_LIST,'r')
