@@ -787,6 +787,9 @@ class yolo_cfg:
         self.open_anno_selected_CUSTOM=False
         self.open_jpeg_selected_CUSTOM=False
 
+        self.fps_MOVMP4='1/2'
+        self.fps_MOVMP4_VAR=tk.StringVar()
+        self.fps_MOVMP4_VAR.set(self.fps_MOVMP4)
 
         self.open_darknet_label_var=None
         self.dropdowntests=None
@@ -1057,7 +1060,7 @@ class yolo_cfg:
                  message=self.filename)
 
     def select_file_MOVMP4(self,file_i):
-        filetypes=(('MOV','*.MOV'),('MP4','*.MP4'),('mp4','*.mp4'),('All files','*.*'))
+        filetypes=(('mp4','*.mp4'),('MOV','*.MOV'),('MP4','*.MP4'),('All files','*.*'))
         if os.path.exists(self.path_MOVMP4):
             initialdir_i=os.path.dirname(self.path_MOVMP4)
         else:
@@ -1945,6 +1948,10 @@ class yolo_cfg:
             self.open_MOVMP4_note.destroy()
             #del self.open_MOVMP4_label
             del self.open_MOVMP4_note
+        try:
+            self.fps_MOVMP4_dropdown.destroy()
+        except:
+            pass
 
         self.open_MOVMP4_label_var=tk.StringVar()
         self.open_MOVMP4_label_var.set(self.path_MOVMP4)
@@ -1952,9 +1959,9 @@ class yolo_cfg:
         self.open_MOVMP4_button.grid(row=5,column=8,sticky='sw')
         self.open_MOVMP4_note=tk.Label(self.root,text="MOV/MP4 File to \n Create JPEGImages",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_MOVMP4_note.grid(row=4,column=8,columnspan=1,sticky='sw')
-        self.fps_MOVMP4_VAR=tk.StringVar()
+        
         self.fps_MOVMP4_options=['1/60','1/30','1/10','1/5','1/4','1/2','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40']
-        self.fps_MOVMP4_VAR.set('1/2')
+
 
 
         #cmd_i=open_cmd+" '{}'".format(self.open_MOVMP4_label_var.get())
