@@ -7,7 +7,7 @@ import shutil
 from tqdm import tqdm
 import collections
 from resources.create_img_list import create_img_list
-def create_imgs_from_video(path_movie=None,fps='1/2',delete_previous_ACTUAL=True,delete_previous_DESIRED=True):
+def create_imgs_from_video(path_movie=None,fps='1/2',delete_previous_ACTUAL=False,delete_previous_DESIRED=True):
     '''path_change should be the MOV or mp4 path '''
     print('\npath_movie = {} \n'.format(path_movie))
     print('\nfps={}\n'.format(fps))
@@ -66,15 +66,28 @@ def create_imgs_from_video(path_movie=None,fps='1/2',delete_previous_ACTUAL=True
             else:
                 os.system(f'rm -rf {Annotations_path}')
             os.makedirs(Annotations_path)
+        
         if 'JPEGImages' not in folders_in_basepath:
             os.makedirs(JPEGImages_path)  
+            delete_previous_ACTUAL=True
+            print(f'delete_previous_ACTUAL=={delete_previous_ACTUAL}')
         else:
+            previous_JPEGImages_actual=os.listdir(JPEGImages_path)
+            previous_JPEGImages_actual=[w for w in previous_JPEGImages_actual if w.find('.jpg')!=-1]
+            if len(previous_JPEGImages_actual)>=actual_frames:
+                print(f'No need to delete previous.  ACTUAL frames found = {len(previous_JPEGImages_actual)}, while actual_frame count was {actual_frames}')
+                delete_previous_ACTUAL=False
+            else:
+                print(f'Insufficient previous ACTUAL frames found = {len(previous_JPEGImages_actual)}, while actual_frame count was {actual_frames}')
             #os.system('mv {} {}'.format(JPEGImages_path,JPEGImages_path+'_backup_{}'.format(time_i)))
             if delete_previous_ACTUAL:
                 os.system(f'rm -rf {JPEGImages_path}')
+                os.makedirs(JPEGImages_path)
+                print(f'delete_previous_ACTUAL=={delete_previous_ACTUAL}')
             else:
-                JPEGImages_path=JPEGImages_path+'_'+time_i
-            os.makedirs(JPEGImages_path)
+                print(f'delete_previous_ACTUAL=={delete_previous_ACTUAL}')
+                pass #JPEGImages_path=JPEGImages_path#+'_'+time_i
+            
         JPEGImages_path_desired=os.path.join(basepath_desired,'JPEGImages')
         Annotations_path_desired=os.path.join(basepath_desired,'Annotations')
         if 'Annotations' not in folders_in_basepath_desired:
@@ -99,9 +112,11 @@ def create_imgs_from_video(path_movie=None,fps='1/2',delete_previous_ACTUAL=True
             os.makedirs(JPEGImages_path_desired)
 
 
-
-        #os.system('ffmpeg -i {} -qscale:v 2 -vf fps={} {}/{}_fps{}_%08d.jpg'.format(path_movie,fps,JPEGImages_path,movie_i_name,fps.replace('/','d').replace('.','p')))
-        os.system('ffmpeg -i {} -qscale:v 2 -vf fps={} {}/{}_fps{}_frame%08d.jpg'.format(path_movie,actual_video_fps,JPEGImages_path,movie_i_name,actual_video_fps.replace('.','p')))
+        if delete_previous_ACTUAL:
+            #os.system('ffmpeg -i {} -qscale:v 2 -vf fps={} {}/{}_fps{}_%08d.jpg'.format(path_movie,fps,JPEGImages_path,movie_i_name,fps.replace('/','d').replace('.','p')))
+            os.system('ffmpeg -i {} -qscale:v 2 -vf fps={} {}/{}_fps{}_frame%08d.jpg'.format(path_movie,actual_video_fps,JPEGImages_path,movie_i_name,actual_video_fps.replace('.','p')))
+        else:
+            print('USING previous full-frame rate to copy from.')
         actual_frames_found=os.listdir(JPEGImages_path)
         actual_frames_found=[os.path.join(JPEGImages_path,w) for w in actual_frames_found if w.find('.jpg')!=-1]
         actual_frames_dic={}
