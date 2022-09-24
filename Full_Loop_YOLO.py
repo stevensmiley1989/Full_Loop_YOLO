@@ -187,6 +187,7 @@ def get_default_settings(SAVED_SETTINGS='SAVED_SETTINGS'):
         print('exception')
         from libs import DEFAULT_SETTINGS 
 
+
 if _platform=='darwin':
     import tkmacosx
     from tkmacosx import Button as Button
@@ -197,6 +198,9 @@ else:
         open_cmd='xdg-open'
     else:
         open_cmd='start'
+if os.path.exists('libs/open_cmd.py'):
+    from libs import open_cmd
+    open_cmd=open_cmd.open_cmd
 #pprint(cfg_vanilla)
 global PROCEED 
 PROCEED=False
@@ -249,6 +253,7 @@ class main_entry:
     def INITIAL_CHECK(self):
         self.get_update_background_img()
         self.root.configure(bg=self.root_bg)
+
         self.dropdown=None
         self.CWD=os.getcwd()
         self.df_settings=pd.DataFrame(columns=['files','Annotations','Number Models','mp4_video_path','path_Annotations','path_JPEGImages','path_Yolo','YOLO_MODEL_PATH'])
@@ -554,17 +559,32 @@ class main_entry:
     #         os.system('bash {}'.format(self.USER_SELECTION2.get()))
     #     else:
     #         print('This does not exist or is not a script \n {}'.format(self.USER_SELECTION2.get()))
+
     def get_update_background_img(self):
         self.image=Image.open(self.root_background_img)
         self.image=self.image.resize((self.root_W,self.root_H),Image.ANTIALIAS)
         self.bg=ImageTk.PhotoImage(self.image)
-        self.canvas=tk.Canvas(self.root,width=self.root_W,height=self.root_H)
-        self.canvas.grid(row=0,column=0,columnspan=self.canvas_columnspan,rowspan=self.canvas_rowspan,sticky='nw')
-        self.canvas.create_image(0,0,image=self.bg,anchor='nw')
+        self.canvas_og=tk.Canvas(self.root,width=self.root_W,height=self.root_H)
+        self.canvas_og.grid(row=0,column=0,columnspan=self.canvas_columnspan,rowspan=self.canvas_rowspan,sticky='nw')
+        self.canvas_og.create_image(0,0,image=self.bg,anchor='nw')
+
+
+
+
+        
+        
+
+
+
+        
+
+
+
     def close(self):
         self.root.destroy()
     def cleanup(self):
         self.top.destroy()
+
 
 class yolo_cfg:
     def __init__(self,root_tk,SAVED_SETTINGS_PATH):
@@ -2346,6 +2366,7 @@ class yolo_cfg:
         self.canvas.configure(xscrollcommand=self.hsbar.set)
         self.frame_table=tk.Frame(self.canvas,bg='black')
         self.canvas.create_window((0,0),window=self.frame_table,anchor='nw')
+
 
 
 
