@@ -157,6 +157,7 @@ ENCODE_METHOD = DEFAULT_ENCODING
 #from resources import switch_basepath
 from resources import create_img_list
 from resources import create_imgs_from_video
+from resources import create_video_from_imgs
 import socket
 import re
 global return_to_main,use_preselected_setting
@@ -791,6 +792,13 @@ class yolo_cfg:
         self.fps_MOVMP4_VAR=tk.StringVar()
         self.fps_MOVMP4_VAR.set(self.fps_MOVMP4)
 
+  
+        self.fps_OUTPUT='DEFAULT'
+        self.fps_OUTPUT_VAR=tk.StringVar()
+        self.fps_OUTPUT_VAR.set(self.fps_OUTPUT)
+        self.open_MOVMP4_INPUT_label_var=tk.StringVar()
+        self.open_MOVMP4_INPUT_label_var.set('None')
+
         self.open_darknet_label_var=None
         self.dropdowntests=None
 
@@ -1075,6 +1083,7 @@ class yolo_cfg:
             self.open_MOVMP4()
         showinfo(title='Selected File',
                  message=self.filename)
+
 
     def select_file_testobjdata(self,file_i):
         filetypes=(('test obj.data','*.data'),('All files','*.*'))
@@ -1941,6 +1950,24 @@ class yolo_cfg:
         self.mp4_selected=True
         self.dropdowntest_menu()
         self.remaining_buttons_clicked=False
+    def select_folder_pathJPEGImages_INPUT(self,title_i,var_i=None,folder_i='None'):
+            if var_i:
+                folder_i=var_i.get() 
+                initialdir=folder_i 
+                           
+                if os.path.exists(folder_i):
+                    foldername=fd.askdirectory(title=title_i,
+                                                initialdir=initialdir)
+                else:
+                    foldername=fd.askdirectory(title=title_i)
+                if foldername=='' or len(foldername)==0:
+                    showinfo(title='NOT FOUND! Using previous path',
+                            message=foldername)
+                elif foldername!='' and len(foldername)!=0:
+                    showinfo(title='Selected Folder',
+                        message=foldername)
+                    folder_i=foldername
+                    var_i.set(folder_i)
 
     def open_MOVMP4(self):
         if self.MOVMP4_selected==True:
@@ -1948,8 +1975,12 @@ class yolo_cfg:
             self.open_MOVMP4_note.destroy()
             #del self.open_MOVMP4_label
             del self.open_MOVMP4_note
+
+            self.open_MOVMP4_INPUT_note.destroy()
+            del self.open_MOVMP4_INPUT_note
         try:
             self.fps_MOVMP4_dropdown.destroy()
+            self.fps_MOVMP4_from_INPUT_dropdown.destroy()
         except:
             pass
 
@@ -1959,8 +1990,15 @@ class yolo_cfg:
         self.open_MOVMP4_button.grid(row=5,column=8,sticky='sw')
         self.open_MOVMP4_note=tk.Label(self.root,text="MOV/MP4 File to \n Create JPEGImages",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_MOVMP4_note.grid(row=4,column=8,columnspan=1,sticky='sw')
+
+
+        self.open_MOVMP4_INPUT_button=Button(self.root,image=self.icon_folder,command=partial(self.select_folder_pathJPEGImages_INPUT,'path_JPEGImages for making .mp4',self.open_MOVMP4_INPUT_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_MOVMP4_INPUT_button.grid(row=7,column=8,sticky='sw')
+        self.open_MOVMP4_INPUT_note=tk.Label(self.root,text="path_JPEGImages to \n Create .mp4 File from",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_MOVMP4_INPUT_note.grid(row=6,column=8,columnspan=1,sticky='sw')
         
         self.fps_MOVMP4_options=['1/60','1/30','1/10','1/5','1/4','1/2','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40']
+        self.fps_MOVMP4_INPUT_options=['DEFAULT','1/60','1/30','1/10','1/5','1/4','1/2','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40']
 
 
 
@@ -1976,15 +2014,43 @@ class yolo_cfg:
         self.fps_MOVMP4_dropdown_label=tk.Label(self.root,text='FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
         self.fps_MOVMP4_dropdown_label.grid(row=4,column=9,sticky='sw')   
 
+        self.fps_MOVMP4_from_INPUT_dropdown=tk.OptionMenu(self.root,self.fps_OUTPUT_VAR,*self.fps_MOVMP4_INPUT_options)
+        self.fps_MOVMP4_from_INPUT_dropdown.grid(row=7,column=9,sticky='nw')
+        self.fps_MOVMP4_from_INPUT_dropdown.config(bg='green',fg='black')
+        self.fps_MOVMP4_from_INPUT_dropdown['menu'].config(fg='lime',bg='black')
+        self.fps_MOVMP4_from_INPUT_dropdown_label=tk.Label(self.root,text='FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
+        self.fps_MOVMP4_from_INPUT_dropdown_label.grid(row=6,column=9,sticky='sw') 
+
     def create_MOVMP4_JPEGImages(self):
         self.create_MOVMP4_button=Button(self.root,image=self.icon_create,command=self.check_fps,bg=self.root_bg,fg=self.root_fg)
         self.create_MOVMP4_button.grid(row=5,column=7,sticky='se')
-        #self.create_MOVMP4_button_note=tk.Label(self.root,text='Create JPEGImages \n from MOV/MP4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-        #self.create_MOVMP4_button_note.grid(row=6,column=6,columnspan=3,sticky='ne')
+        self.create_MOVMP4_from_INPUT_button=Button(self.root,image=self.icon_create,command=self.create_video_from_imgs,bg=self.root_bg,fg=self.root_fg)
+        self.create_MOVMP4_from_INPUT_button.grid(row=7,column=7,sticky='se')
+
 
     def check_fps(self):
         create_imgs_from_video.create_imgs_from_video(self.path_MOVMP4,self.fps_MOVMP4_VAR.get())
+        try:
+            self.open_jpgs_video_button.destroy()
+        except:
+            pass
+        if os.path.exists(self.path_MOVMP4):
+            cmd_i=open_cmd+' '+os.path.dirname(self.path_MOVMP4)
+            self.run_cmd(cmd_i)
+            self.open_jpgs_video_button=Button(self.root,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.open_jpgs_video_button.grid(row=5,column=10,sticky='sw')
 
+    def create_video_from_imgs(self):
+        create_video_from_imgs.create_video_from_imgs(self.open_MOVMP4_INPUT_label_var.get(),self.fps_OUTPUT_VAR.get())
+        try:
+            self.open_output_video_button.destroy()
+        except:
+            pass
+        if os.path.exists(self.open_MOVMP4_INPUT_label_var.get()):
+            cmd_i=open_cmd+' '+self.open_MOVMP4_INPUT_label_var.get()
+            self.run_cmd(cmd_i)
+            self.open_output_video_button=Button(self.root,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.open_output_video_button.grid(row=7,column=10,sticky='sw')
 
 
     def dropdowntest_menu(self):
