@@ -3830,7 +3830,7 @@ class yolo_cfg:
         f.writelines('cd {} \n'.format(self.yolov7_path))
         self.last_weights_path_yolov7=os.path.join(os.path.dirname(self.data_path),'yolov7-tiny/weights/last.pt')
         if max(self.WIDTH_NUM,self.HEIGHT_NUM)>800:
-            batch_size=8
+            batch_size=4
         else:
             batch_size=16
         gpu_string=self.train_yolov7_gpu.get()
