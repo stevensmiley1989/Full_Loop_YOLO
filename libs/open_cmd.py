@@ -1,1 +1,1 @@
-open_cmd='xdg-open'
+open_cmd='code'
