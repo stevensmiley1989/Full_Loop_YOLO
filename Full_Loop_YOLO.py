@@ -560,6 +560,8 @@ class main_entry:
         self.frame_canvas.grid_propagate(False)
         self.canvas=tk.Canvas(self.frame_canvas,bg='black')
         self.canvas.grid(row=0,column=0,sticky='news')
+        self.label = tk.Label(self.canvas, image = self.bg)
+        self.label.grid(row=0,column=0,sticky='news')
         self.style3=ttk.Style()
         self.style3.configure('Vertical.TScrollbar',
                             background='green',
@@ -5780,6 +5782,8 @@ class yolo_cfg:
         self.frame_canvas1.grid_propagate(False)
         self.canvas1=tk.Canvas(self.frame_canvas1,bg='black')
         self.canvas1.grid(row=0,column=0,sticky='news')
+        self.label1 = tk.Label(self.canvas1, image = self.bg)
+        self.label1.grid(row=0,column=0,sticky='news')
         self.style3=ttk.Style()
         self.style3.configure('Vertical.TScrollbar',
                             background='green',
