@@ -298,8 +298,8 @@ class main_entry:
         print(self.df_settings)
         self.checkd_buttons={}
         self.checkd_vars={}
-        self.checkd_label=tk.Label(self.root,text='Dataset',bg=self.root_bg,fg=self.root_fg,font=('Arial 14 underline'))
-        self.checkd_label.grid(row=1,column=2,sticky='nw')
+        self.checkd_label=tk.Label(self.frame_table,text='Dataset',bg=self.root_bg,fg=self.root_fg,font=('Arial 14 underline'))
+        self.checkd_label.grid(row=0,column=2,sticky='nw')
         f=open('libs/DATASETS_LIST.txt','w')
         print(self.df_settings)
         for i,path_JPEGImages_i in enumerate(list(self.df_settings['path_JPEGImages'])):
@@ -310,16 +310,16 @@ class main_entry:
 
             self.checkd_vars[label]=tk.IntVar()
             self.checkd_vars[label].set(0)
-            self.checkd_buttons[file]=ttk.Checkbutton(self.root, style='Normal.TCheckbutton',text=label,variable=self.checkd_vars[label], command=self.update_checks,onvalue=1, offvalue=0)
+            self.checkd_buttons[file]=ttk.Checkbutton(self.frame_table, style='Normal.TCheckbutton',text=label,variable=self.checkd_vars[label], command=self.update_checks,onvalue=1, offvalue=0)
             self.checkd_buttons[file].grid(row=i+1,column=2,sticky='sw')
         self.checkm_buttons={}
         self.checkm_vars={}
-        #self.checkm_label=tk.Label(self.root,text='Number of Models',bg=self.root_bg,fg=self.root_fg,font=('Arial 14 underline'))
+        #self.checkm_label=tk.Label(self.frame_table1,text='Number of Models',bg=self.root_bg,fg=self.root_fg,font=('Arial 14 underline'))
         #self.checkm_label.grid(row=1,column=3,sticky='nw')
         for i,label in enumerate(sorted(list(self.df_settings['Number Models'].astype(int).unique()))):
             self.checkm_vars[label]=tk.IntVar()
             self.checkm_vars[label].set(1)
-            #self.checkm_buttons[file]=ttk.Checkbutton(self.root, style='Normal.TCheckbutton',text=label,variable=self.checkm_vars[label], command=self.update_checks,onvalue=1, offvalue=0)
+            #self.checkm_buttons[file]=ttk.Checkbutton(self.frame_table1, style='Normal.TCheckbutton',text=label,variable=self.checkm_vars[label], command=self.update_checks,onvalue=1, offvalue=0)
             #self.checkm_buttons[file].grid(row=i+1,column=3,sticky='sw')           
 
 
@@ -333,18 +333,19 @@ class main_entry:
         self.USER=""
         self.USER_SELECTION=tk.StringVar()
         self.dropdown_menu()
-        self.submit_label=Button(self.root,text='Submit',command=self.submit,bg=self.root_fg,fg=self.root_bg,font=('Arial',12))
+        self.submit_label=Button(self.frame_table,text='Submit',command=self.submit,bg=self.root_fg,fg=self.root_bg,font=('Arial',12))
         self.submit_label.grid(row=1,column=5,sticky='se')
-        self.delete_label=Button(self.root,text='Delete',command=self.popupWindow_delete,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
+        self.delete_label=Button(self.frame_table,text='Delete',command=self.popupWindow_delete,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         self.delete_label.grid(row=2,column=5,sticky='se')
-        self.open_libs=Button(self.root,text='Open /libs',command=self.run_cmd_open_libs,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
+        self.open_libs=Button(self.frame_table,text='Open /libs',command=self.run_cmd_open_libs,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         self.open_libs.grid(row=3,column=5,sticky='se')
-        self.move_separate_button=Button(self.root,text='Move to HIDDEN',command=self.move_separate,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
+        self.move_separate_button=Button(self.frame_table,text='Move to HIDDEN',command=self.move_separate,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         self.move_separate_button.grid(row=4,column=5,sticky='se')
-        # self.submit2_label=Button(self.root,text='Run Script',command=self.submit_script,bg=self.root_fg,fg=self.root_bg,font=('Arial',12))
+        # self.submit2_label=Button(self.frame_table1,text='Run Script',command=self.submit_script,bg=self.root_fg,fg=self.root_bg,font=('Arial',12))
         # self.submit2_label.grid(row=4,column=1,sticky='se')
-        # self.select_file_script_label=Button(self.root,image=self.icon_folder,command=self.select_file_script,bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
+        # self.select_file_script_label=Button(self.frame_table1,image=self.icon_folder,command=self.select_file_script,bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
         # self.select_file_script_label.grid(row=4,column=2,sticky='sw')
+
 
 
     def update_checks(self):
@@ -425,33 +426,14 @@ class main_entry:
             self.USER_SELECTION.set(self.USER)
         else:
             self.USER_SELECTION.set(self.SETTINGS_FILE_LIST[0])
-        self.dropdown=tk.OptionMenu(self.root,self.USER_SELECTION,*self.SETTINGS_FILE_LIST)
+        self.dropdown=tk.OptionMenu(self.frame_table,self.USER_SELECTION,*self.SETTINGS_FILE_LIST)
         self.dropdown.grid(row=1,column=9,sticky='sw')
         self.dropdown.config(bg='green',fg='black')
         self.dropdown['menu'].config(fg='lime',bg='black')
         
-        self.dropdown_label=Button(self.root,image=self.icon_single_file,command=self.run_cmd_libs,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
+        self.dropdown_label=Button(self.frame_table,image=self.icon_single_file,command=self.run_cmd_libs,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         self.dropdown_label.grid(row=1,column=8,sticky='sw')
-        # f=open(self.list_script_path,'r')
-        # self.SCRIPTS_LINES=f.readlines()
-        # f.close()
-        # if len(self.SCRIPTS_LINES)>0:
-        #     self.SCRIPTS_FILE_LIST=self.SCRIPTS_LINES
-        #     self.SCRIPTS_FILE_LIST=[w.replace('\n','') for w in self.SCRIPTS_FILE_LIST if os.path.exists(w.replace('\n',''))]
-        # else:
-        #     self.SCRIPTS_FILE_LIST=['None']
-        # print([os.path.exists(w) for w in self.SCRIPTS_FILE_LIST])
-        # self.USER_SELECTION2=tk.StringVar()
-        # if len(self.SCRIPTS_FILE_LIST)==0:
-        #     self.SCRIPTS_FILE_LIST=['None']
-        # self.USER_SELECTION2.set(self.SCRIPTS_FILE_LIST[0])
-        # self.dropdown_2=tk.OptionMenu(self.root,self.USER_SELECTION2,*self.SCRIPTS_FILE_LIST)
-        # self.dropdown_2.grid(row=4,column=4,sticky='sw')
-
-        # self.dropdown_2_label=Button(self.root,image=self.icon_single_file,command=self.run_cmd_scripts,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
-        # self.dropdown_2_label.grid(row=4,column=3,sticky='sw')
-        # self.dropdown_3_label=Button(self.root,text='Edit Script Paths',command=self.run_cmd_editpaths,bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
-        # self.dropdown_3_label.grid(row=5,column=1,sticky='ne')        
+    
     def run_cmd_libs(self):
         cmd_i=open_cmd+" {}.py".format(os.path.join('libs',self.USER_SELECTION.get()))
         os.system(cmd_i)
@@ -564,10 +546,51 @@ class main_entry:
         self.image=Image.open(self.root_background_img)
         self.image=self.image.resize((self.root_W,self.root_H),Image.ANTIALIAS)
         self.bg=ImageTk.PhotoImage(self.image)
-        self.canvas_og=tk.Canvas(self.root,width=self.root_W,height=self.root_H)
-        self.canvas_og.grid(row=0,column=0,columnspan=self.canvas_columnspan,rowspan=self.canvas_rowspan,sticky='nw')
-        self.canvas_og.create_image(0,0,image=self.bg,anchor='nw')
+        # self.canvas_og=tk.Canvas(self.frame_table1,width=self.root_W,height=self.root_H)
+        # self.canvas_og.grid(row=0,column=0,columnspan=self.canvas_columnspan,rowspan=self.canvas_rowspan,sticky='nw')
+        # self.canvas_og.create_image(0,0,image=self.bg,anchor='nw')
+        self.root.columnconfigure(0,weight=1)
+        self.root.rowconfigure(0,weight=1)
+        self.FMas=tk.Frame(self.root,bg='Black')
+        self.FMas.grid(sticky=(tk.N,tk.E,tk.S,tk.W),padx=20,pady=20)
+        self.FMas.columnconfigure(0,weight=1)
+        self.frame_canvas=tk.Frame(self.FMas)
+        self.frame_canvas.grid(row=0,column=0,sticky='nw')
+        self.frame_canvas.grid_rowconfigure(0,weight=1)
+        self.frame_canvas.grid_columnconfigure(0,weight=1)
+        self.frame_canvas.grid_propagate(False)
+        self.canvas=tk.Canvas(self.frame_canvas,bg='black')
+        self.canvas.grid(row=0,column=0,sticky='news')
+        self.style3=ttk.Style()
+        self.style3.configure('Vertical.TScrollbar',
+                            background='green',
+                            foreground='black',
+                            arrowcolor='black',
+                            activebackground='yellow')
+        self.style3.configure('Horizontal.TScrollbar',
+                            background='green',
+                            foreground='black',
+                            arrowcolor='black',
+                            activebackground='yellow')
+        self.vsbar=ttk.Scrollbar(self.frame_canvas,orient="vertical",command=self.canvas.yview,style="Vertical.TScrollbar")
+        self.vsbar.grid(row=0,column=1,sticky='nes',pady=1)
+        self.hsbar=ttk.Scrollbar(self.frame_canvas,orient="horizontal",command=self.canvas.xview,style="Horizontal.TScrollbar")
 
+        self.hsbar.grid(row=0,column=0,sticky='new',padx=1)
+        self.canvas.configure(yscrollcommand=self.vsbar.set)
+        self.canvas.configure(xscrollcommand=self.hsbar.set)
+        self.frame_table=tk.Frame(self.canvas,bg='black',padx=20,pady=20)
+        self.canvas.create_window((0,0),window=self.frame_table,anchor='nw')
+
+
+        total_width=self.root_W*1.#080#width_i+width_j+self.hsbar.winfo_width()
+        total_height=self.root_H*1.#height_i+height_j+self.vsbar.winfo_height()
+        self.canvas.create_image((total_width,total_height),image=self.bg,anchor='nw')
+        print('total_width',total_width)
+        print('total_height',total_height)
+        self.frame_canvas.config(width=total_width,height=total_height)
+        self.canvas.config(scrollregion=self.canvas.bbox('all'))
+        
 
 
 
@@ -772,7 +795,7 @@ class yolo_cfg:
         else:
             self.custom_inputs_valid=True
         # self.root.withdraw()
-        # self.top=tk.Toplevel(self.root,width=300,height=300)
+        # self.top=tk.Toplevel(self.frame_table1,width=300,height=300)
         # self.canvas_generate=tk.Canvas(self.top,bg='white')
         # self.canvas_generate.pack(expand=tk.YES,fill=tk.BOTH)
         # self.top.destroy()
@@ -822,19 +845,19 @@ class yolo_cfg:
         self.open_darknet_label_var=None
         self.dropdowntests=None
 
-        self.save_settings_button=Button(self.root,image=self.icon_save_settings,command=self.save_settings,bg=self.root_bg,fg=self.root_fg)
+        self.save_settings_button=Button(self.frame_table1,image=self.icon_save_settings,command=self.save_settings,bg=self.root_bg,fg=self.root_fg)
         self.save_settings_button.grid(row=1,column=4,sticky='se')
-        self.save_settings_note=tk.Label(self.root,text='Save Settings',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.save_settings_note=tk.Label(self.frame_table1,text='Save Settings',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.save_settings_note.grid(row=2,column=4,sticky='ne')
 
-        self.save_custom_settings_button=Button(self.root,image=self.icon_save_settings,command=self.save_settings_CUSTOM,bg=self.root_bg,fg=self.root_fg)
+        self.save_custom_settings_button=Button(self.frame_table1,image=self.icon_save_settings,command=self.save_settings_CUSTOM,bg=self.root_bg,fg=self.root_fg)
         self.save_custom_settings_button.grid(row=1,column=3,sticky='se')
-        self.save_custom_settings_note=tk.Label(self.root,text='Save Custom Settings',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.save_custom_settings_note=tk.Label(self.frame_table1,text='Save Custom Settings',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.save_custom_settings_note.grid(row=2,column=3,sticky='ne')
 
-        self.return_to_main_button=Button(self.root,text='Return to Main Menu',command=self.return_to_main,bg=self.root_fg,fg=self.root_bg)
+        self.return_to_main_button=Button(self.frame_table1,text='Return to Main Menu',command=self.return_to_main,bg=self.root_fg,fg=self.root_bg)
         self.return_to_main_button.grid(row=0,column=0,sticky='se')
-        # self.return_to_main_note=tk.Label(self.root,text='Main Menu',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        # self.return_to_main_note=tk.Label(self.frame_table1,text='Main Menu',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         # self.return_to_main_note.grid(row=1,column=1,sticky='nw')
 
 
@@ -842,74 +865,74 @@ class yolo_cfg:
 
         self.open_basepath_label_var=tk.StringVar()
         self.open_basepath_label_var.set(self.base_path_OG)
-        self.open_basepath_button=Button(self.root,image=self.icon_folder,command=partial(self.select_folder,self.base_path_OG,'save path',self.open_basepath_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_basepath_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.base_path_OG,'save path',self.open_basepath_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_basepath_button.grid(row=1,column=5,sticky='se')
-        self.open_basepath_note=tk.Label(self.root,text="base_path_OG dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_basepath_note=tk.Label(self.frame_table1,text="base_path_OG dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_basepath_note.grid(row=2,column=5,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_basepath_label_var.get())
-        self.open_basepath_label=Button(self.root,textvariable=self.open_basepath_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_basepath_label=Button(self.frame_table1,textvariable=self.open_basepath_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_basepath_label.grid(row=1,column=6,columnspan=50,sticky='sw')
 
         self.PREFIX_VAR=tk.StringVar()
         self.PREFIX_VAR.set(self.PREFIX)
-        self.PREFIX_entry=tk.Entry(self.root,textvariable=self.PREFIX_VAR)
+        self.PREFIX_entry=tk.Entry(self.frame_table1,textvariable=self.PREFIX_VAR)
         self.PREFIX_entry.grid(row=7,column=0,sticky='se')
-        self.PREFIX_label=tk.Label(self.root,text='PREFIX',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.PREFIX_label=tk.Label(self.frame_table1,text='PREFIX',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.PREFIX_label.grid(row=8,column=0,sticky='ne')
 
         self.WIDTH_NUM_VAR=tk.StringVar()
         self.WIDTH_NUM_VAR.set(self.WIDTH_NUM)
-        self.WIDTH_NUM_entry=tk.Entry(self.root,textvariable=self.WIDTH_NUM_VAR)
+        self.WIDTH_NUM_entry=tk.Entry(self.frame_table1,textvariable=self.WIDTH_NUM_VAR)
         self.WIDTH_NUM_entry.grid(row=9,column=0,sticky='se')
-        self.WIDTH_NUM_label=tk.Label(self.root,text='WIDTH',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.WIDTH_NUM_label=tk.Label(self.frame_table1,text='WIDTH',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.WIDTH_NUM_label.grid(row=10,column=0,sticky='ne')
 
         self.HEIGHT_NUM_VAR=tk.StringVar()
         self.HEIGHT_NUM_VAR.set(self.HEIGHT_NUM)
-        self.HEIGHT_NUM_entry=tk.Entry(self.root,textvariable=self.HEIGHT_NUM_VAR)
+        self.HEIGHT_NUM_entry=tk.Entry(self.frame_table1,textvariable=self.HEIGHT_NUM_VAR)
         self.HEIGHT_NUM_entry.grid(row=11,column=0,sticky='se')
-        self.HEIGHT_NUM_label=tk.Label(self.root,text='HEIGHT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.HEIGHT_NUM_label=tk.Label(self.frame_table1,text='HEIGHT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.HEIGHT_NUM_label.grid(row=12,column=0,sticky='ne')
 
         self.num_div_VAR=tk.StringVar()
         self.num_div_VAR.set(self.num_div)
-        self.num_div_entry=tk.Entry(self.root,textvariable=self.num_div_VAR)
+        self.num_div_entry=tk.Entry(self.frame_table1,textvariable=self.num_div_VAR)
         self.num_div_entry.grid(row=13,column=0,sticky='se')
-        self.num_div_label=tk.Label(self.root,text='num_div',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.num_div_label=tk.Label(self.frame_table1,text='num_div',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.num_div_label.grid(row=14,column=0,sticky='ne')
 
         self.num_classes_VAR=tk.StringVar()
         self.num_classes_VAR.set(self.num_classes)
-        self.num_classes_entry=tk.Entry(self.root,textvariable=self.num_classes_VAR)
+        self.num_classes_entry=tk.Entry(self.frame_table1,textvariable=self.num_classes_VAR)
         self.num_classes_entry.grid(row=15,column=0,sticky='se')
-        self.num_classes_label=tk.Label(self.root,text='num_classes',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.num_classes_label=tk.Label(self.frame_table1,text='num_classes',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.num_classes_label.grid(row=16,column=0,sticky='ne')
 
         self.random_VAR=tk.StringVar()
         self.random_VAR.set(self.random)
         self.random_options=['0','1']
-        self.random_dropdown=tk.OptionMenu(self.root,self.random_VAR,*self.random_options)
+        self.random_dropdown=tk.OptionMenu(self.frame_table1,self.random_VAR,*self.random_options)
         self.random_dropdown.grid(row=17,column=0,sticky='se')    
         self.random_dropdown.config(bg='green',fg='black')
         self.random_dropdown['menu'].config(fg='lime',bg='black')   
-        self.random_label=tk.Label(self.root,text='random',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.random_label=tk.Label(self.frame_table1,text='random',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.random_label.grid(row=18,column=0,sticky='ne')
 
         self.ITERATION_NUM_VAR=tk.StringVar()
         self.ITERATION_NUM_VAR.set(self.ITERATION_NUM)
-        self.ITERATION_entry=tk.Entry(self.root,textvariable=self.ITERATION_NUM_VAR)
+        self.ITERATION_entry=tk.Entry(self.frame_table1,textvariable=self.ITERATION_NUM_VAR)
         self.ITERATION_entry.grid(row=19,column=0,sticky='se')
-        self.ITERATION_label=tk.Label(self.root,text='max_batches',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.ITERATION_label=tk.Label(self.frame_table1,text='max_batches',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.ITERATION_label.grid(row=20,column=0,sticky='ne')
 
-        self.generate_cfg_button=Button(self.root,image=self.icon_config,command=self.generate_cfg,bg=self.root_bg,fg=self.root_fg)
+        self.generate_cfg_button=Button(self.frame_table1,image=self.icon_config,command=self.generate_cfg,bg=self.root_bg,fg=self.root_fg)
         self.generate_cfg_button.grid(row=3,column=0,sticky='s')
-        self.generate_cfg_note=tk.Label(self.root,text='1.b \n Generate Yolo \n Configs (.cfgs)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.generate_cfg_note=tk.Label(self.frame_table1,text='1.b \n Generate Yolo \n Configs (.cfgs)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.generate_cfg_note.grid(row=4,column=0,sticky='n')
 
-        self.load_cfg_button=Button(self.root,image=self.icon_config,command=self.load_cfg,bg=self.root_bg,fg=self.root_fg)
+        self.load_cfg_button=Button(self.frame_table1,image=self.icon_config,command=self.load_cfg,bg=self.root_bg,fg=self.root_fg)
         self.load_cfg_button.grid(row=1,column=0,sticky='s')
-        self.load_cfg_note=tk.Label(self.root,text='1.a \n Load Yolo \n Configs (.cfgs)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.load_cfg_note=tk.Label(self.frame_table1,text='1.a \n Load Yolo \n Configs (.cfgs)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.load_cfg_note.grid(row=2,column=0,sticky='n')
 
         self.open_anno_label_var=tk.StringVar()
@@ -937,10 +960,10 @@ class yolo_cfg:
         self.style3.configure('Normal.TRadiobutton',
                              background='green',
                              foreground='black')
-        self.button_yolo_tiny=ttk.Radiobutton(text='Yolov4-tiny',style='Normal.TRadiobutton',variable=self.var_yolo_choice,value='Yolov4-tiny')
+        self.button_yolo_tiny=ttk.Radiobutton(self.frame_table1,text='Yolov4-tiny',style='Normal.TRadiobutton',variable=self.var_yolo_choice,value='Yolov4-tiny')
 
         self.button_yolo_tiny.grid(row=5,column=0,stick='se')
-        self.button_yolo_regular=ttk.Radiobutton(text='Yolov4',style='Normal.TRadiobutton',variable=self.var_yolo_choice,value='Yolov4')
+        self.button_yolo_regular=ttk.Radiobutton(self.frame_table1,text='Yolov4',style='Normal.TRadiobutton',variable=self.var_yolo_choice,value='Yolov4')
         self.button_yolo_regular.grid(row=6,column=0,stick='ne')
 
         self.RECORDRAW_BUTTONS()
@@ -948,27 +971,27 @@ class yolo_cfg:
         self.COMPUTE_METRICS_BUTTONS()
 
     def COMPUTE_METRICS_BUTTONS(self):
-        self.popup_metrics_buttons=Button(self.root,text='Compute Metrics',command=self.popupWindow_mAP,bg=self.root_fg,fg=self.root_bg)
+        self.popup_metrics_buttons=Button(self.frame_table1,text='Compute Metrics',command=self.popupWindow_mAP,bg=self.root_fg,fg=self.root_bg)
         self.popup_metrics_buttons.grid(row=0,column=7,sticky='sw')
 
     def TEST_BUTTONS(self):
-        self.popup_TEST_button=Button(self.root,text='TEST Script Buttons',command=self.popupWindow_TEST,bg=self.root_fg,fg=self.root_bg)
+        self.popup_TEST_button=Button(self.frame_table1,text='TEST Script Buttons',command=self.popupWindow_TEST,bg=self.root_fg,fg=self.root_bg)
         self.popup_TEST_button.grid(row=13,column=2,sticky='sw')
 
     def RECORDRAW_BUTTONS(self):
-        self.popup_RECORDRAW_button=Button(self.root,text='RECORD RAW VIDEO Buttons',command=self.popupWindow_RECORD_RAW,bg=self.root_fg,fg=self.root_bg)
+        self.popup_RECORDRAW_button=Button(self.frame_table1,text='RECORD RAW VIDEO Buttons',command=self.popupWindow_RECORD_RAW,bg=self.root_fg,fg=self.root_bg)
         self.popup_RECORDRAW_button.grid(row=0,column=2,sticky='sw')
 
     def TRAIN_BUTTONS(self):
-        self.popup_TRAIN_button=Button(self.root,text='TRAIN Script Buttons',command=self.popupWindow_TRAIN,bg=self.root_fg,fg=self.root_bg)
+        self.popup_TRAIN_button=Button(self.frame_table1,text='TRAIN Script Buttons',command=self.popupWindow_TRAIN,bg=self.root_fg,fg=self.root_bg)
         self.popup_TRAIN_button.grid(row=12,column=2,sticky='sw')
 
     def SHOWTABLE_BUTTONS(self):
-        self.popup_SHOWTABLE_button=Button(self.root,text='Show df',command=self.popupWindow_showtable,bg=self.root_fg,fg=self.root_bg)
+        self.popup_SHOWTABLE_button=Button(self.frame_table1,text='Show df',command=self.popupWindow_showtable,bg=self.root_fg,fg=self.root_bg)
         self.popup_SHOWTABLE_button.grid(row=3,column=2,sticky='sw')
 
     def CUSTOMINPUT_BUTTONS(self):
-        self.popup_custominput_button=Button(self.root,text='Provide Custom Train/Split Inputs',command=self.popupWindow_custominput,bg=self.root_fg,fg=self.root_bg)
+        self.popup_custominput_button=Button(self.frame_table1,text='Provide Custom Train/Split Inputs',command=self.popupWindow_custominput,bg=self.root_fg,fg=self.root_bg)
         self.popup_custominput_button.grid(row=4,column=3,sticky='sw')
 
     def return_to_main(self):
@@ -1168,7 +1191,7 @@ class yolo_cfg:
                     self.open_darknet_label.destroy()
                     del self.open_darknet_label
                     cmd_i=open_cmd+" '{}'".format(self.open_darknet_label_var.get())
-                    self.open_darknet_label=Button(self.root,textvariable=self.open_darknet_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+                    self.open_darknet_label=Button(self.frame_table1,textvariable=self.open_darknet_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_darknet_label.grid(row=11,column=5,columnspan=50,sticky='sw')
                     self.darknet_path=self.foldername
                     print(self.path_darknet)
@@ -1178,7 +1201,7 @@ class yolo_cfg:
                     self.open_basepath_label.destroy()
                     del self.open_basepath_label
                     cmd_i=open_cmd+" '{}'".format(self.open_basepath_label_var.get())
-                    self.open_basepath_label=Button(self.root,textvariable=self.open_basepath_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+                    self.open_basepath_label=Button(self.frame_table1,textvariable=self.open_basepath_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_basepath_label.grid(row=1,column=6,columnspan=50,sticky='sw')
                     self.base_path_OG=self.foldername
                     print(self.base_path_OG)  
@@ -1189,7 +1212,7 @@ class yolo_cfg:
                     self.open_anno_label.destroy()
                     del self.open_anno_label
                     cmd_i=open_cmd+" '{}'".format(self.open_anno_label_var.get())
-                    self.open_anno_label=Button(self.root,textvariable=self.open_anno_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+                    self.open_anno_label=Button(self.frame_table1,textvariable=self.open_anno_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_anno_label.grid(row=11,column=5,columnspan=50,sticky='sw')
                     self.path_Annotations=self.foldername
                     print(self.path_Annotations)
@@ -1200,7 +1223,7 @@ class yolo_cfg:
                     self.open_jpeg_label.destroy()
                     del self.open_jpeg_label
                     cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var.get())
-                    self.open_jpeg_label=Button(self.root,textvariable=self.open_jpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+                    self.open_jpeg_label=Button(self.frame_table1,textvariable=self.open_jpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_jpeg_label.grid(row=13,column=5,columnspan=50,sticky='sw')
                     self.path_JPEGImages=self.foldername
                     print(self.path_JPEGImages)  
@@ -1210,7 +1233,7 @@ class yolo_cfg:
                     self.open_predjpeg_label.destroy()
                     del self.open_predjpeg_label
                     cmd_i=open_cmd+" '{}'".format(self.open_predjpeg_label_var.get())
-                    self.open_predjpeg_label=Button(self.root,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+                    self.open_predjpeg_label=Button(self.frame_table1,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_predjpeg_label.grid(row=10+11,column=5,columnspan=50,sticky='sw')
                     self.path_predJPEGImages=self.foldername
                     print(self.path_predJPEGImages)   
@@ -1228,7 +1251,7 @@ class yolo_cfg:
                     self.open_yolo_label.destroy()
                     del self.open_yolo_label
                     cmd_i=open_cmd+" '{}'".format(self.open_yolo_label_var.get())
-                    self.open_yolo_label=Button(self.root,textvariable=self.open_yolo_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+                    self.open_yolo_label=Button(self.frame_table1,textvariable=self.open_yolo_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_yolo_label.grid(row=15,column=5,columnspan=50,sticky='sw')
                     self.path_Yolo=self.foldername
                     print(self.path_Yolo)  
@@ -1445,7 +1468,7 @@ class yolo_cfg:
         self.initial_buttons()
     def generate_cfg(self):
         #self.root.withdraw()
-        #self.top=tk.Toplevel(self.root,width=300,height=300)
+        #self.top=tk.Toplevel(self.frame_table1,width=300,height=300)
         #self.canvas_generate=tk.Canvas(self.top,bg='white')
         #self.canvas_generate.pack(expand=tk.YES,fill=tk.BOTH)
         #self.top.destroy()
@@ -1665,14 +1688,14 @@ class yolo_cfg:
         self.open_basepath_now_label_var=tk.StringVar()
         self.open_basepath_now_label_var.set(self.base_path)
         cmd_i=open_cmd+" '{}'".format(self.open_basepath_now_label_var.get())
-        self.open_basepath_now_button=Button(self.root,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.open_basepath_now_button=Button(self.frame_table1,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_basepath_now_button.grid(row=3,column=4,sticky='se')
-        #sjs#self.open_basepath_now_note=tk.Label(self.root,text="{}".format(self.open_basepath_now_label_var.get()),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        #sjs#self.open_basepath_now_note=tk.Label(self.frame_table1,text="{}".format(self.open_basepath_now_label_var.get()),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         #sjs#self.open_basepath_now_note.grid(row=4,column=4,sticky='ne')
-        self.open_basepath_now_note=tk.Label(self.root,text="{}".format('Scripts'),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_basepath_now_note=tk.Label(self.frame_table1,text="{}".format('Scripts'),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_basepath_now_note.grid(row=4,column=4,sticky='ne')
         # cmd_i=open_cmd+" '{}'".format(self.open_basepath_now_label_var.get())
-        # self.open_basepath_now_label=Button(self.root,textvariable=self.open_basepath_now_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        # self.open_basepath_now_label=Button(self.frame_table1,textvariable=self.open_basepath_now_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         # self.open_basepath_now_label.grid(row=3,column=5,columnspan=50,sticky='sw')
         self.basepath_now_selected=True
 
@@ -1685,17 +1708,17 @@ class yolo_cfg:
         self.open_save_cfg_path_train_label_var=tk.StringVar()
         self.open_save_cfg_path_train_label_var.set(self.save_cfg_path_train)
         cmd_i=open_cmd+" '{}'".format(self.open_save_cfg_path_train_label_var.get())
-        self.open_save_cfg_path_train_button=Button(self.root,image=self.icon_single_file,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.open_save_cfg_path_train_button=Button(self.frame_table1,image=self.icon_single_file,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_save_cfg_path_train_button.grid(row=5,column=4,sticky='se')
-        #sjs#self.open_save_cfg_path_train_note=tk.Label(self.root,text="{}".format(self.open_save_cfg_path_train_label_var.get().split('/')[-1]),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        #sjs#self.open_save_cfg_path_train_note=tk.Label(self.frame_table1,text="{}".format(self.open_save_cfg_path_train_label_var.get().split('/')[-1]),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         #sjs#self.open_save_cfg_path_train_note.grid(row=6,column=4,sticky='ne')
-        self.open_save_cfg_path_train_note=tk.Label(self.root,text="{}".format("train.cfg"),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_save_cfg_path_train_note=tk.Label(self.frame_table1,text="{}".format("train.cfg"),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_save_cfg_path_train_note.grid(row=6,column=4,sticky='ne')
         cmd_i="netron '{}' -b".format(self.open_save_cfg_path_train_label_var.get())
-        self.open_save_cfg_path_train_button_netron=Button(self.root,image=self.icon_map,command=partial(self.run_thread_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.open_save_cfg_path_train_button_netron=Button(self.frame_table1,image=self.icon_map,command=partial(self.run_thread_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_save_cfg_path_train_button_netron.grid(row=5,column=5,sticky='sw')
         # cmd_i=open_cmd+" '{}'".format(self.open_save_cfg_path_train_label_var.get())
-        # self.open_save_cfg_path_train_label=Button(self.root,textvariable=self.open_save_cfg_path_train_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        # self.open_save_cfg_path_train_label=Button(self.frame_table1,textvariable=self.open_save_cfg_path_train_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         # self.open_save_cfg_path_train_label.grid(row=5,column=5,columnspan=50,sticky='sw')
         self.save_cfg_path_train_selected=True
 
@@ -1708,18 +1731,18 @@ class yolo_cfg:
         self.open_save_cfg_path_test_label_var=tk.StringVar()
         self.open_save_cfg_path_test_label_var.set(self.save_cfg_path_test)
         cmd_i=open_cmd+" '{}'".format(self.open_save_cfg_path_test_label_var.get())
-        self.open_save_cfg_path_test_button=Button(self.root,image=self.icon_single_file,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.open_save_cfg_path_test_button=Button(self.frame_table1,image=self.icon_single_file,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_save_cfg_path_test_button.grid(row=7,column=4,sticky='se')
-        #sjs#self.open_save_cfg_path_test_note=tk.Label(self.root,text="{}".format(self.open_save_cfg_path_test_label_var.get().split('/')[-1]),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        #sjs#self.open_save_cfg_path_test_note=tk.Label(self.frame_table1,text="{}".format(self.open_save_cfg_path_test_label_var.get().split('/')[-1]),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         #sjs#self.open_save_cfg_path_test_note.grid(row=8,column=4,sticky='ne')
-        self.open_save_cfg_path_test_note=tk.Label(self.root,text="{}".format("test.cfg"),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_save_cfg_path_test_note=tk.Label(self.frame_table1,text="{}".format("test.cfg"),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_save_cfg_path_test_note.grid(row=8,column=4,sticky='ne')
 
         cmd_i="netron '{}' -b".format(self.open_save_cfg_path_test_label_var.get())
-        self.open_save_cfg_path_test_button_netron=Button(self.root,image=self.icon_map,command=partial(self.run_thread_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.open_save_cfg_path_test_button_netron=Button(self.frame_table1,image=self.icon_map,command=partial(self.run_thread_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_save_cfg_path_test_button_netron.grid(row=7,column=5,sticky='sw')
         # cmd_i=open_cmd+" '{}'".format(self.open_save_cfg_path_test_label_var.get())
-        # self.open_save_cfg_path_test_label=Button(self.root,textvariable=self.open_save_cfg_path_test_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        # self.open_save_cfg_path_test_label=Button(self.frame_table1,textvariable=self.open_save_cfg_path_test_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         # self.open_save_cfg_path_test_label.grid(row=7,column=5,columnspan=50,sticky='sw')
         self.save_cfg_path_test_selected=True
 
@@ -1727,22 +1750,22 @@ class yolo_cfg:
 
         self.open_jpeg_label_var=tk.StringVar()
         self.open_jpeg_label_var.set(self.path_JPEGImages)
-        self.open_jpeg_button=Button(self.root,image=self.icon_folder,command=partial(self.select_folder,self.path_JPEGImages,'Open JPEGImages Folder',self.open_jpeg_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_jpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_JPEGImages,'Open JPEGImages Folder',self.open_jpeg_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_jpeg_button.grid(row=13,column=4,sticky='se')
-        self.open_jpeg_note=tk.Label(self.root,text="JPEGImages dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_jpeg_note=tk.Label(self.frame_table1,text="JPEGImages dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_jpeg_note.grid(row=14,column=4,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var.get())
-        self.open_jpeg_label=Button(self.root,textvariable=self.open_jpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_jpeg_label=Button(self.frame_table1,textvariable=self.open_jpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_jpeg_label.grid(row=13,column=5,columnspan=50,sticky='sw')
 
         self.open_predjpeg_label_var=tk.StringVar()
         self.open_predjpeg_label_var.set(self.path_predJPEGImages)
-        self.open_predjpeg_button=Button(self.root,image=self.icon_folder,command=partial(self.select_folder,self.path_predJPEGImages,'Open Prediction JPEGImages Folder',self.open_predjpeg_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_predjpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_predJPEGImages,'Open Prediction JPEGImages Folder',self.open_predjpeg_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_predjpeg_button.grid(row=10+11,column=4,sticky='se')
-        self.open_predjpeg_note=tk.Label(self.root,text="Prediction JPEGImages dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_predjpeg_note=tk.Label(self.frame_table1,text="Prediction JPEGImages dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_predjpeg_note.grid(row=11+11,column=4,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_predjpeg_label_var.get())
-        self.open_predjpeg_label=Button(self.root,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_predjpeg_label=Button(self.frame_table1,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_predjpeg_label.grid(row=10+11,column=5,columnspan=50,sticky='sw')
 
         self.open_MOVMP4()
@@ -1751,35 +1774,23 @@ class yolo_cfg:
         if os.path.exists(self.path_Yolo)==False:
             os.makedirs(self.path_Yolo)
         self.open_yolo_label_var.set(self.path_Yolo)
-        self.open_yolo_button=Button(self.root,image=self.icon_folder,command=partial(self.select_folder,self.path_Yolo,'Open Yolo Folder',self.open_yolo_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_yolo_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_Yolo,'Open Yolo Folder',self.open_yolo_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_yolo_button.grid(row=15,column=4,sticky='se')
-        self.open_yolo_note=tk.Label(self.root,text="Yolo dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_yolo_note=tk.Label(self.frame_table1,text="Yolo dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_yolo_note.grid(row=16,column=4,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_yolo_label_var.get())
-        self.open_yolo_label=Button(self.root,textvariable=self.open_yolo_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_yolo_label=Button(self.frame_table1,textvariable=self.open_yolo_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_yolo_label.grid(row=15,column=5,columnspan=50,sticky='sw')
 
-        self.create_yolo_objs_button=Button(self.root,image=self.icon_yolo_objects,command=self.convert_PascalVOC_to_YOLO,bg=self.root_bg,fg=self.root_fg)
+        self.create_yolo_objs_button=Button(self.frame_table1,image=self.icon_yolo_objects,command=self.convert_PascalVOC_to_YOLO,bg=self.root_bg,fg=self.root_fg)
         self.create_yolo_objs_button.grid(row=1,column=1,sticky='se')
-        self.create_yolo_objs_button_note=tk.Label(self.root,text='2.a \n Create Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.create_yolo_objs_button_note=tk.Label(self.frame_table1,text='2.a \n Create Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.create_yolo_objs_button_note.grid(row=2,column=1,sticky='ne')
 
         
 
         self.var_overwrite=tk.StringVar()
-        # df_pkls=os.listdir(self.path_Yolo)
-        # df_pkls=[os.path.join(self.path_Yolo,w) for w in df_pkls if w.find('_df_YOLO.pkl')!=-1]
-        # self.found_names={}
-        # if len(df_pkls)>0:
-        #     for pkl_i in tqdm(df_pkls):
-        #         self.df_pkl=pd.read_pickle(pkl_i)
-        #         names_possible=list(self.df_pkl['label_i'].unique())
-        #         for name in names_possible:
-        #             if name not in self.found_names.keys():
-        #                 self.found_names[name]=len(self.found_names.keys())+0
-        #     f=open(self.names_path,'w')
-        #     f.writelines([k+'\n' for k, v in sorted(self.found_names.items(), key=lambda item: item[1])])
-        #     f.close()
+
         if os.path.exists(os.path.join(self.path_Yolo,os.path.basename(self.names_path))) and os.path.exists(self.names_path)==False:
             shutil.copy(os.path.join(self.path_Yolo,os.path.basename(self.names_path)),self.names_path)
         if os.path.exists(self.names_path):
@@ -1795,17 +1806,14 @@ class yolo_cfg:
         self.style2.configure('Normal.TRadiobutton',
                              background='green',
                              foreground='black')
-        self.button_overwrite_yes=ttk.Radiobutton(text='Create new',style='Normal.TRadiobutton',variable=self.var_overwrite,value='Yes',
+        self.button_overwrite_yes=ttk.Radiobutton(self.frame_table1,text='Create new',style='Normal.TRadiobutton',variable=self.var_overwrite,value='Yes',
                                      command=partial(self.select_yes_no,'Yes'))
 
         self.button_overwrite_yes.grid(row=1,column=2,stick='nw')
-        self.button_overwrite_no=ttk.Radiobutton(text='Keep existing as is',style='Normal.TRadiobutton',variable=self.var_overwrite,value='No',
+        self.button_overwrite_no=ttk.Radiobutton(self.frame_table1,text='Keep existing as is',style='Normal.TRadiobutton',variable=self.var_overwrite,value='No',
                                      command=partial(self.select_yes_no,'No'))
         self.button_overwrite_no.grid(row=2,column=2,stick='nw')
-        #REMOVING this option to keep it simple
-        # self.button_overwrite_add=ttk.Radiobutton(text='Add to existing',style='Normal.TRadiobutton',variable=self.var_overwrite,value='Add',
-        #                              command=partial(self.select_yes_no,'Add'))
-        # self.button_overwrite_add.grid(row=3,column=2,stick='nw')
+
 
 
 
@@ -1821,12 +1829,12 @@ class yolo_cfg:
 
         self.open_anno_label_var=tk.StringVar()
         self.open_anno_label_var.set(self.path_Annotations)
-        self.open_anno_button=Button(self.root,image=self.icon_folder,command=partial(self.select_folder,self.path_Annotations,'Open Annotations Folder',self.open_anno_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_anno_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_Annotations,'Open Annotations Folder',self.open_anno_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_anno_button.grid(row=11,column=4,sticky='se')
-        self.open_anno_note=tk.Label(self.root,text="Annotations dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_anno_note=tk.Label(self.frame_table1,text="Annotations dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_anno_note.grid(row=12,column=4,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_anno_label_var.get())
-        self.open_anno_label=Button(self.root,textvariable=self.open_anno_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_anno_label=Button(self.frame_table1,textvariable=self.open_anno_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_anno_label.grid(row=11,column=5,columnspan=50,sticky='sw')
         self.open_anno_selected=True
 
@@ -1862,7 +1870,7 @@ class yolo_cfg:
         self.open_anno_selected_CUSTOM=True
 
     def send_text_buttons(self):
-        self.ck2=tk.Checkbutton(self.root,text='Send Text Message/Email Alerts',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
+        self.ck2=tk.Checkbutton(self.frame_table1,text='Send Text Message/Email Alerts',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
         self.ck2.grid(row=14,column=3,sticky='n')
     def send_text_buttons_training(self):
         self.ck2=tk.Checkbutton(self.top,text='Send Text Message/Email Alerts\n\t after training? \n (FYI, only valid for Multi-Training selections)',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
@@ -1909,12 +1917,12 @@ class yolo_cfg:
         self.open_data_path_label_var=tk.StringVar()
         self.open_data_path_label_var.set(self.data_path)
         cmd_i=open_cmd+" '{}'".format(self.open_data_path_label_var.get())
-        self.open_data_path_button=Button(self.root,image=self.icon_single_file,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.open_data_path_button=Button(self.frame_table1,image=self.icon_single_file,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_data_path_button.grid(row=7,column=4+1,sticky='se')
-        self.open_data_path_note=tk.Label(self.root,text="{}".format(os.path.basename(self.open_data_path_label_var.get())),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_data_path_note=tk.Label(self.frame_table1,text="{}".format(os.path.basename(self.open_data_path_label_var.get())),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_data_path_note.grid(row=8,column=4+1,sticky='ne')
         # cmd_i=open_cmd+" '{}'".format(self.open_data_path_label_var.get())
-        # self.open_data_path_label=Button(self.root,textvariable=self.open_data_path_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        # self.open_data_path_label=Button(self.frame_table1,textvariable=self.open_data_path_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         # self.open_data_path_label.grid(row=17,column=4+50,columnspan=50,sticky='sw')
         self.data_path_selected=True
 
@@ -1954,12 +1962,12 @@ class yolo_cfg:
 
         self.open_mp4_label_var=tk.StringVar()
         self.open_mp4_label_var.set(self.mp4_video_path)
-        self.open_mp4_button=Button(self.root,image=self.icon_folder,command=partial(self.select_file_mp4,self.mp4_video_path),bg=self.root_bg,fg=self.root_fg)
+        self.open_mp4_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_file_mp4,self.mp4_video_path),bg=self.root_bg,fg=self.root_fg)
         self.open_mp4_button.grid(row=19,column=4,sticky='se')
-        self.open_mp4_note=tk.Label(self.root,text="mp4 file to test with",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_mp4_note=tk.Label(self.frame_table1,text="mp4 file to test with",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_mp4_note.grid(row=20,column=4,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_mp4_label_var.get())
-        self.open_mp4_label=Button(self.root,textvariable=self.open_mp4_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_mp4_label=Button(self.frame_table1,textvariable=self.open_mp4_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_mp4_label.grid(row=19,column=5,columnspan=50,sticky='sw')
         
 
@@ -2006,15 +2014,15 @@ class yolo_cfg:
 
         self.open_MOVMP4_label_var=tk.StringVar()
         self.open_MOVMP4_label_var.set(self.path_MOVMP4)
-        self.open_MOVMP4_button=Button(self.root,image=self.icon_single_file,command=partial(self.select_file_MOVMP4,self.path_MOVMP4),bg=self.root_bg,fg=self.root_fg)
+        self.open_MOVMP4_button=Button(self.frame_table1,image=self.icon_single_file,command=partial(self.select_file_MOVMP4,self.path_MOVMP4),bg=self.root_bg,fg=self.root_fg)
         self.open_MOVMP4_button.grid(row=5,column=8,sticky='sw')
-        self.open_MOVMP4_note=tk.Label(self.root,text="MOV/MP4 File to \n Create JPEGImages",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_MOVMP4_note=tk.Label(self.frame_table1,text="MOV/MP4 File to \n Create JPEGImages",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_MOVMP4_note.grid(row=4,column=8,columnspan=1,sticky='sw')
 
 
-        self.open_MOVMP4_INPUT_button=Button(self.root,image=self.icon_folder,command=partial(self.select_folder_pathJPEGImages_INPUT,'path_JPEGImages for making .mp4',self.open_MOVMP4_INPUT_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_MOVMP4_INPUT_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder_pathJPEGImages_INPUT,'path_JPEGImages for making .mp4',self.open_MOVMP4_INPUT_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_MOVMP4_INPUT_button.grid(row=7,column=8,sticky='sw')
-        self.open_MOVMP4_INPUT_note=tk.Label(self.root,text="path_JPEGImages to \n Create .mp4 File from",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_MOVMP4_INPUT_note=tk.Label(self.frame_table1,text="path_JPEGImages to \n Create .mp4 File from",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_MOVMP4_INPUT_note.grid(row=6,column=8,columnspan=1,sticky='sw')
         
         self.fps_MOVMP4_options=['1/60','1/30','1/10','1/5','1/4','1/2','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40']
@@ -2023,28 +2031,28 @@ class yolo_cfg:
 
 
         #cmd_i=open_cmd+" '{}'".format(self.open_MOVMP4_label_var.get())
-        #self.open_MOVMP4_label=Button(self.root,textvariable=self.open_MOVMP4_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        #self.open_MOVMP4_label=Button(self.frame_table1,textvariable=self.open_MOVMP4_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         #self.open_MOVMP4_label.grid(row=5,column=9,columnspan=50,sticky='sw') 
         self.MOVMP4_selected=True 
         self.create_MOVMP4_JPEGImages()
-        self.fps_MOVMP4_dropdown=tk.OptionMenu(self.root,self.fps_MOVMP4_VAR,*self.fps_MOVMP4_options)
+        self.fps_MOVMP4_dropdown=tk.OptionMenu(self.frame_table1,self.fps_MOVMP4_VAR,*self.fps_MOVMP4_options)
         self.fps_MOVMP4_dropdown.grid(row=5,column=9,sticky='nw')
         self.fps_MOVMP4_dropdown.config(bg='green',fg='black')
         self.fps_MOVMP4_dropdown['menu'].config(fg='lime',bg='black')
-        self.fps_MOVMP4_dropdown_label=tk.Label(self.root,text='FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
+        self.fps_MOVMP4_dropdown_label=tk.Label(self.frame_table1,text='FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
         self.fps_MOVMP4_dropdown_label.grid(row=4,column=9,sticky='sw')   
 
-        self.fps_MOVMP4_from_INPUT_dropdown=tk.OptionMenu(self.root,self.fps_OUTPUT_VAR,*self.fps_MOVMP4_INPUT_options)
+        self.fps_MOVMP4_from_INPUT_dropdown=tk.OptionMenu(self.frame_table1,self.fps_OUTPUT_VAR,*self.fps_MOVMP4_INPUT_options)
         self.fps_MOVMP4_from_INPUT_dropdown.grid(row=7,column=9,sticky='nw')
         self.fps_MOVMP4_from_INPUT_dropdown.config(bg='green',fg='black')
         self.fps_MOVMP4_from_INPUT_dropdown['menu'].config(fg='lime',bg='black')
-        self.fps_MOVMP4_from_INPUT_dropdown_label=tk.Label(self.root,text='FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
+        self.fps_MOVMP4_from_INPUT_dropdown_label=tk.Label(self.frame_table1,text='FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
         self.fps_MOVMP4_from_INPUT_dropdown_label.grid(row=6,column=9,sticky='sw') 
 
     def create_MOVMP4_JPEGImages(self):
-        self.create_MOVMP4_button=Button(self.root,image=self.icon_create,command=self.check_fps,bg=self.root_bg,fg=self.root_fg)
+        self.create_MOVMP4_button=Button(self.frame_table1,image=self.icon_create,command=self.check_fps,bg=self.root_bg,fg=self.root_fg)
         self.create_MOVMP4_button.grid(row=5,column=7,sticky='se')
-        self.create_MOVMP4_from_INPUT_button=Button(self.root,image=self.icon_create,command=self.create_video_from_imgs,bg=self.root_bg,fg=self.root_fg)
+        self.create_MOVMP4_from_INPUT_button=Button(self.frame_table1,image=self.icon_create,command=self.create_video_from_imgs,bg=self.root_bg,fg=self.root_fg)
         self.create_MOVMP4_from_INPUT_button.grid(row=7,column=7,sticky='se')
 
 
@@ -2057,7 +2065,7 @@ class yolo_cfg:
         if os.path.exists(self.path_MOVMP4):
             cmd_i=open_cmd+' '+os.path.dirname(self.path_MOVMP4)
             self.run_cmd(cmd_i)
-            self.open_jpgs_video_button=Button(self.root,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.open_jpgs_video_button=Button(self.frame_table1,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
             self.open_jpgs_video_button.grid(row=5,column=10,sticky='sw')
 
     def create_video_from_imgs(self):
@@ -2069,7 +2077,7 @@ class yolo_cfg:
         if os.path.exists(self.open_MOVMP4_INPUT_label_var.get()):
             cmd_i=open_cmd+' '+self.open_MOVMP4_INPUT_label_var.get()
             self.run_cmd(cmd_i)
-            self.open_output_video_button=Button(self.root,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+            self.open_output_video_button=Button(self.frame_table1,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
             self.open_output_video_button.grid(row=7,column=10,sticky='sw')
 
 
@@ -2085,10 +2093,10 @@ class yolo_cfg:
         else:
             self.model_path_var.set(self.options[0])
             #print('Using custom cfg/model')
-        # self.dropdowntests=tk.OptionMenu(self.root,self.model_path_var,*self.options,command=self.read_model_test)
+        # self.dropdowntests=tk.OptionMenu(self.frame_table1,self.model_path_var,*self.options,command=self.read_model_test)
         # self.dropdowntests.grid(row=9,column=7,sticky='nw')
         # cmd_i=open_cmd+" '{}'".format(self.MODEL_PATHS)
-        # self.dropdowntests_label=Button(self.root,text='Testing Models',command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
+        # self.dropdowntests_label=Button(self.frame_table1,text='Testing Models',command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         # self.dropdowntests_label.grid(row=8,column=7,sticky='sw')
 
     def train_yolo(self):
@@ -2104,9 +2112,9 @@ class yolo_cfg:
         except:
             self.epochs_VAR=tk.StringVar()
             self.epochs_VAR.set(self.epochs)
-            self.epochs_entry=tk.Entry(self.root,textvariable=self.epochs_VAR)
+            self.epochs_entry=tk.Entry(self.frame_table1,textvariable=self.epochs_VAR)
             self.epochs_entry.grid(row=21,column=0,sticky='se')
-            self.epochs_label=tk.Label(self.root,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.epochs_label=tk.Label(self.frame_table1,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_label.grid(row=22,column=0,sticky='ne')
 
         try:
@@ -2225,38 +2233,38 @@ class yolo_cfg:
         if self.RTSP_SERVER and self.PORT_VAR==None:
             self.PORT_VAR=tk.StringVar()
             self.PORT_VAR.set(self.PORT)
-            self.PORT_entry=tk.Entry(self.root,textvariable=self.PORT_VAR)
+            self.PORT_entry=tk.Entry(self.frame_table1,textvariable=self.PORT_VAR)
             self.PORT_entry.grid(row=13+spacer,column=2,sticky='sw')
-            self.PORT_label=tk.Label(self.root,text='RTSP PORT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.PORT_label=tk.Label(self.frame_table1,text='RTSP PORT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.PORT_label.grid(row=14+spacer,column=2,sticky='nw')  
         if self.RTSP_SERVER and self.FPS_VAR==None:
             self.FPS_VAR=tk.StringVar()
             self.FPS_VAR.set(self.FPS)
-            self.FPS_entry=tk.Entry(self.root,textvariable=self.FPS_VAR)
+            self.FPS_entry=tk.Entry(self.frame_table1,textvariable=self.FPS_VAR)
             self.FPS_entry.grid(row=15+spacer,column=2,sticky='sw')
-            self.FPS_label=tk.Label(self.root,text='RTSP FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.FPS_label=tk.Label(self.frame_table1,text='RTSP FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.FPS_label.grid(row=16+spacer,column=2,sticky='nw')  
         if self.RTSP_SERVER and self.STREAM_KEY_VAR==None:
             self.STREAM_KEY_VAR=tk.StringVar()
             self.STREAM_KEY_VAR.set(self.STREAM_KEY)
-            self.STREAM_KEY_entry=tk.Entry(self.root,textvariable=self.STREAM_KEY_VAR)
+            self.STREAM_KEY_entry=tk.Entry(self.frame_table1,textvariable=self.STREAM_KEY_VAR)
             self.STREAM_KEY_entry.grid(row=17+spacer,column=2,sticky='sw')
-            self.STREAM_KEY_label=tk.Label(self.root,text='RTSP STREAM KEY',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.STREAM_KEY_label=tk.Label(self.frame_table1,text='RTSP STREAM KEY',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.STREAM_KEY_label.grid(row=18+spacer,column=2,sticky='nw')  
         if self.RTSP_SERVER and self.RTSP_FULL_PATH_VAR==None:
             self.RTSP_FULL_PATH_VAR=tk.StringVar()
             self.get_full_path_rtsp()
-            self.RTSP_FULL_PATH_label=tk.Label(self.root,textvariable=self.RTSP_FULL_PATH_VAR,bg=self.root_fg,fg=self.root_bg,font=('Arial',10))
+            self.RTSP_FULL_PATH_label=tk.Label(self.frame_table1,textvariable=self.RTSP_FULL_PATH_VAR,bg=self.root_fg,fg=self.root_bg,font=('Arial',10))
             self.RTSP_FULL_PATH_label.grid(row=14+spacer-2,column=2,sticky='nw')  
         if self.RTSP_SERVER and self.USE_RTSP_VAR==None:
             self.USE_RTSP_VAR=tk.StringVar()
             self.USE_RTSP_options=['Yes','No']
             self.USE_RTSP_VAR.set('No')
-            self.USE_RTSP_dropdown=tk.OptionMenu(self.root,self.USE_RTSP_VAR,*self.USE_RTSP_options,command=self.get_full_path_rtsp())
+            self.USE_RTSP_dropdown=tk.OptionMenu(self.frame_table1,self.USE_RTSP_VAR,*self.USE_RTSP_options,command=self.get_full_path_rtsp())
             self.USE_RTSP_dropdown.grid(row=13+spacer-2,column=3,sticky='sw')
             self.USE_RTSP_dropdown.config(bg='green',fg='black')
             self.USE_RTSP_dropdown['menu'].config(fg='lime',bg='black')
-            self.USE_RTSP_label=tk.Label(self.root,text='RTSP Server?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+            self.USE_RTSP_label=tk.Label(self.frame_table1,text='RTSP Server?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
             self.USE_RTSP_label.grid(row=14+spacer-2,column=3,sticky='nw')   
         if self.RTSP_CLIENT and self.USE_RTSP_CLIENT_VAR==None: 
             self.popupWindow_RTSP()
@@ -2270,11 +2278,11 @@ class yolo_cfg:
 
 
     def RTSP_BUTTONS(self):
-        self.popup_RTSP_button=Button(self.root,text='Client/Socket RTSP Buttons',command=self.popupWindow_RTSP,bg=self.root_fg,fg=self.root_bg)
+        self.popup_RTSP_button=Button(self.frame_table1,text='Client/Socket RTSP Buttons',command=self.popupWindow_RTSP,bg=self.root_fg,fg=self.root_bg)
         self.popup_RTSP_button.grid(row=16+5-2,column=3,sticky='sw')
 
     def CLASSIFY_CHIPS_BUTTONS(self):
-        self.popup_CLASSIFY_CHIPS_button=Button(self.root,text='CLASSIFY CHIPS Buttons',command=self.popupWindow_CLASSIFY_CHIPS,bg=self.root_fg,fg=self.root_bg)
+        self.popup_CLASSIFY_CHIPS_button=Button(self.frame_table1,text='CLASSIFY CHIPS Buttons',command=self.popupWindow_CLASSIFY_CHIPS,bg=self.root_fg,fg=self.root_bg)
         self.popup_CLASSIFY_CHIPS_button.grid(row=9,column=8,sticky='sw')
 
 
@@ -2282,16 +2290,16 @@ class yolo_cfg:
         self.style3.configure('Normal.TRadiobutton',
                              background='green',
                              foreground='black')
-        self.button_classify_yes=ttk.Radiobutton(text='Yes',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='Yes')
+        self.button_classify_yes=ttk.Radiobutton(self.frame_table1,text='Yes',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='Yes')
 
         self.button_classify_yes.grid(row=9,column=9,stick='nw')
-        self.button_classify_no=ttk.Radiobutton(text='No',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='No')
+        self.button_classify_no=ttk.Radiobutton(self.frame_table1,text='No',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='No')
         self.button_classify_no.grid(row=9,column=10,stick='ne')
-        self.label_classify=tk.Label(self.root,text='CLASSIFY CHIPS?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.label_classify=tk.Label(self.frame_table1,text='CLASSIFY CHIPS?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
         self.label_classify.grid(row=8,column=9,columnspan=2,stick='sew')
 
     def GENERATE_CUSTOM_DATASET_BUTTONS(self):
-        self.popup_GCD_button=Button(self.root,text='GENERATE CUSTOM DATASET Buttons',command=self.popupWindow_GCD,bg=self.root_fg,fg=self.root_bg)
+        self.popup_GCD_button=Button(self.frame_table1,text='GENERATE CUSTOM DATASET Buttons',command=self.popupWindow_GCD,bg=self.root_fg,fg=self.root_bg)
         self.popup_GCD_button.grid(row=0,column=3,sticky='se')
 
     def popupWindow_GCD(self):
@@ -2810,15 +2818,15 @@ class yolo_cfg:
         if self.YOUTUBE_KEY_VAR==None:
             self.YOUTUBE_KEY_VAR=tk.StringVar()
             self.YOUTUBE_KEY_VAR.set(self.YOUTUBE_KEY)
-            self.YOUTUBE_KEY_entry=tk.Entry(self.root,textvariable=self.YOUTUBE_KEY_VAR)
+            self.YOUTUBE_KEY_entry=tk.Entry(self.frame_table1,textvariable=self.YOUTUBE_KEY_VAR)
             self.YOUTUBE_KEY_entry.grid(row=11,column=2,sticky='sw')
-            self.YOUTUBE_KEY_label=tk.Label(self.root,text='YOUTUBE STREAM KEY',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.YOUTUBE_KEY_label=tk.Label(self.frame_table1,text='YOUTUBE STREAM KEY',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.YOUTUBE_KEY_label.grid(row=11,column=2,sticky='nw')  
             
             self.SETTINGS_YOUTUBE_LIST=['720p','1080p','480p']
             self.USER_SELECTION_yt=tk.StringVar()
             self.USER_SELECTION_yt.set('720p')
-            self.dropdown_yt=tk.OptionMenu(self.root,self.USER_SELECTION_yt,*self.SETTINGS_YOUTUBE_LIST)
+            self.dropdown_yt=tk.OptionMenu(self.frame_table1,self.USER_SELECTION_yt,*self.SETTINGS_YOUTUBE_LIST)
             self.dropdown_yt.grid(row=11,column=3,sticky='sw')
             self.dropdown_yt.config(bg='green',fg='black')
             self.dropdown_yt['menu'].config(fg='lime',bg='black')
@@ -2839,9 +2847,9 @@ class yolo_cfg:
     #     self.TMP_create_test_bash()
     #     cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','.sh'))
     #     #cmd_i=" bash '{}'".format(self.tmp_test_path)
-    #     self.test_yolo_objs_button=Button(self.root,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+    #     self.test_yolo_objs_button=Button(self.frame_table1,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
     #     self.test_yolo_objs_button.grid(row=12,column=1,sticky='se')
-    #     self.test_yolo_objs_button_note=tk.Label(self.root,text='5.a \n Test Yolov4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+    #     self.test_yolo_objs_button_note=tk.Label(self.frame_table1,text='5.a \n Test Yolov4',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
     #     self.test_yolo_objs_button_note.grid(row=13,column=1,sticky='ne')
 
     def test_yolodnn(self):
@@ -3036,32 +3044,32 @@ class yolo_cfg:
     def labelImg_buttons(self):
         if os.path.exists('libs/labelImg_path.py'):
 
-            self.labelImg_button=Button(self.root,image=self.icon_labelImg,command=self.popupWindow_labelImg,bg=self.root_bg,fg=self.root_fg)
+            self.labelImg_button=Button(self.frame_table1,image=self.icon_labelImg,command=self.popupWindow_labelImg,bg=self.root_bg,fg=self.root_fg)
             self.labelImg_button.grid(row=9,column=4,sticky='se')
-            self.labelImg_button_note=tk.Label(self.root,text='LabelImg',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.labelImg_button_note=tk.Label(self.frame_table1,text='LabelImg',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.labelImg_button_note.grid(row=10,column=4,sticky='ne')    
 
     def MOSAIC_buttons(self):
         if os.path.exists('libs/MOSAIC_Chip_Sorter_path.py'):
 
-            self.MOSAIC_button=Button(self.root,image=self.icon_MOSAIC,command=self.popupWindow_MOSAIC,bg=self.root_bg,fg=self.root_fg)
+            self.MOSAIC_button=Button(self.frame_table1,image=self.icon_MOSAIC,command=self.popupWindow_MOSAIC,bg=self.root_bg,fg=self.root_fg)
             self.MOSAIC_button.grid(row=9,column=5,sticky='se')
-            self.MOSAIC_button_note=tk.Label(self.root,text='MOSAIC Chip Sorter',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.MOSAIC_button_note=tk.Label(self.frame_table1,text='MOSAIC Chip Sorter',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.MOSAIC_button_note.grid(row=10,column=5,sticky='ne')         
 
     def IMGAUG_buttons(self):
         if os.path.exists('libs/IMAGE_AUG_GUI_path.py'):
 
-            self.IMGAUG_button=Button(self.root,image=self.icon_IMGAUG,command=self.popupWindow_IMGAUG,bg=self.root_bg,fg=self.root_fg)
+            self.IMGAUG_button=Button(self.frame_table1,image=self.icon_IMGAUG,command=self.popupWindow_IMGAUG,bg=self.root_bg,fg=self.root_fg)
             self.IMGAUG_button.grid(row=9,column=6,sticky='se')
-            self.IMGAUG_button_note=tk.Label(self.root,text='IMAGE AUG GUI',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.IMGAUG_button_note=tk.Label(self.frame_table1,text='IMAGE AUG GUI',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.IMGAUG_button_note.grid(row=10,column=6,sticky='ne') 
 
     def CLASSIFY_CHIPS_buttons(self):
         if os.path.exists('libs/CLASSIFY_CHIPS_path.py'):
-            self.CLASSIFY_CHIPS_button=Button(self.root,image=self.icon_CLASSIFY_CHIPS,command=self.open_CLASSIFY_CHIPS,bg=self.root_bg,fg=self.root_fg)
+            self.CLASSIFY_CHIPS_button=Button(self.frame_table1,image=self.icon_CLASSIFY_CHIPS,command=self.open_CLASSIFY_CHIPS,bg=self.root_bg,fg=self.root_fg)
             self.CLASSIFY_CHIPS_button.grid(row=9,column=7,sticky='se')
-            self.CLASSIFY_CHIPS_button_note=tk.Label(self.root,text='CLASSIFY CHIPS GUI',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.CLASSIFY_CHIPS_button_note=tk.Label(self.frame_table1,text='CLASSIFY CHIPS GUI',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.CLASSIFY_CHIPS_button_note.grid(row=10,column=7,sticky='ne')       
 
     def open_CLASSIFY_CHIPS(self):
@@ -3590,9 +3598,9 @@ class yolo_cfg:
             print(os.path.exists(self.best_weights_path))
             if os.path.exists(os.path.join(self.CWD,'libs/tensorflow_yolov4_tflite_path.py')) and (self.WIDTH_NUM==self.HEIGHT_NUM) and os.path.exists(self.best_weights_path):
                 self.create_tflite_bash()
-                self.convert_tflite_button=Button(self.root,image=self.icon_test,command=self.run_create_tflite_bash,bg=self.root_bg,fg=self.root_fg)
+                self.convert_tflite_button=Button(self.frame_table1,image=self.icon_test,command=self.run_create_tflite_bash,bg=self.root_bg,fg=self.root_fg)
                 self.convert_tflite_button.grid(row=3,column=6,sticky='se')
-                self.convert_tflite_button_note=tk.Label(self.root,text='Convert Yolov4 \n to TFLITE',bg=self.root_bg,fg=self.root_fg,font=("Arial", 7))
+                self.convert_tflite_button_note=tk.Label(self.frame_table1,text='Convert Yolov4 \n to TFLITE',bg=self.root_bg,fg=self.root_fg,font=("Arial", 7))
                 self.convert_tflite_button_note.grid(row=4,column=6,sticky='ne')
 
     def calculate_epochs_yolov4(self):
@@ -3635,9 +3643,9 @@ class yolo_cfg:
         except:
             self.epochs_VAR=tk.StringVar()
             self.epochs_VAR.set(self.epochs)
-            self.epochs_entry=tk.Entry(self.root,textvariable=self.epochs_VAR)
+            self.epochs_entry=tk.Entry(self.frame_table1,textvariable=self.epochs_VAR)
             self.epochs_entry.grid(row=21,column=0,sticky='se')
-            self.epochs_label=tk.Label(self.root,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.epochs_label=tk.Label(self.frame_table1,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_label.grid(row=22,column=0,sticky='ne')
 
     def popupWindow_RECORD_RAW(self):
@@ -5657,12 +5665,57 @@ class yolo_cfg:
             self.return_to_main_customSettings()
             #self.root.title(os.path.basename(self.SAVED_SETTINGS_PATH_CUSTOM))
     def get_update_background_img(self):
+        # self.image=Image.open(self.root_background_img)
+        # self.image=self.image.resize((self.root_W,self.root_H),Image.ANTIALIAS)
+        # self.bg=ImageTk.PhotoImage(self.image)
+        # self.canvas=tk.Canvas(self.frame_table1,width=self.root_W,height=self.root_H)
+        # self.canvas.grid(row=0,column=0,columnspan=self.canvas_columnspan,rowspan=self.canvas_rowspan,sticky='nw')
+        # self.canvas.create_image(0,0,image=self.bg,anchor='nw')
         self.image=Image.open(self.root_background_img)
         self.image=self.image.resize((self.root_W,self.root_H),Image.ANTIALIAS)
         self.bg=ImageTk.PhotoImage(self.image)
-        self.canvas=tk.Canvas(self.root,width=self.root_W,height=self.root_H)
-        self.canvas.grid(row=0,column=0,columnspan=self.canvas_columnspan,rowspan=self.canvas_rowspan,sticky='nw')
-        self.canvas.create_image(0,0,image=self.bg,anchor='nw')
+        # self.canvas_og=tk.Canvas(self.frame_table1,width=self.root_W,height=self.root_H)
+        # self.canvas_og.grid(row=0,column=0,columnspan=self.canvas_columnspan,rowspan=self.canvas_rowspan,sticky='nw')
+        # self.canvas_og.create_image(0,0,image=self.bg,anchor='nw')
+        self.root.columnconfigure(0,weight=1)
+        self.root.rowconfigure(0,weight=1)
+        self.FMas1=tk.Frame(self.root,bg='Black')
+        self.FMas1.grid(sticky=(tk.N,tk.E,tk.S,tk.W),padx=20,pady=20)
+        self.FMas1.columnconfigure(0,weight=1)
+        self.frame_canvas1=tk.Frame(self.FMas1)
+        self.frame_canvas1.grid(row=17,column=0,sticky='nw')
+        self.frame_canvas1.grid_rowconfigure(0,weight=1)
+        self.frame_canvas1.grid_columnconfigure(0,weight=1)
+        self.frame_canvas1.grid_propagate(False)
+        self.canvas1=tk.Canvas(self.frame_canvas1,bg='black')
+        self.canvas1.grid(row=0,column=0,sticky='news')
+        self.style3=ttk.Style()
+        self.style3.configure('Vertical.TScrollbar',
+                            background='green',
+                            foreground='black',
+                            arrowcolor='black',
+                            activebackground='yellow')
+        self.style3.configure('Horizontal.TScrollbar',
+                            background='green',
+                            foreground='black',
+                            arrowcolor='black',
+                            activebackground='yellow')
+        self.vsbar1=ttk.Scrollbar(self.frame_canvas1,orient="vertical",command=self.canvas1.yview,style="Vertical.TScrollbar")
+        self.vsbar1.grid(row=0,column=1,sticky='nes',pady=10)
+        self.hsbar1=ttk.Scrollbar(self.frame_canvas1,orient="horizontal")
+        self.hsbar1.configure(command=self.canvas1.xview,style="Horizontal.TScrollbar")
+        self.hsbar1.grid(row=0,column=0,sticky='new',padx=10)
+        self.canvas1.configure(yscrollcommand=self.vsbar1.set)
+        self.canvas1.configure(xscrollcommand=self.hsbar1.set)
+        self.frame_table1=tk.Frame(self.canvas1,bg='black',padx=20,pady=20)
+        self.canvas1.create_window((0,0),window=self.frame_table1,anchor='nw')
+        total_width=self.root_W*1.#080#width_i+width_j+self.hsbar.winfo_width()
+        total_height=self.root_H*1.#height_i+height_j+self.vsbar.winfo_height()
+        self.canvas1.create_image((total_width,total_height),image=self.bg,anchor='nw')
+        print('total_width',total_width)
+        print('total_height',total_height)
+        self.frame_canvas1.config(width=total_width,height=total_height)
+        self.canvas1.config(scrollregion=self.canvas1.bbox('all'))
 
     def run_cmd(self,cmd_i):
         os.system(cmd_i)
@@ -6845,14 +6898,14 @@ class yolo_cfg:
         
         self.TRAIN_SPLIT_VAR=tk.StringVar()
         self.TRAIN_SPLIT_VAR.set(self.TRAIN_SPLIT)
-        self.TRAIN_SPLIT_entry=tk.Entry(self.root,textvariable=self.TRAIN_SPLIT_VAR)
+        self.TRAIN_SPLIT_entry=tk.Entry(self.frame_table1,textvariable=self.TRAIN_SPLIT_VAR)
         self.TRAIN_SPLIT_entry.grid(row=4,column=2,sticky='sw')
-        self.TRAIN_SPLIT_label=tk.Label(self.root,text='TRAIN SPLIT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.TRAIN_SPLIT_label=tk.Label(self.frame_table1,text='TRAIN SPLIT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.TRAIN_SPLIT_label.grid(row=5,column=2,sticky='nw')
 
-        self.split_yolo_objs_button=Button(self.root,image=self.icon_divide,command=self.split_objs,bg=self.root_bg,fg=self.root_fg)
+        self.split_yolo_objs_button=Button(self.frame_table1,image=self.icon_divide,command=self.split_objs,bg=self.root_bg,fg=self.root_fg)
         self.split_yolo_objs_button.grid(row=4,column=1,sticky='se')
-        self.split_yolo_objs_button_note=tk.Label(self.root,text='2.b \n Split Train/Valid Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.split_yolo_objs_button_note=tk.Label(self.frame_table1,text='2.b \n Split Train/Valid Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.split_yolo_objs_button_note.grid(row=5,column=1,sticky='ne')
         self.SHOWTABLE_BUTTONS()
         self.TOTAL_LIST=list(self.df['path_jpeg_dest_i'])
@@ -6967,7 +7020,7 @@ class yolo_cfg:
                                 pass
                             try:
                                 cmd_i=open_cmd+" '{}'".format(self.open_predjpeg_label_var.get())
-                                self.open_predjpeg_label=Button(self.root,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+                                self.open_predjpeg_label=Button(self.frame_table1,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                                 self.open_predjpeg_label.grid(row=10+11,column=5,columnspan=50,sticky='sw')
                             except:
                                 print('COULD NOT self.open_predjpeg_label')
@@ -7106,7 +7159,7 @@ class yolo_cfg:
             self.TRAIN_SPLIT_VAR.set(self.TRAIN_SPLIT)
             try:
                 self.TRAIN_SPLIT_label.destroy()
-                self.TRAIN_SPLIT_label=tk.Label(self.root,text='USING CUSTOM TRAIN SPLIT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+                self.TRAIN_SPLIT_label=tk.Label(self.frame_table1,text='USING CUSTOM TRAIN SPLIT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
                 self.TRAIN_SPLIT_label.grid(row=5,column=2,sticky='nw')
             except:
                 pass
@@ -7204,7 +7257,7 @@ class yolo_cfg:
         self.TRAIN_SPLIT=int(self.TRAIN_SPLIT_VAR.get())
         try:
             self.TRAIN_SPLIT_label.destroy()
-            self.TRAIN_SPLIT_label=tk.Label(self.root,text='TRAIN SPLIT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.TRAIN_SPLIT_label=tk.Label(self.frame_table1,text='TRAIN SPLIT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.TRAIN_SPLIT_label.grid(row=5,column=2,sticky='nw')
         except:
             pass
@@ -7216,7 +7269,7 @@ class yolo_cfg:
             try:
                 self.TRAIN_SPLIT_label.destroy()
                 self.custom_split_count=np.round(len(self.df[self.df['train']==1])/len(self.df['train']),2)
-                self.TRAIN_SPLIT_label=tk.Label(self.root,text=f'USING CUSTOM TRAIN SPLIT of {self.custom_split_count}',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+                self.TRAIN_SPLIT_label=tk.Label(self.frame_table1,text=f'USING CUSTOM TRAIN SPLIT of {self.custom_split_count}',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
                 self.TRAIN_SPLIT_label.grid(row=5,column=2,sticky='nw')
             except:
                 pass
@@ -7319,25 +7372,25 @@ class yolo_cfg:
         f.close()
         self.THRESH_VAR=tk.StringVar()
         self.THRESH_VAR.set(self.THRESH)
-        self.THRESH_entry=tk.Entry(self.root,textvariable=self.THRESH_VAR)
+        self.THRESH_entry=tk.Entry(self.frame_table1,textvariable=self.THRESH_VAR)
         self.THRESH_entry.grid(row=8,column=2,sticky='sw')
-        self.THRESH_label=tk.Label(self.root,text='Threshold',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.THRESH_label=tk.Label(self.frame_table1,text='Threshold',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.THRESH_label.grid(row=9,column=2,sticky='nw')
         self.IOU_THRESH_VAR=tk.StringVar()
         self.IOU_THRESH_VAR.set(self.IOU_THRESH)
-        self.IOU_THRESH_entry=tk.Entry(self.root,textvariable=self.IOU_THRESH_VAR)
+        self.IOU_THRESH_entry=tk.Entry(self.frame_table1,textvariable=self.IOU_THRESH_VAR)
         self.IOU_THRESH_entry.grid(row=8,column=3,sticky='sw')
-        self.IOU_THRESH_label=tk.Label(self.root,text='IOU Threshold',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.IOU_THRESH_label=tk.Label(self.frame_table1,text='IOU Threshold',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.IOU_THRESH_label.grid(row=9,column=3,sticky='nw')
         self.POINTS_VAR=tk.StringVar()
         self.POINTS_LIST=['0: Custom','11: PascalVOC 2007','101: MS COCO']
         self.POINTS_VAR.set('0: Custom')
         self.POINTS=self.POINTS_VAR.get().split(':')[0]
-        self.POINTS_dropdown=tk.OptionMenu(self.root,self.POINTS_VAR,*self.POINTS_LIST)
+        self.POINTS_dropdown=tk.OptionMenu(self.frame_table1,self.POINTS_VAR,*self.POINTS_LIST)
         self.POINTS_dropdown.grid(row=8,column=3,sticky='se')
         self.POINTS_dropdown.config(bg='green',fg='black')
         self.POINTS_dropdown['menu'].config(fg='lime',bg='black')
-        self.POINTS_label=tk.Label(self.root,text='POINTS',bg=self.root_bg,fg=self.root_fg,font=('Arial',7),padx=20)
+        self.POINTS_label=tk.Label(self.frame_table1,text='POINTS',bg=self.root_bg,fg=self.root_fg,font=('Arial',7),padx=20)
         self.POINTS_label.grid(row=9,column=3,sticky='ne')
         self.create_yolo_scripts_buttons()
         self.load_yolo_scripts_buttons()
@@ -7345,21 +7398,21 @@ class yolo_cfg:
         self.save_settings()   
 
     def change_obj_names_buttons(self):
-        self.change_obj_names_button=Button(self.root,text='Change obj.names',command=self.open_popupwindow_labels,bg=self.root_fg,fg=self.root_bg)
+        self.change_obj_names_button=Button(self.frame_table1,text='Change obj.names',command=self.open_popupwindow_labels,bg=self.root_fg,fg=self.root_bg)
         self.change_obj_names_button.grid(row=0,column=9,sticky='sw')
 
     def load_yolo_scripts_buttons(self):
-        self.load_yolo_files_button=Button(self.root,image=self.icon_scripts,command=self.remaining_buttons,bg=self.root_bg,fg=self.root_fg)
+        self.load_yolo_files_button=Button(self.frame_table1,image=self.icon_scripts,command=self.remaining_buttons,bg=self.root_bg,fg=self.root_fg)
         self.load_yolo_files_button.grid(row=6,column=1,sticky='se')
-        self.load_yolo_files_button_note=tk.Label(self.root,text='3.a \n Load Yolo \n Scripts (.sh)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.load_yolo_files_button_note=tk.Label(self.frame_table1,text='3.a \n Load Yolo \n Scripts (.sh)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.load_yolo_files_button_note.grid(row=7,column=1,sticky='ne')
         self.create_darknet_buttons()
 
 
     def create_yolo_scripts_buttons(self):
-        self.create_yolo_files_button=Button(self.root,image=self.icon_scripts,command=self.create_yolo_files,bg=self.root_bg,fg=self.root_fg)
+        self.create_yolo_files_button=Button(self.frame_table1,image=self.icon_scripts,command=self.create_yolo_files,bg=self.root_bg,fg=self.root_fg)
         self.create_yolo_files_button.grid(row=8,column=1,sticky='se')
-        self.create_yolo_files_button_note=tk.Label(self.root,text='3.b \n Create Yolo \n Scripts (.sh)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.create_yolo_files_button_note=tk.Label(self.frame_table1,text='3.b \n Create Yolo \n Scripts (.sh)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.create_yolo_files_button_note.grid(row=9,column=1,sticky='ne')
         self.create_darknet_buttons()
     def create_darknet_buttons(self):
@@ -7369,12 +7422,12 @@ class yolo_cfg:
 
         self.open_darknet_label_var=tk.StringVar()
         self.open_darknet_label_var.set(self.darknet_path)
-        self.open_darknet_button=Button(self.root,image=self.icon_folder,command=partial(self.select_folder,self.darknet_path,'path to Darknet',self.open_darknet_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_darknet_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.darknet_path,'path to Darknet',self.open_darknet_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_darknet_button.grid(row=17,column=4,sticky='se')
-        self.open_darknet_note=tk.Label(self.root,text="darknet_path dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_darknet_note=tk.Label(self.frame_table1,text="darknet_path dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_darknet_note.grid(row=18,column=4,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_darknet_label_var.get())
-        self.open_darknet_label=Button(self.root,textvariable=self.open_darknet_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_darknet_label=Button(self.frame_table1,textvariable=self.open_darknet_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_darknet_label.grid(row=17,column=5,columnspan=50,sticky='sw')
 
 
@@ -7386,12 +7439,12 @@ class yolo_cfg:
         self.open_backup_models_label_var=tk.StringVar()
         self.open_backup_models_label_var.set(self.backup_path)
         cmd_i=open_cmd+" '{}'".format(self.open_backup_models_label_var.get())
-        self.open_backup_button=Button(self.root,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
+        self.open_backup_button=Button(self.frame_table1,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_backup_button.grid(row=3,column=5,sticky='se')
-        self.open_backup_note=tk.Label(self.root,text=os.path.basename(self.open_backup_models_label_var.get()),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_backup_note=tk.Label(self.frame_table1,text=os.path.basename(self.open_backup_models_label_var.get()),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_backup_note.grid(row=4,column=5,sticky='ne')
         # cmd_i=open_cmd+" '{}'".format(self.open_backup_models_label_var.get())
-        # self.open_backup_models_label=Button(self.root,textvariable=self.open_backup_models_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        # self.open_backup_models_label=Button(self.frame_table1,textvariable=self.open_backup_models_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         # self.open_backup_models_label.grid(row=19,column=5,columnspan=50,sticky='sw')
         self.backup_models_selected=True
 
