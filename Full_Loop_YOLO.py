@@ -163,6 +163,61 @@ import re
 global return_to_main,use_preselected_setting
 return_to_main=True
 use_preselected_setting=False
+
+class CreateToolTip(object):
+    """
+    https://stackoverflow.com/questions/3221956/how-do-i-display-tooltips-in-tkinter
+    create a tooltip for a given widget
+    """
+    def __init__(self, widget, text='widget info'):
+        self.waittime = 500     #miliseconds
+        self.wraplength = 480   #pixels
+        self.widget = widget
+        self.text = text
+        self.widget.bind("<Enter>", self.enter)
+        self.widget.bind("<Leave>", self.leave)
+        self.widget.bind("<ButtonPress>", self.leave)
+        self.id = None
+        self.tw = None
+
+    def enter(self, event=None):
+        self.schedule()
+
+    def leave(self, event=None):
+        self.unschedule()
+        self.hidetip()
+
+    def schedule(self):
+        self.unschedule()
+        self.id = self.widget.after(self.waittime, self.showtip)
+
+    def unschedule(self):
+        id = self.id
+        self.id = None
+        if id:
+            self.widget.after_cancel(id)
+
+    def showtip(self, event=None):
+        x = y = 0
+        x, y, cx, cy = self.widget.bbox("insert")
+        x += self.widget.winfo_rootx() + 25
+        y += self.widget.winfo_rooty() + 20
+        # creates a toplevel window
+        self.tw = tk.Toplevel(self.widget)
+        # Leaves only the label and removes the app window
+        self.tw.wm_overrideredirect(True)
+        self.tw.wm_geometry("+%d+%d" % (x, y))
+        label = tk.Label(self.tw, text=self.text, justify='left',
+                       background="#ffffff", relief='solid', borderwidth=1,
+                       wraplength = self.wraplength)
+        label.pack(ipadx=1)
+
+    def hidetip(self):
+        tw = self.tw
+        self.tw= None
+        if tw:
+            tw.destroy()
+
 class TestApp(tk.Frame):
     def __init__(self, parent, filepath):
         super().__init__(parent)
@@ -298,6 +353,9 @@ class main_entry:
         self.checkd_vars={}
         self.checkd_label=tk.Label(self.frame_table,text='Dataset',bg=self.root_bg,fg=self.root_fg,font=('Arial 14 underline'))
         self.checkd_label.grid(row=0,column=2,sticky='nw')
+        self.checkd_label_tip=CreateToolTip(self.checkd_label,'''
+        
+            You can toggle different "Dataset" paths to allow dropdown options to change.\n\t ''')
         f=open('libs/DATASETS_LIST.txt','w')
         print(self.df_settings)
         for i,path_JPEGImages_i in enumerate(list(self.df_settings['path_JPEGImages'])):
@@ -333,12 +391,37 @@ class main_entry:
         self.dropdown_menu()
         self.submit_label=Button(self.frame_table,text='Submit',command=self.submit,bg=self.root_fg,fg=self.root_bg,font=('Arial',12))
         self.submit_label.grid(row=1,column=5,sticky='se')
+        self.submit_label_tip=CreateToolTip(self.submit_label,'''
+       
+        If you are creating a new one:
+                Then set to DEFAULT_SETTINGS.py and "Submit". It should walk you through setting the new one up. 
+        
+        Else:
+                Pick the *SAVED_SETTINGS.py path of an existing model to load from the dropdown.
+                You can toggle different options on the left for "Dataset" as you create more models with time.  
+                This will allow you to quickly identify previous models you made to load in the future.\n\t ''')
+
         self.delete_label=Button(self.frame_table,text='Delete',command=self.popupWindow_delete,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         self.delete_label.grid(row=2,column=5,sticky='se')
+        self.delete_label_tip=CreateToolTip(self.delete_label,'''
+       
+        If you want to permenantly delete a create model path & settings.  Select it from the dropdown and press this button.  
+        Be CAREFUL what you delete.  If unsure, just move it to HIDDEN.''')
+
         self.open_libs=Button(self.frame_table,text='Open /libs',command=self.run_cmd_open_libs,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         self.open_libs.grid(row=3,column=5,sticky='se')
+        self.open_libs_tip=CreateToolTip(self.open_libs,'''
+       
+        If you want to see what *SAVED_SETTINGS.py exist in the "libs" directory, press this button. ''')
+
         self.move_separate_button=Button(self.frame_table,text='Move to HIDDEN',command=self.move_separate,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         self.move_separate_button.grid(row=4,column=5,sticky='se')
+        self.move_separate_button_tip=CreateToolTip(self.move_separate_button,'''
+       
+        If you want to hide models of the past that are making it hard to find certain models you are searching for.  
+        Then you can select those "Dataset" options where they are not needed at the moment and click this button with them to move their *SAVED_SETTINGS.py to libs/HIDDEN 
+        for future use. ''')
+
         # self.submit2_label=Button(self.frame_table1,text='Run Script',command=self.submit_script,bg=self.root_fg,fg=self.root_bg,font=('Arial',12))
         # self.submit2_label.grid(row=4,column=1,sticky='se')
         # self.select_file_script_label=Button(self.frame_table1,image=self.icon_folder,command=self.select_file_script,bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
@@ -426,12 +509,25 @@ class main_entry:
         else:
             self.USER_SELECTION.set(self.SETTINGS_FILE_LIST[0])
         self.dropdown=tk.OptionMenu(self.frame_table,self.USER_SELECTION,*self.SETTINGS_FILE_LIST)
+        self.dropdown_tip=CreateToolTip(self.dropdown,'''
+       
+        If you are creating a new one:
+                Then set to DEFAULT_SETTINGS.py and "Submit". It should walk you through setting the new one up. 
+        
+        Else:
+                This is the *SAVED_SETTINGS.py path of an existing model to load.
+                You can toggle different options on the left for "Dataset" as you create more models.  
+                This will allow you to quickly identify previous models you made to load in the future.\n\t ''')
+
         self.dropdown.grid(row=1,column=9,sticky='sw')
         self.dropdown.config(bg='green',fg='black')
         self.dropdown['menu'].config(fg='lime',bg='black')
         
         self.dropdown_label=Button(self.frame_table,image=self.icon_single_file,command=self.run_cmd_libs,bg=self.root_bg,fg=self.root_fg,font=('Arial',12))
         self.dropdown_label.grid(row=1,column=8,sticky='sw')
+        self.dropdown_label_tip=CreateToolTip(self.dropdown_label,'''
+        
+            Open the specified *SAVED_SETTINGS.py file or DEFAULT_SETTINGS.py\n\t ''')
     
     def run_cmd_libs(self):
         cmd_i=open_cmd+" {}.py".format(os.path.join('libs',self.USER_SELECTION.get()))
@@ -836,11 +932,18 @@ class yolo_cfg:
 
         self.save_settings_button=Button(self.frame_table1,image=self.icon_save_settings,command=self.save_settings,bg=self.root_bg,fg=self.root_fg)
         self.save_settings_button.grid(row=1,column=4,sticky='se')
+        self.save_settings_button_tip=CreateToolTip(self.save_settings_button,'''
+        Save the current settings for future use at this path for Yolo_Files. \n\t ''')
         self.save_settings_note=tk.Label(self.frame_table1,text='Save Settings',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.save_settings_note.grid(row=2,column=4,sticky='ne')
 
         self.save_custom_settings_button=Button(self.frame_table1,image=self.icon_save_settings,command=self.save_settings_CUSTOM,bg=self.root_bg,fg=self.root_fg)
         self.save_custom_settings_button.grid(row=1,column=3,sticky='se')
+        self.save_custom_settings_button_tip=CreateToolTip(self.save_custom_settings_button,'''
+        Save the CUSTOM settings to create a new Yolo_Files path with your Custom Annotations/JPEGImages.
+        
+        If unsure, make sure you have selected Custom Annotations/JPEGImages before proceeding.  
+        Also, if there was models trained before at this path, they will be copied over for transfer learning to the new custom saved settings path. \n\t ''')
         self.save_custom_settings_note=tk.Label(self.frame_table1,text='Save Custom Settings',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.save_custom_settings_note.grid(row=2,column=3,sticky='ne')
 
@@ -856,16 +959,32 @@ class yolo_cfg:
         self.open_basepath_label_var.set(self.base_path_OG)
         self.open_basepath_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.base_path_OG,'Set the path for Yolo_Files',self.open_basepath_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_basepath_button.grid(row=1,column=5,sticky='se')
+        self.open_basepath_button_tip=CreateToolTip(self.open_basepath_button,'''
+        Set the path for Yolo_Files. \n\t 
+        This is where your model files will go in their designated folder by prefix name.''')
         self.open_basepath_note=tk.Label(self.frame_table1,text="Yolo_Files",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_basepath_note.grid(row=2,column=5,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_basepath_label_var.get())
         self.open_basepath_label=Button(self.frame_table1,textvariable=self.open_basepath_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_basepath_label.grid(row=1,column=6,columnspan=50,sticky='sw')
+        self.open_basepath_label_tip=CreateToolTip(self.open_basepath_label,'''
+        View the path for your Yolo_Files. \n\t 
+        This is where your model files are located under their designated folder by prefix name.''')
 
         self.PREFIX_VAR=tk.StringVar()
         self.PREFIX_VAR.set(self.PREFIX)
         self.PREFIX_entry=tk.Entry(self.frame_table1,textvariable=self.PREFIX_VAR)
         self.PREFIX_entry.grid(row=7,column=0,sticky='se')
+        self.PREFIX_tip=CreateToolTip(self.PREFIX_entry,'''
+        Set the PREFIX for the Yolo_Files the models will be created under. 
+        
+        
+        TYPE: STRING
+
+        APPLICABLE: yolov4, yolov7
+
+        Recommended to NOT use any Spaces in prefix name.
+        \n''')
         self.PREFIX_label=tk.Label(self.frame_table1,text='PREFIX',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.PREFIX_label.grid(row=8,column=0,sticky='ne')
 
@@ -873,6 +992,20 @@ class yolo_cfg:
         self.WIDTH_NUM_VAR.set(self.WIDTH_NUM)
         self.WIDTH_NUM_entry=tk.Entry(self.frame_table1,textvariable=self.WIDTH_NUM_VAR)
         self.WIDTH_NUM_entry.grid(row=9,column=0,sticky='se')
+        self.WIDTH_NUM_tip=CreateToolTip(self.WIDTH_NUM_entry,'''
+        Set the WIDTH_NUM for the Yolo models.
+
+        TYPE: INTEGER
+
+        APPLICABLE: yolov4, yolov7
+        
+        Recommended this value EQUAL to the HEIGHT_NUM.
+
+        Smaller values, increase model throughput (i.e. FPS), but decrease model Accuracy (i.e. mAP).
+        Higher values, decrease throughput (i.e. FPS), but increase model Accuracy (i.e. mAP).
+
+        Be aware that if WIDTH!=HEIGHT, then there will be limitations to creating only Yolov4-tiny or Yolov4 regular models.
+        In addition, limitations WIDTH!=HEIGHT also includes the inability to create TFLITE models. \n''')
         self.WIDTH_NUM_label=tk.Label(self.frame_table1,text='WIDTH',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.WIDTH_NUM_label.grid(row=10,column=0,sticky='ne')
 
@@ -880,6 +1013,20 @@ class yolo_cfg:
         self.HEIGHT_NUM_VAR.set(self.HEIGHT_NUM)
         self.HEIGHT_NUM_entry=tk.Entry(self.frame_table1,textvariable=self.HEIGHT_NUM_VAR)
         self.HEIGHT_NUM_entry.grid(row=11,column=0,sticky='se')
+        self.HEIGHT_NUM_tip=CreateToolTip(self.HEIGHT_NUM_entry,'''
+        Set the HEIGHT_NUM for the Yolo models.
+
+        TYPE: INTEGER
+
+        APPLICABLE: yolov4, yolov7
+
+        Recommended this value EQUAL to the WIDTH_NUM.
+
+        Smaller values, increase model throughput (i.e. FPS), but decrease model Accuracy (i.e. mAP).
+        Higher values, decrease throughput (i.e. FPS), but increase model Accuracy (i.e. mAP).
+
+        Be aware that if WIDTH!=HEIGHT, then there will be limitations to creating only Yolov4-tiny or Yolov4 regular models.
+        In addition, limitations WIDTH!=HEIGHT also includes the inability to create TFLITE models. \n''')
         self.HEIGHT_NUM_label=tk.Label(self.frame_table1,text='HEIGHT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.HEIGHT_NUM_label.grid(row=12,column=0,sticky='ne')
 
@@ -887,6 +1034,21 @@ class yolo_cfg:
         self.num_div_VAR.set(self.num_div)
         self.num_div_entry=tk.Entry(self.frame_table1,textvariable=self.num_div_VAR)
         self.num_div_entry.grid(row=13,column=0,sticky='se')
+        self.num_div_tip=CreateToolTip(self.num_div_entry,'''
+        Set the num_div for the Yolo models.
+
+        TYPE: INTEGER
+
+        APPLICABLE: yolov4 types ONLY.
+
+        Recommended this value EQUAL to 0.  Values can range between 0 and 4.
+
+        This is only compatible with tiny-yolov4 and regular yolov4.  It has no effect on yolov7 models.
+
+        Increasing the number of divisions, increases model throughput (i.e. FPS), but decrease model Accuracy (i.e. mAP).
+        Decreasing the number of divisions, decreases throughput (i.e. FPS), but increase model Accuracy (i.e. mAP).
+
+        Be aware that any value other than 0 will make TFLITE model creation not possible with this GUI.\n''')
         self.num_div_label=tk.Label(self.frame_table1,text='num_div',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.num_div_label.grid(row=14,column=0,sticky='ne')
 
@@ -894,6 +1056,15 @@ class yolo_cfg:
         self.num_classes_VAR.set(self.num_classes)
         self.num_classes_entry=tk.Entry(self.frame_table1,textvariable=self.num_classes_VAR)
         self.num_classes_entry.grid(row=15,column=0,sticky='se')
+        self.num_classses_tip=CreateToolTip(self.num_classes_entry,'''
+        Set the num_classes for the Yolo models.
+
+        TYPE: INTEGER
+
+        APPLICABLE: yolov4, yolov7
+
+        Recommended leave this value alone and let the GUI figure out what the number of classes is based on the data you 
+        set via Annotations/JPEGImages/Yolo_Objs.\n''')
         self.num_classes_label=tk.Label(self.frame_table1,text='num_classes',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.num_classes_label.grid(row=16,column=0,sticky='ne')
 
@@ -904,6 +1075,19 @@ class yolo_cfg:
         self.random_dropdown.grid(row=17,column=0,sticky='se')    
         self.random_dropdown.config(bg='green',fg='black')
         self.random_dropdown['menu'].config(fg='lime',bg='black')   
+        self.random_dropdown_tip=CreateToolTip(self.random_dropdown,'''
+        Set the random_dropdown for the Yolo models.
+
+        TYPE: BOOLEAN
+    
+        APPLICABLE: yolov4 types ONLY.
+
+        If set to 0, then yolov4 or yolov4-tiny will not use random in the configuration file.
+        If set to 1, then yolov4 or yolov4-tiny will use random in the configuration file.
+
+        This has no effect on Yolov7 models.
+        
+        Recommended to set to 1 if you plan on training a yolov4 or yolov4-tiny model.\n''')
         self.random_label=tk.Label(self.frame_table1,text='random',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.random_label.grid(row=18,column=0,sticky='ne')
 
@@ -911,16 +1095,47 @@ class yolo_cfg:
         self.ITERATION_NUM_VAR.set(self.ITERATION_NUM)
         self.ITERATION_entry=tk.Entry(self.frame_table1,textvariable=self.ITERATION_NUM_VAR)
         self.ITERATION_entry.grid(row=19,column=0,sticky='se')
+        self.ITERATION_entry_tip=CreateToolTip(self.ITERATION_entry,'''
+        Set the ITERATION_entry for the Yolo models.
+
+        TYPE: INTEGER
+
+        APPLICABLE: yolov4 types ONLY.
+
+        Recommended 2000 iterations (i.e. 2000 is max_batch in the configuration file for training). 
+        Only applicable to yolov4 or yolov4-tiny.
+
+        You can adjust this value automatically by chaning the number of EPOCHS in the TRAIN_SCRIPTS when training yolov4 or yolov4-tiny.
+
+        Recommended to leave alone at 2000 and adjust it through EPOCHS in the TRAIN_SCRIPTS buttons if neccessary.
+        
+        The calculation for adjustment is documented in the backup_weights path whenever a model is made.
+        \n''')
+
         self.ITERATION_label=tk.Label(self.frame_table1,text='max_batches',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.ITERATION_label.grid(row=20,column=0,sticky='ne')
 
         self.generate_cfg_button=Button(self.frame_table1,image=self.icon_config,command=self.generate_cfg,bg=self.root_bg,fg=self.root_fg)
         self.generate_cfg_button.grid(row=3,column=0,sticky='s')
+        self.generate_cfg_button_tip=CreateToolTip(self.generate_cfg_button,'''
+        Create new yolov4 or yolov4-tiny configuration files based on the entries set.
+
+        APPLICABLE: yolov4 types ONLY.  However, must be clicked to proceed for even yolov7 type models, unless Load Yolo Config is clicked instead.
+
+        If a configuration has already been made, then no need to recreate it with this button.  Use the Load Yolo Config instead.
+
+        \n''')
         self.generate_cfg_note=tk.Label(self.frame_table1,text='1.b \n Generate Yolo \n Configs (.cfgs)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.generate_cfg_note.grid(row=4,column=0,sticky='n')
 
         self.load_cfg_button=Button(self.frame_table1,image=self.icon_config,command=self.load_cfg,bg=self.root_bg,fg=self.root_fg)
         self.load_cfg_button.grid(row=1,column=0,sticky='s')
+        self.load_cfg_button_tip=CreateToolTip(self.load_cfg_button,'''
+        Load existing yolov4 configuration file.
+
+        APPLICABLE: yolov4 types ONLY.  However, must be clicked to proceed for even yolov7 type models.
+
+        \n''')
         self.load_cfg_note=tk.Label(self.frame_table1,text='1.a \n Load Yolo \n Configs (.cfgs)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.load_cfg_note.grid(row=2,column=0,sticky='n')
 
@@ -950,9 +1165,20 @@ class yolo_cfg:
                              background='green',
                              foreground='black')
         self.button_yolo_tiny=ttk.Radiobutton(self.frame_table1,text='Yolov4-tiny',style='Normal.TRadiobutton',variable=self.var_yolo_choice,value='Yolov4-tiny')
+        self.button_yolo_tiny_tip=CreateToolTip(self.button_yolo_tiny,'''
+        This option generates or loads yolov4-tiny configuration models for training/testing.
 
+        APPLICABLE: yolov4 types ONLY.  
+
+        \n''')
         self.button_yolo_tiny.grid(row=5,column=0,stick='se')
         self.button_yolo_regular=ttk.Radiobutton(self.frame_table1,text='Yolov4',style='Normal.TRadiobutton',variable=self.var_yolo_choice,value='Yolov4')
+        self.button_yolo_regular_tip=CreateToolTip(self.button_yolo_regular,'''
+        This option generates or loads regular yolov4 configuration models for training/testing.
+
+        APPLICABLE: yolov4 types ONLY.  
+
+        \n''')
         self.button_yolo_regular.grid(row=6,column=0,stick='ne')
 
         self.RECORDRAW_BUTTONS()
@@ -1016,26 +1242,79 @@ class yolo_cfg:
     def COMPUTE_METRICS_BUTTONS(self):
         self.popup_metrics_buttons=Button(self.frame_table1,text='Compute Metrics',command=self.popupWindow_mAP,bg=self.root_fg,fg=self.root_bg)
         self.popup_metrics_buttons.grid(row=0,column=7,sticky='sw')
+        self.popup_metrics_buttons_tip=CreateToolTip(self.popup_metrics_buttons,'''
+        This will popup a window that 
+        allows you to select Ground Truth and Prediction Annotation directories to 
+        evaluate COCO mAP values.
+        
+        In addition, Confusion Matrices can be generated and their is an option to merge the Ground Truth and Prediction Annotations for viewing.
+        
+
+        APPLICABLE: yolov4, yolov7, and any other model that generated PascalVOC xml annotation files. 
+
+        \n''')
 
     def TEST_BUTTONS(self):
         self.popup_TEST_button=Button(self.frame_table1,text='TEST Script Buttons',command=self.popupWindow_TEST,bg=self.root_fg,fg=self.root_bg)
         self.popup_TEST_button.grid(row=13,column=2,sticky='sw')
+        self.popup_TEST_button_tip=CreateToolTip(self.popup_TEST_button,'''
+        This is where you TEST your yolo models. 
+
+        A variety of options will be presented for you to select what model you want to test and how.
+
+        APPLICABLE: yolov4, yolov7 
+
+        \n''')
 
     def RECORDRAW_BUTTONS(self):
         self.popup_RECORDRAW_button=Button(self.frame_table1,text='RECORD RAW VIDEO Buttons',command=self.popupWindow_RECORD_RAW,bg=self.root_fg,fg=self.root_bg)
         self.popup_RECORDRAW_button.grid(row=0,column=2,sticky='sw')
+        self.popup_RECORDRAW_button_tip=CreateToolTip(self.popup_RECORDRAW_button,'''
+        This is allows you to record video to the local device under a custom prefix. 
+
+        Input options for recording video are: 1) /dev/video0 etc 2) rtsp feeds.
+
+        Useful for when wanting to record raw data for labeling with later.
+
+        \n''')
+
 
     def TRAIN_BUTTONS(self):
         self.popup_TRAIN_button=Button(self.frame_table1,text='TRAIN Script Buttons',command=self.popupWindow_TRAIN,bg=self.root_fg,fg=self.root_bg)
         self.popup_TRAIN_button.grid(row=12,column=2,sticky='sw')
+        self.popup_TRAIN_button_tip=CreateToolTip(self.popup_TRAIN_button,'''
+        This is where you TRAIN your yolo models. 
+
+        A variety of options will be presented for you to select what model you want to test and how.
+
+        APPLICABLE: yolov4, yolov7 
+
+        \n''')
 
     def SHOWTABLE_BUTTONS(self):
         self.popup_SHOWTABLE_button=Button(self.frame_table1,text='Show df',command=self.popupWindow_showtable,bg=self.root_fg,fg=self.root_bg)
         self.popup_SHOWTABLE_button.grid(row=3,column=2,sticky='sw')
+        self.popup_SHOWTABLE_button_tip=CreateToolTip(self.popup_SHOWTABLE_button,'''
+        This is allows you to inspect what files you will be training or validating on. 
+        
+        It opens up a Pandas DataFrame of your inputs for training/validating to inspect.
+
+        APPLICABLE: yolov4, yolov7 
+
+        \n''')
 
     def CUSTOMINPUT_BUTTONS(self):
         self.popup_custominput_button=Button(self.frame_table1,text='Provide Custom Train/Split Inputs',command=self.popupWindow_custominput,bg=self.root_fg,fg=self.root_bg)
         self.popup_custominput_button.grid(row=4,column=3,sticky='sw')
+        self.popup_custominput_button_tip=CreateToolTip(self.popup_custominput_button,'''
+        This is allows you to directly select a list for training input instead of letting the TRAIN/SPLIT feature split your data at random.
+        
+        This is useful if you want to ensure models of different types are trained on the same INPUT training data.  Or validated on the same etc.
+
+
+        APPLICABLE: yolov4, yolov7 
+
+        \n''')
 
     def return_to_main(self):
         global return_to_main
@@ -1236,6 +1515,14 @@ class yolo_cfg:
                     cmd_i=open_cmd+" '{}'".format(self.open_darknet_label_var.get())
                     self.open_darknet_label=Button(self.frame_table1,textvariable=self.open_darknet_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_darknet_label.grid(row=11,column=5,columnspan=50,sticky='sw')
+                    self.open_darknet_label_tip=CreateToolTip(self.open_darknet_label,'''
+                    This is allows you to specify the path to your darknet executable.
+
+                    It should also be in your libs/DEFAULT_SETTINGS.py if you have not already set it there. 
+
+                    APPLICABLE: yolov4 types ONLY.
+
+                    \n''')
                     self.darknet_path=self.foldername
                     print(self.darknet_path)
                 if var_i==self.open_basepath_label_var:
@@ -1246,6 +1533,10 @@ class yolo_cfg:
                     cmd_i=open_cmd+" '{}'".format(self.open_basepath_label_var.get())
                     self.open_basepath_label=Button(self.frame_table1,textvariable=self.open_basepath_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_basepath_label.grid(row=1,column=6,columnspan=50,sticky='sw')
+                    self.open_basepath_label_tip=CreateToolTip(self.open_basepath_label,'''
+                    View the path for your Yolo_Files. \n\t 
+                    This is where your model files are located under their designated folder by prefix name.''')
+
                     self.base_path_OG=self.foldername
                     print(self.base_path_OG)  
 
@@ -1257,6 +1548,9 @@ class yolo_cfg:
                     cmd_i=open_cmd+" '{}'".format(self.open_anno_label_var.get())
                     self.open_anno_label=Button(self.frame_table1,textvariable=self.open_anno_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_anno_label.grid(row=11,column=5,columnspan=50,sticky='sw')
+                    self.open_anno_label_tip=CreateToolTip(self.open_anno_label,'''
+                    View the path for your Annotations. \n\t 
+                    This is where your Annotations are located to create Yolo_Objs with.''')
                     self.path_Annotations=self.foldername
                     print(self.path_Annotations)
 
@@ -1268,6 +1562,9 @@ class yolo_cfg:
                     cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var.get())
                     self.open_jpeg_label=Button(self.frame_table1,textvariable=self.open_jpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_jpeg_label.grid(row=13,column=5,columnspan=50,sticky='sw')
+                    self.open_jpeg_label_tip=CreateToolTip(self.open_jpeg_label,'''
+                    View the path for your JPEGImages. \n\t 
+                    This is where your JPEGImages are located to create Yolo_Objs with.''')
                     self.path_JPEGImages=self.foldername
                     print(self.path_JPEGImages)  
 
@@ -1278,6 +1575,9 @@ class yolo_cfg:
                     cmd_i=open_cmd+" '{}'".format(self.open_predjpeg_label_var.get())
                     self.open_predjpeg_label=Button(self.frame_table1,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_predjpeg_label.grid(row=10+11,column=5,columnspan=50,sticky='sw')
+                    self.open_predjpeg_label_tip=CreateToolTip(self.open_predjpeg_label,'''
+                    View the path for your prediction JPEGImages. \n\t 
+                    This is where your prediction JPEGImages are located to TEST mAP with when selected.''')
                     self.path_predJPEGImages=self.foldername
                     print(self.path_predJPEGImages)   
                     create_img_list.create_img_list(self.path_predJPEGImages)
@@ -1296,6 +1596,11 @@ class yolo_cfg:
                     cmd_i=open_cmd+" '{}'".format(self.open_yolo_label_var.get())
                     self.open_yolo_label=Button(self.frame_table1,textvariable=self.open_yolo_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_yolo_label.grid(row=15,column=5,columnspan=50,sticky='sw')
+                    self.open_yolo_label_tip=CreateToolTip(self.open_yolo_label,'''
+                    View the path for your Yolo_Objs. \n\t 
+                    This is where your .txt/.jpg files are located for training/testing with yolo.  
+                    
+                    These are created from your Annotations/JPEGImages directories.''')
                     self.path_Yolo=self.foldername
                     print(self.path_Yolo)  
                 
@@ -1307,6 +1612,10 @@ class yolo_cfg:
                     cmd_i=open_cmd+" '{}'".format(self.open_anno_label_var_CUSTOM.get())
                     self.open_anno_label_CUSTOM=Button(self.top,textvariable=self.open_anno_label_var_CUSTOM, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_anno_label_CUSTOM.grid(row=3,column=5,columnspan=50,sticky='sw')
+                    self.open_anno_label_CUSTOM_tip=CreateToolTip(self.open_anno_label_CUSTOM,'''
+                    View the path for your CUSTOM Annotations. \n\t 
+                    This is where your Annotation files are located if you want to create a new CUSTOM model path with.  
+                    ''')
                     self.path_Annotations_CUSTOM=self.foldername
                     print(self.path_Annotations_CUSTOM)
                     self.open_anno_CUSTOM()
@@ -1319,6 +1628,10 @@ class yolo_cfg:
                     cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var_CUSTOM.get())
                     self.open_jpeg_label_CUSTOM=Button(self.top,textvariable=self.open_jpeg_label_var_CUSTOM, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_jpeg_label_CUSTOM.grid(row=4,column=5,columnspan=50,sticky='sw')
+                    self.open_jpeg_label_CUSTOM_tip=CreateToolTip(self.open_jpeg_label_CUSTOM,'''
+                    View the path for your CUSTOM JPEGImages. \n\t 
+                    This is where your JPEGImage files are located if you want to create a new CUSTOM model path with.  
+                    ''')
                     self.path_JPEGImages_CUSTOM=self.foldername
                     print(self.path_JPEGImages_CUSTOM)  
                     self.open_jpeg_CUSTOM()
@@ -1733,6 +2046,8 @@ class yolo_cfg:
         cmd_i=open_cmd+" '{}'".format(self.open_basepath_now_label_var.get())
         self.open_basepath_now_button=Button(self.frame_table1,image=self.icon_open,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_basepath_now_button.grid(row=3,column=4,sticky='se')
+        self.open_basepath_now_button_tip=CreateToolTip(self.open_basepath_now_button,'''
+        Open the path to all of your created Scripts for your Yolo_Files. ''')
         #sjs#self.open_basepath_now_note=tk.Label(self.frame_table1,text="{}".format(self.open_basepath_now_label_var.get()),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         #sjs#self.open_basepath_now_note.grid(row=4,column=4,sticky='ne')
         self.open_basepath_now_note=tk.Label(self.frame_table1,text="{}".format('Scripts'),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
@@ -1753,6 +2068,10 @@ class yolo_cfg:
         cmd_i=open_cmd+" '{}'".format(self.open_save_cfg_path_train_label_var.get())
         self.open_save_cfg_path_train_button=Button(self.frame_table1,image=self.icon_single_file,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_save_cfg_path_train_button.grid(row=5,column=4,sticky='se')
+        self.open_save_cfg_path_train_button_tip=CreateToolTip( self.open_save_cfg_path_train_button,'''
+        Open your yolov4/yolov4-tiny train .cfg file.
+        
+        APPLICABLE: yolov4 ONLY. ''')
         #sjs#self.open_save_cfg_path_train_note=tk.Label(self.frame_table1,text="{}".format(self.open_save_cfg_path_train_label_var.get().split('/')[-1]),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         #sjs#self.open_save_cfg_path_train_note.grid(row=6,column=4,sticky='ne')
         self.open_save_cfg_path_train_note=tk.Label(self.frame_table1,text="{}".format("train.cfg"),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
@@ -1760,6 +2079,10 @@ class yolo_cfg:
         cmd_i="netron '{}' -b".format(self.open_save_cfg_path_train_label_var.get())
         self.open_save_cfg_path_train_button_netron=Button(self.frame_table1,image=self.icon_map,command=partial(self.run_thread_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_save_cfg_path_train_button_netron.grid(row=5,column=5,sticky='sw')
+        self.open_save_cfg_path_train_button_netron_tip=CreateToolTip(self.open_save_cfg_path_train_button_netron,'''
+        Open your yolov4/yolov4-tiny train .cfg file with netron.
+        
+        APPLICABLE: yolov4 ONLY. ''')
         # cmd_i=open_cmd+" '{}'".format(self.open_save_cfg_path_train_label_var.get())
         # self.open_save_cfg_path_train_label=Button(self.frame_table1,textvariable=self.open_save_cfg_path_train_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         # self.open_save_cfg_path_train_label.grid(row=5,column=5,columnspan=50,sticky='sw')
@@ -1776,6 +2099,10 @@ class yolo_cfg:
         cmd_i=open_cmd+" '{}'".format(self.open_save_cfg_path_test_label_var.get())
         self.open_save_cfg_path_test_button=Button(self.frame_table1,image=self.icon_single_file,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_save_cfg_path_test_button.grid(row=7,column=4,sticky='se')
+        self.open_save_cfg_path_test_button_tip=CreateToolTip( self.open_save_cfg_path_test_button,'''
+        Open your yolov4/yolov4-tiny test .cfg file.
+        
+        APPLICABLE: yolov4 ONLY. ''')
         #sjs#self.open_save_cfg_path_test_note=tk.Label(self.frame_table1,text="{}".format(self.open_save_cfg_path_test_label_var.get().split('/')[-1]),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         #sjs#self.open_save_cfg_path_test_note.grid(row=8,column=4,sticky='ne')
         self.open_save_cfg_path_test_note=tk.Label(self.frame_table1,text="{}".format("test.cfg"),bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
@@ -1784,6 +2111,10 @@ class yolo_cfg:
         cmd_i="netron '{}' -b".format(self.open_save_cfg_path_test_label_var.get())
         self.open_save_cfg_path_test_button_netron=Button(self.frame_table1,image=self.icon_map,command=partial(self.run_thread_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.open_save_cfg_path_test_button_netron.grid(row=7,column=5,sticky='sw')
+        self.open_save_cfg_path_test_button_netron_tip=CreateToolTip( self.open_save_cfg_path_test_button_netron,'''
+        Open your yolov4/yolov4-tiny test .cfg file with netron.
+        
+        APPLICABLE: yolov4 ONLY. ''')
         # cmd_i=open_cmd+" '{}'".format(self.open_save_cfg_path_test_label_var.get())
         # self.open_save_cfg_path_test_label=Button(self.frame_table1,textvariable=self.open_save_cfg_path_test_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         # self.open_save_cfg_path_test_label.grid(row=7,column=5,columnspan=50,sticky='sw')
@@ -1829,6 +2160,10 @@ class yolo_cfg:
         self.create_yolo_objs_button.grid(row=1,column=1,sticky='se')
         self.create_yolo_objs_button_note=tk.Label(self.frame_table1,text='2.a \n Create Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.create_yolo_objs_button_note.grid(row=2,column=1,sticky='ne')
+        self.create_yolo_objs_button_tip=CreateToolTip(self.create_yolo_objs_button,'''
+        This creates Yolo_Objs at your Yolo_Objs path from your Annotations/JPEGImages.
+        
+        APPLICABLE: yolov4, yolov7 \n''')
 
         
 
@@ -1861,36 +2196,60 @@ class yolo_cfg:
     def open_jpegs(self):
         self.open_jpeg_label_var=tk.StringVar()
         self.open_jpeg_label_var.set(self.path_JPEGImages)
-        self.open_jpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_JPEGImages,'Open JPEGImages Folder',self.open_jpeg_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_jpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_JPEGImages,'Set JPEGImages Folder',self.open_jpeg_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_jpeg_button.grid(row=13,column=4,sticky='se')
+        self.open_jpeg_button_tip=CreateToolTip(self.open_jpeg_button,'''
+        Set the path for your JPEGImages. \n\t 
+        This is where your JPEGImages are located to create Yolo_Objs with.''')
         self.open_jpeg_note=tk.Label(self.frame_table1,text="JPEGImages",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_jpeg_note.grid(row=14,column=4,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var.get())
         self.open_jpeg_label=Button(self.frame_table1,textvariable=self.open_jpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_jpeg_label.grid(row=13,column=5,columnspan=50,sticky='sw')
+        self.open_jpeg_label_tip=CreateToolTip(self.open_jpeg_label,'''
+        View the path for your JPEGImages. \n\t 
+        This is where your JPEGImages are located to create Yolo_Objs with.''')
 
         self.open_predjpeg_label_var=tk.StringVar()
         self.open_predjpeg_label_var.set(self.path_predJPEGImages)
-        self.open_predjpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_predJPEGImages,'Open Prediction JPEGImages Folder',self.open_predjpeg_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_predjpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_predJPEGImages,'Set Prediction JPEGImages Folder',self.open_predjpeg_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_predjpeg_button.grid(row=10+11,column=4,sticky='se')
+        self.open_predjpeg_button_tip=CreateToolTip(self.open_predjpeg_button,'''
+        Set the path for your prediction JPEGImages. \n\t 
+        This is where your prediction JPEGImages are located to TEST mAP with when selected.''')
+
+
         self.open_predjpeg_note=tk.Label(self.frame_table1,text="Prediction JPEGImages",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_predjpeg_note.grid(row=11+11,column=4,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_predjpeg_label_var.get())
         self.open_predjpeg_label=Button(self.frame_table1,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_predjpeg_label.grid(row=10+11,column=5,columnspan=50,sticky='sw')
+        self.open_predjpeg_label_tip=CreateToolTip(self.open_predjpeg_label,'''
+        View the path for your prediction JPEGImages. \n\t 
+        This is where your prediction JPEGImages are located to TEST mAP with when selected.''')
 
     def open_yolo_objs(self):
         self.open_yolo_label_var=tk.StringVar()
         if os.path.exists(self.path_Yolo)==False:
             os.makedirs(self.path_Yolo)
         self.open_yolo_label_var.set(self.path_Yolo)
-        self.open_yolo_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_Yolo,'Open Yolo_Objs Folder',self.open_yolo_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_yolo_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_Yolo,'Set Yolo_Objs Folder',self.open_yolo_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_yolo_button.grid(row=15,column=4,sticky='se')
+        self.open_yolo_button_tip=CreateToolTip(self.open_yolo_button,'''
+        Set the path for your Yolo_Objs. \n\t 
+        This is where your .txt/.jpg files are located for training/testing with yolo.  
+        
+        These are created from your Annotations/JPEGImages directories.''')
         self.open_yolo_note=tk.Label(self.frame_table1,text="Yolo_Objs",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_yolo_note.grid(row=16,column=4,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_yolo_label_var.get())
         self.open_yolo_label=Button(self.frame_table1,textvariable=self.open_yolo_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_yolo_label.grid(row=15,column=5,columnspan=50,sticky='sw')
+        self.open_yolo_label_tip=CreateToolTip(self.open_yolo_label,'''
+        View the path for your Yolo_Objs. \n\t 
+        This is where your .txt/.jpg files are located for training/testing with yolo.  
+        
+        These are created from your Annotations/JPEGImages directories.''')
 
 
 
@@ -1908,11 +2267,19 @@ class yolo_cfg:
         self.open_anno_label_var.set(self.path_Annotations)
         self.open_anno_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_Annotations,'Open Annotations Folder',self.open_anno_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_anno_button.grid(row=11,column=4,sticky='se')
+        self.open_anno_button_tip=CreateToolTip(self.open_anno_button,'''
+        Set the path for your Annotations. \n\t 
+        This is where your Annotations are located to create Yolo_Objs with.''')
+
+
         self.open_anno_note=tk.Label(self.frame_table1,text="Annotations dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_anno_note.grid(row=12,column=4,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_anno_label_var.get())
         self.open_anno_label=Button(self.frame_table1,textvariable=self.open_anno_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_anno_label.grid(row=11,column=5,columnspan=50,sticky='sw')
+        self.open_anno_label_tip=CreateToolTip(self.open_anno_label,'''
+        View the path for your Annotations. \n\t 
+        This is where your Annotations are located to create Yolo_Objs with.''')
         self.open_anno_selected=True
 
     def open_anno_CUSTOM(self,row_i=3,col_i=6,columnspan=75,sticky='sew',location=None,sticky2='ne',sticky3='se'):
@@ -1935,7 +2302,9 @@ class yolo_cfg:
         self.open_anno_label_var_CUSTOM.set(self.path_Annotations_CUSTOM)
         
         self.open_anno_button_CUSTOM=Button(location,image=self.icon_folder,command=partial(self.select_folder,os.path.dirname(self.path_Yolo),'Open Custom Annotations Folder',self.open_anno_label_var_CUSTOM),bg=self.root_bg,fg=self.root_fg)
-
+        self.open_anno_button_CUSTOM_tip=CreateToolTip(self.open_anno_button_CUSTOM,'''
+        Set the path for your CUSTOM Annotations. \n\t 
+        This is where your CUSTOM Annotations path is located to create a new model with if desired.''')
         self.open_anno_note_CUSTOM=tk.Label(location,text="Custom Annotations dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
 
         if col_i>0:
@@ -1944,14 +2313,32 @@ class yolo_cfg:
 
         self.open_anno_label_CUSTOM=Button(location,textvariable=self.open_anno_label_var_CUSTOM, command=self.open_custom_anno_cmd,bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_anno_label_CUSTOM.grid(row=row_i,column=col_i+1,columnspan=columnspan,sticky=sticky)
+        self.open_anno_label_CUSTOM_tip=CreateToolTip(self.open_anno_label_CUSTOM,'''
+        View the path for your CUSTOM Annotations. \n\t 
+        This is where your Annotation files are located if you want to create a new CUSTOM model path with.  
+        ''')
         self.open_anno_selected_CUSTOM=True
 
     def send_text_buttons(self):
         self.ck2=tk.Checkbutton(self.frame_table1,text='Send Text Message/Email Alerts',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
         self.ck2.grid(row=14,column=3,sticky='n')
+        self.ck2_tip=CreateToolTip(self.ck2,'''
+        Allows you to send text message/email alerts if selected. \n\t 
+
+        Requires a GOOGLE account setup to send SMS messages with through API.  
+
+        Can be used to alert when certain objects are detected or even when your model is done training.
+        ''')
     def send_text_buttons_training(self):
-        self.ck2=tk.Checkbutton(self.top,text='Send Text Message/Email Alerts\n\t after training? \n (FYI, only valid for Multi-Training selections)',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
-        self.ck2.grid(row=18,column=0,sticky='sw')
+        self.ck21=tk.Checkbutton(self.top,text='Send Text Message/Email Alerts\n\t after training? \n (FYI, only valid for Multi-Training selections)',variable=self.sec,command=self.show_numbers,onvalue='y',offvalue='n',bg=self.root_fg,fg=self.root_bg)
+        self.ck21.grid(row=18,column=0,sticky='sw')
+        self.ck21_tip=CreateToolTip(self.ck21,'''
+        Allows you to send text message/email alerts if selected. \n\t 
+
+        Requires a GOOGLE account setup to send SMS messages with through API.  
+
+        Can be used to alert when your model is done training.
+        ''')
     def select_yes_no(self,selected):
         if str(selected)=='Yes':
             self.var_overwrite.set('Yes')
@@ -2093,12 +2480,20 @@ class yolo_cfg:
         self.open_MOVMP4_label_var.set(self.path_MOVMP4)
         self.open_MOVMP4_button=Button(self.frame_table1,image=self.icon_single_file,command=partial(self.select_file_MOVMP4,self.path_MOVMP4),bg=self.root_bg,fg=self.root_fg)
         self.open_MOVMP4_button.grid(row=5,column=8,sticky='sw')
+        self.open_MOVMP4_button_tip=CreateToolTip(self.open_MOVMP4_button,'''
+        If desired to create JPEGImages from an .mp4/.MOV file type, 
+        then navigate to your .mp4/.MOV file. \n\t 
+        ''')
         self.open_MOVMP4_note=tk.Label(self.frame_table1,text="MOV/MP4 File to \n Create JPEGImages",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_MOVMP4_note.grid(row=4,column=8,columnspan=1,sticky='sw')
 
 
         self.open_MOVMP4_INPUT_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder_pathJPEGImages_INPUT,'path_JPEGImages for making .mp4',self.open_MOVMP4_INPUT_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_MOVMP4_INPUT_button.grid(row=7,column=8,sticky='sw')
+        self.open_MOVMP4_INPUT_button_tip=CreateToolTip(self.open_MOVMP4_INPUT_button,'''
+        If desired to stitch together JPEGImages to create an .mp4/.MOV file type, 
+        then navigate to your directory of JPEGImages. \n\t 
+        ''')
         self.open_MOVMP4_INPUT_note=tk.Label(self.frame_table1,text="path_JPEGImages to \n Create .mp4 File from",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_MOVMP4_INPUT_note.grid(row=6,column=8,columnspan=1,sticky='sw')
         
@@ -2118,19 +2513,35 @@ class yolo_cfg:
         self.fps_MOVMP4_dropdown['menu'].config(fg='lime',bg='black')
         self.fps_MOVMP4_dropdown_label=tk.Label(self.frame_table1,text='FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
         self.fps_MOVMP4_dropdown_label.grid(row=4,column=9,sticky='sw')   
+        self.fps_MOVMP4_dropdown_tip=CreateToolTip(self.fps_MOVMP4_dropdown,'''
+        Pick an option from this dropdown menu to cutup the .mp4/.MOV file into a DESIRED FPS for labeling.
+        
+        Recommended 1/2 (1 frame per 2 seconds) for video where objects are not changing enough in 2 seconds to gain any more useful information for training a model.\n\t 
+        ''')
 
         self.fps_MOVMP4_from_INPUT_dropdown=tk.OptionMenu(self.frame_table1,self.fps_OUTPUT_VAR,*self.fps_MOVMP4_INPUT_options)
         self.fps_MOVMP4_from_INPUT_dropdown.grid(row=7,column=9,sticky='nw')
         self.fps_MOVMP4_from_INPUT_dropdown.config(bg='green',fg='black')
         self.fps_MOVMP4_from_INPUT_dropdown['menu'].config(fg='lime',bg='black')
+        self.fps_MOVMP4_from_INPUT_dropdown_tip=CreateToolTip(self.fps_MOVMP4_from_INPUT_dropdown,'''
+        Recommended to keep at DEFAULT, unless another FPS is desired. \n\t 
+        ''')
         self.fps_MOVMP4_from_INPUT_dropdown_label=tk.Label(self.frame_table1,text='FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',8))
         self.fps_MOVMP4_from_INPUT_dropdown_label.grid(row=6,column=9,sticky='sw') 
 
     def create_MOVMP4_JPEGImages(self):
         self.create_MOVMP4_button=Button(self.frame_table1,image=self.icon_create,command=self.check_fps,bg=self.root_bg,fg=self.root_fg)
         self.create_MOVMP4_button.grid(row=5,column=7,sticky='se')
+        self.create_MOVMP4_button_tip=CreateToolTip(self.create_MOVMP4_button,'''
+        If desired to create JPEGImages from an .mp4/.MOV file type, 
+        then click this button after you have navigated to your .mp4/.MOV file. \n\t 
+        ''')
         self.create_MOVMP4_from_INPUT_button=Button(self.frame_table1,image=self.icon_create,command=self.create_video_from_imgs,bg=self.root_bg,fg=self.root_fg)
         self.create_MOVMP4_from_INPUT_button.grid(row=7,column=7,sticky='se')
+        self.create_MOVMP4_INPUT_button_tip=CreateToolTip(self.create_MOVMP4_from_INPUT_button,'''
+        If desired to stitch together JPEGImages to create an .mp4/.MOV file type, 
+        then click this button after you have navigated to your directory of JPEGImages. \n\t 
+        ''')
 
 
     def check_fps(self):
@@ -2180,6 +2591,14 @@ class yolo_cfg:
         #cmd_i=" bash '{}'".format(self.save_cfg_path_train.replace('.cfg','.sh'))
         self.train_yolo_objs_button=Button(self.top,image=self.icon_train,command=self.train_yolov4,bg=self.root_bg,fg=self.root_fg)
         self.train_yolo_objs_button.grid(row=3,column=2,sticky='se')
+        self.train_yolo_objs_button_tip=CreateToolTip(self.train_yolo_objs_button,'''
+        This button trains your yolov4/yolov4-tiny model with darknet. \n\t 
+
+        APPLICABLE: yolov4 types ONLY.
+
+        If the config was generated for yolov4-tiny, then this will train yolov4-tiny.
+        If the config was generated for regular yolov4, then this will train regular yolov4.
+        ''')
         self.train_yolo_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.train_yolo_objs_button_note.grid(row=4,column=2,sticky='ne')
 
@@ -2191,6 +2610,16 @@ class yolo_cfg:
             self.epochs_VAR.set(self.epochs)
             self.epochs_entry=tk.Entry(self.frame_table1,textvariable=self.epochs_VAR)
             self.epochs_entry.grid(row=21,column=0,sticky='se')
+            self.epochs_entry_tip=CreateToolTip(self.epochs_entry,'''
+            This will set the number of EPOCHS used for training yolov4/yolov4-tiny with darknet. \n\t 
+
+            APPLICABLE: yolov4 types ONLY.
+
+            It will adjust the NUM_ITERATIONS or max_batches in the configuration file for training.
+
+            If the config was generated for yolov4-tiny, then this will adjust configs for yolov4-tiny.
+            If the config was generated for regular yolov4, then this will adjust configs for regular yolov4.
+            ''')
             self.epochs_label=tk.Label(self.frame_table1,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_label.grid(row=22,column=0,sticky='ne')
 
@@ -2202,6 +2631,16 @@ class yolo_cfg:
 
         self.train_yolo_gpu_entry=tk.Entry(self.top,textvariable=self.train_yolo_gpu)
         self.train_yolo_gpu_entry.grid(row=10,column=2,sticky='sw')
+        self.train_yolo_gpu_entry_tip=CreateToolTip(self.train_yolo_gpu_entry,'''
+        This will set the number of GPUS used for training yolov4/yolov4-tiny with darknet. \n\t 
+
+        APPLICABLE: yolov4 types ONLY.
+
+        It simply adds a -gpus 0,1,2 etc to the bash script for training before training.
+
+        Note, if more GPUS are selected then available, darknet will pick what is available.
+
+        ''')
         self.train_yolo_gpu_label=tk.Label(self.top,text='gpus (i.e., 0,1,2)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.train_yolo_gpu_label.grid(row=11,column=2,sticky='nw')
 
@@ -2217,6 +2656,10 @@ class yolo_cfg:
         self.multi_train_yolov4_var.set(0)
         self.multi_train_yolov4_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov4_var,onvalue=1, offvalue=0)
         self.multi_train_yolov4_buttons.grid(row=14-7,column=2,sticky='sw')
+        self.multi_train_yolov4_buttons_tip=CreateToolTip(self.multi_train_yolov4_buttons,'''
+        This will allow it to be added to the list for training multiple models in sequence if others are selected. \n\t 
+
+        ''')
 
     def train_yolov4_madness(self):
         if self.epochs_VAR.get()!=self.epochs:
@@ -2312,6 +2755,14 @@ class yolo_cfg:
             self.PORT_VAR.set(self.PORT)
             self.PORT_entry=tk.Entry(self.frame_table1,textvariable=self.PORT_VAR)
             self.PORT_entry.grid(row=13+spacer,column=2,sticky='sw')
+            self.PORT_entry_tip=CreateToolTip(self.PORT_entry,'''
+            For RTSP, this PORT entry is the PORT for RTSP Server ONLY.
+            
+            RTSP Server will let you stream via RTSP your output detections.
+            
+            APPLICABLE: yolov4/yolov7 \n\t 
+
+            ''')
             self.PORT_label=tk.Label(self.frame_table1,text='RTSP PORT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.PORT_label.grid(row=14+spacer,column=2,sticky='nw')  
         if self.RTSP_SERVER and self.FPS_VAR==None:
@@ -2319,6 +2770,16 @@ class yolo_cfg:
             self.FPS_VAR.set(self.FPS)
             self.FPS_entry=tk.Entry(self.frame_table1,textvariable=self.FPS_VAR)
             self.FPS_entry.grid(row=15+spacer,column=2,sticky='sw')
+            self.FPS_entry_tip=CreateToolTip(self.FPS_entry,'''
+            For RTSP, this FPS entry is the FPS for RTSP Server ONLY.
+            
+            RTSP Server will let you stream via RTSP your output detections.
+            
+            APPLICABLE: yolov4/yolov7 \n\t 
+
+            Recommended to start lower and increase, depending on latency of RTSP connection for streaming out from this device.
+
+            ''')
             self.FPS_label=tk.Label(self.frame_table1,text='RTSP FPS',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.FPS_label.grid(row=16+spacer,column=2,sticky='nw')  
         if self.RTSP_SERVER and self.STREAM_KEY_VAR==None:
@@ -2326,12 +2787,30 @@ class yolo_cfg:
             self.STREAM_KEY_VAR.set(self.STREAM_KEY)
             self.STREAM_KEY_entry=tk.Entry(self.frame_table1,textvariable=self.STREAM_KEY_VAR)
             self.STREAM_KEY_entry.grid(row=17+spacer,column=2,sticky='sw')
+            self.STREAM_KEY_entry_tip=CreateToolTip(self.STREAM_KEY_entry,'''
+            For RTSP, this STREAM_KEY entry is the STREAM_KEY for RTSP Server ONLY.
+            
+            RTSP Server will let you stream via RTSP your output detections.
+            
+            APPLICABLE: yolov4/yolov7 \n\t 
+
+            ''')
             self.STREAM_KEY_label=tk.Label(self.frame_table1,text='RTSP STREAM KEY',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.STREAM_KEY_label.grid(row=18+spacer,column=2,sticky='nw')  
         if self.RTSP_SERVER and self.RTSP_FULL_PATH_VAR==None:
             self.RTSP_FULL_PATH_VAR=tk.StringVar()
             self.get_full_path_rtsp()
             self.RTSP_FULL_PATH_label=tk.Label(self.frame_table1,textvariable=self.RTSP_FULL_PATH_VAR,bg=self.root_fg,fg=self.root_bg,font=('Arial',10))
+            self.RTSP_FULL_PATH_tip=CreateToolTip(self.RTSP_FULL_PATH_label,'''
+            For RTSP, this RTSP_FULL_PATH is the entire path to copy/paste for viewing on another device with VLC etc.
+            
+            For RTSP Server ONLY.
+            
+            RTSP Server will let you stream via RTSP your output detections.
+            
+            APPLICABLE: yolov4/yolov7 \n\t 
+
+            ''')
             self.RTSP_FULL_PATH_label.grid(row=14+spacer-2,column=2,sticky='nw')  
         if self.RTSP_SERVER and self.USE_RTSP_VAR==None:
             self.USE_RTSP_VAR=tk.StringVar()
@@ -2339,6 +2818,15 @@ class yolo_cfg:
             self.USE_RTSP_VAR.set('No')
             self.USE_RTSP_dropdown=tk.OptionMenu(self.frame_table1,self.USE_RTSP_VAR,*self.USE_RTSP_options,command=self.get_full_path_rtsp())
             self.USE_RTSP_dropdown.grid(row=13+spacer-2,column=3,sticky='sw')
+            self.USE_RTSP_dropwdown_tip=CreateToolTip(self.USE_RTSP_dropdown,'''
+            For RTSP, this Yes/No is what allows RTSP Serving to occur when testing models.  Only applicable to RTSP_Server.
+
+            
+            RTSP Server will let you stream via RTSP your output detections.
+            
+            APPLICABLE: yolov4/yolov7 \n\t 
+
+            ''')
             self.USE_RTSP_dropdown.config(bg='green',fg='black')
             self.USE_RTSP_dropdown['menu'].config(fg='lime',bg='black')
             self.USE_RTSP_label=tk.Label(self.frame_table1,text='RTSP Server?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
@@ -2357,29 +2845,37 @@ class yolo_cfg:
     def RTSP_BUTTONS(self):
         self.popup_RTSP_button=Button(self.frame_table1,text='Client/Socket RTSP Buttons',command=self.popupWindow_RTSP,bg=self.root_fg,fg=self.root_bg)
         self.popup_RTSP_button.grid(row=16+5-2,column=3,sticky='sw')
+        self.popup_RTSP_button_tip=CreateToolTip(self.popup_RTSP_button,'''
+        For Socket/Client RTSP options.
+
+        Could be used with CLASSIFY_CHIPS.py to point to a classifier model for the output detections from yolov7 or yolov4 etc.
+        
+        APPLICABLE: yolov4/yolov7 \n\t 
+
+        ''')
 
     def CLASSIFY_CHIPS_BUTTONS(self):
         self.popup_CLASSIFY_CHIPS_button=Button(self.frame_table1,image=self.icon_CLASSIFY_CHIPS,command=self.popupWindow_CLASSIFY_CHIPS,bg=self.root_bg,fg=self.root_fg)
         self.popup_CLASSIFY_CHIPS_button.grid(row=9,column=7,sticky='s',padx=10)  
+        self.popup_CLASSIFY_CHIPS_button_tip=CreateToolTip(self.popup_CLASSIFY_CHIPS_button,'''
+        This opens the options for the CLASSIFY_CHIPS GUI or for inferencing with a classifier as the second stage to detections from yolov4 or yolov7 etc.
+        
+        APPLICABLE: yolov4/yolov7 \n\t 
+
+        ''')
         self.popup_CLASSIFY_CHIPS_button_note=tk.Label(self.frame_table1,text='CLASSIFY CHIPS GUI ',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.popup_CLASSIFY_CHIPS_button_note.grid(row=10,column=7,sticky='n',padx=10)   
 
 
-        # self.style3=ttk.Style()
-        # self.style3.configure('Normal.TRadiobutton',
-        #                      background='green',
-        #                      foreground='black')
-        # self.button_classify_yes=ttk.Radiobutton(self.frame_table1,text='Yes',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='Yes')
-
-        # self.button_classify_yes.grid(row=9,column=9,stick='nw')
-        # self.button_classify_no=ttk.Radiobutton(self.frame_table1,text='No',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='No')
-        # self.button_classify_no.grid(row=9,column=10,stick='ne')
-        # self.label_classify=tk.Label(self.frame_table1,text='CLASSIFY CHIPS?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
-        # self.label_classify.grid(row=8,column=9,columnspan=2,stick='sew')
-
     def GENERATE_CUSTOM_DATASET_BUTTONS(self):
         self.popup_GCD_button=Button(self.frame_table1,text='GENERATE CUSTOM DATASET Buttons',command=self.popupWindow_GCD,bg=self.root_fg,fg=self.root_bg)
         self.popup_GCD_button.grid(row=0,column=3,sticky='se')
+        self.popup_GCD_button_tip=CreateToolTip(self.popup_GCD_button,'''
+        This opens up the options to generate a CUSTOM dataset based on data located on your current device.
+
+        APPLICABLE: yolov4/yolov7 \n\t 
+
+        ''')
 
     def popupWindow_GCD(self):
         try:
@@ -2405,14 +2901,40 @@ class yolo_cfg:
 
         self.open_GCD_label_CUSTOM=Button(self.FMas,text="Open Custom Dataset LIST OPTIONS",command=self.open_dataset_lists,bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_GCD_label_CUSTOM.grid(row=0,column=0,sticky='nw')
+        self.open_GCD_label_tip=CreateToolTip(self.open_GCD_label_CUSTOM,'''
+        You can view and/or modify the Custom Dataset paths used for generating a new custom dataset.
+
+        APPLICABLE: yolov4/yolov7 \n\t 
+
+        ''')
 
         self.generate_GCD_label_CUSTOM=Button(self.FMas,text="Generate Custom Dataset",command=self.generate_GCD,bg='green',fg=self.root_bg,font=("Arial", 10))
         self.generate_GCD_label_CUSTOM.grid(row=7,column=0,sticky='sw')
+        self.generate_GCD_label_CUSTOM_tip=CreateToolTip(self.generate_GCD_label_CUSTOM,'''
+        Generates the custom dataset based on your selections.
+
+        Uses grep -r over your list of datasets to determine what is in them.  
+        
+        When the max classes is found, it stops searching the given dataset for efficiency.
+        
+        APPLICABLE: yolov4/yolov7 \n\t 
+
+        ''')
 
         self.MAX_PER_CLASS_VAR=tk.StringVar()
         self.MAX_PER_CLASS_VAR.set(self.MAX_PER_CLASS)
         self.MAX_PER_CLASS_entry=tk.Entry(self.FMas,textvariable=self.MAX_PER_CLASS_VAR)
         self.MAX_PER_CLASS_entry.grid(row=9,column=0,sticky='nw')
+        self.MAX_PER_CLASS_entry_tip=CreateToolTip(self.MAX_PER_CLASS_entry,'''
+        The MAX_PER_CLASS is the number to stop searching with grep.  
+        
+        When generating custom datasets based on your selections, grep -r is used over your list of datasets to determine what is in them.  
+        
+        When the max classes is found, it stops searching the given dataset for efficiency.
+        
+        APPLICABLE: yolov4/yolov7 \n\t 
+
+        ''')
         self.MAX_PER_CLASS_label=tk.Label(self.FMas,text='MAX_PER_CLASS',bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.MAX_PER_CLASS_label.grid(row=8,column=0,sticky='sw')
 
@@ -2420,6 +2942,12 @@ class yolo_cfg:
         self.TARGET_LIST_VAR.set(self.TARGET_LIST)
         self.TARGET_LIST_entry=tk.Entry(self.FMas,textvariable=self.TARGET_LIST_VAR)
         self.TARGET_LIST_entry.grid(row=11,column=0,sticky='nw')
+        self.TARGET_LIST_entry_tip=CreateToolTip(self.TARGET_LIST_entry,'''
+        The TARGET_LIST_entry is the search conditions for searching datsets with grep on.  
+        
+        APPLICABLE: yolov4/yolov7 \n\t 
+
+        ''')
         self.TARGET_LIST_label=tk.Label(self.FMas,text='CLASS LIST',bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.TARGET_LIST_label.grid(row=10,column=0,sticky='sw')
 
@@ -2502,7 +3030,14 @@ class yolo_cfg:
         self.run_cmd(cmd_i)
     def load_dataset_lists_buttons(self):
         self.load_GCD_label_CUSTOM=Button(self.FMas,text="Load Custom Dataset LIST OPTIONS",command=self.load_dataset_lists,bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
-        self.load_GCD_label_CUSTOM.grid(row=1,column=0,sticky='nw')   
+        self.load_GCD_label_CUSTOM.grid(row=1,column=0,sticky='nw')  
+        self.load_GCD_label_CUSTOM_tip=CreateToolTip(self.load_GCD_label_CUSTOM,'''
+        If changes are made with the OPEN Custom Dataset LIST_OPTIONS,
+        this loads those changes to take effect.  
+        
+        APPLICABLE: yolov4/yolov7 \n\t 
+
+        ''') 
 
     def load_dataset_lists(self):
         spacer=0
@@ -2700,6 +3235,20 @@ class yolo_cfg:
             self.CLASSIFY_CHIPS_LIST=['NO OPTIONS AVAILABLE']
         self.USE_CLASSIFY_CHIPS_VAR.set(self.CLASSIFY_CHIPS_LIST[0])
         self.USE_CLASSIFY_CHIPS_dropdown=tk.OptionMenu(self.top,self.USE_CLASSIFY_CHIPS_VAR,*self.CLASSIFY_CHIPS_LIST,command=self.return_CLASSIFY_CHIPS)
+        self.USE_CLASSIFY_CHIPS_dropwdown_tip=CreateToolTip(self.USE_CLASSIFY_CHIPS_dropdown,'''
+        You must have created a Classifier with CLASSIFY_CHIPS first, which generates the bash scripts for INFERENCE.
+        
+        This is a list of options to choose for inference with as a secondary classifier to yolo.  
+        
+        It requires the PORTS to be configured correctly in 
+        the main page under RTSP/SOCKET options.  
+        
+        PORTS should match to what is in the script you select since when calling yolo, it uses both pieces to connect
+        the socket/ports together for inference.
+        
+        APPLICABLE: yolov4/yolov7 \n\t 
+
+        ''') 
         self.USE_CLASSIFY_CHIPS_dropdown.grid(row=15+spacer-2,column=3,sticky='sw')
         self.USE_CLASSIFY_CHIPS_dropdown.config(bg='green',fg='black')
         self.USE_CLASSIFY_CHIPS_dropdown['menu'].config(bg='lime',fg='black')
@@ -2774,6 +3323,18 @@ class yolo_cfg:
             self.SOCKET_RTSP_PORTS=['8889']
         self.USE_SOCKET_RTSP_PORT_VAR.set(self.SOCKET_RTSP_PORTS[0])
         self.USE_SOCKET_RTSP_PORT_dropdown=tk.OptionMenu(self.top,self.USE_SOCKET_RTSP_PORT_VAR,*self.SOCKET_RTSP_PORTS,command=self.return_SOCKET_RTSP_PORT)
+        self.USE_SOCKET_RTSP_PORT_dropdown_tip=CreateToolTip(self.USE_SOCKET_RTSP_PORT_dropdown,'''
+        This works with an INFERENCE Classifier generated with CLASSIFY_CHIPS.
+        
+        This is a list of options to choose for PORTs that a classifier could inference with as a secondary classifier to yolo.  
+               
+        PORTS should match to what is in the script you select since when calling yolo, it uses both pieces to connect
+        the socket/ports together for inference.
+        
+        APPLICABLE: yolov4/yolov7 \n\t 
+
+        ''') 
+        
         self.USE_SOCKET_RTSP_PORT_dropdown.grid(row=19+spacer-2,column=3,sticky='sw')
         self.USE_SOCKET_RTSP_PORT_dropdown.config(bg='green',fg='black')
         self.USE_SOCKET_RTSP_PORT_dropdown['menu'].config(fg='lime',bg='black')
@@ -2799,6 +3360,17 @@ class yolo_cfg:
         self.USE_SOCKET_RTSP_HOST_VAR.set(self.SOCKET_RTSP_HOSTS[0])
         self.USE_SOCKET_RTSP_HOST_dropdown=tk.OptionMenu(self.top,self.USE_SOCKET_RTSP_HOST_VAR,*self.SOCKET_RTSP_HOSTS,command=self.return_SOCKET_RTSP_HOST)
         self.USE_SOCKET_RTSP_HOST_dropdown.grid(row=23+spacer-2,column=3,sticky='sw')
+        self.USE_SOCKET_RTSP_HOST_dropdown_tip=CreateToolTip(self.USE_SOCKET_RTSP_HOST_dropdown,'''
+        This works with an INFERENCE Classifier generated with CLASSIFY_CHIPS.
+        
+        This is a list of options to choose for HOSTs that a classifier could inference with as a secondary classifier to yolo.  
+               
+        HOSTS should match to what is in the script you select since when calling yolo, it uses both pieces to connect
+        the socket/ports together for inference.
+        
+        APPLICABLE: yolov4/yolov7 \n\t 
+
+        ''') 
         self.USE_SOCKET_RTSP_HOST_dropdown.config(bg='green',fg='black')
         self.USE_SOCKET_RTSP_HOST_dropdown['menu'].config(fg='lime',bg='black')
 
@@ -2913,6 +3485,15 @@ class yolo_cfg:
             self.YOUTUBE_KEY_VAR.set(self.YOUTUBE_KEY)
             self.YOUTUBE_KEY_entry=tk.Entry(self.frame_table1,textvariable=self.YOUTUBE_KEY_VAR)
             self.YOUTUBE_KEY_entry.grid(row=11,column=2,sticky='sw')
+            self.YOUTUBE_KEY_entry_tip=CreateToolTip(self.YOUTUBE_KEY_entry,'''
+            If you want to stream your detections to YOUTUBE, put the key here.
+
+            Requires you to have a YOUTUBE account setup for streaming.
+        
+            
+            APPLICABLE: yolov4/yolov7 \n\t 
+
+            ''') 
             self.YOUTUBE_KEY_label=tk.Label(self.frame_table1,text='YOUTUBE STREAM KEY',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.YOUTUBE_KEY_label.grid(row=11,column=2,sticky='nw')  
             
@@ -2920,6 +3501,15 @@ class yolo_cfg:
             self.USER_SELECTION_yt=tk.StringVar()
             self.USER_SELECTION_yt.set('720p')
             self.dropdown_yt=tk.OptionMenu(self.frame_table1,self.USER_SELECTION_yt,*self.SETTINGS_YOUTUBE_LIST)
+            self.dropdown_yt_tip=CreateToolTip(self.dropdown_yt,'''
+            This dropdown for youtube sets the streaming output resolution.  
+
+            Requires you to have a YOUTUBE account setup for streaming.
+        
+            
+            APPLICABLE: yolov4/yolov7 \n\t 
+
+            ''') 
             self.dropdown_yt.grid(row=11,column=3,sticky='sw')
             self.dropdown_yt.config(bg='green',fg='black')
             self.dropdown_yt['menu'].config(fg='lime',bg='black')
@@ -2933,6 +3523,14 @@ class yolo_cfg:
         #cmd_i=" bash '{}'".format(self.tmp_test_path)
         self.test_yolo_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.test_yolo_objs_button.grid(row=5,column=2,sticky='se')
+        self.test_yolo_objs_button_tip=CreateToolTip(self.test_yolo_objs_button,'''
+        TESTS your yolo model with the webcam using darknet.  
+
+        Requires you to have trained the respective model first.
+        
+        APPLICABLE: yolov4 types ONLY \n\t 
+
+        ''') 
         self.test_yolo_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.test_yolo_objs_button_note.grid(row=6,column=2,sticky='ne')
 
@@ -2951,6 +3549,14 @@ class yolo_cfg:
         #cmd_i=" bash '{}'".format(self.tmp_test_path)
         self.test_yolo_objsdnn_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.test_yolo_objsdnn_button.grid(row=13,column=2,sticky='se')
+        self.test_yolo_objsdnn_button_tip=CreateToolTip(self.test_yolo_objsdnn_button,'''
+        TESTS your yolo model with the webcam using opencv dnn.  
+
+        Requires you to have trained the respective model first.
+        
+        APPLICABLE: yolov4 types ONLY \n\t 
+
+        ''') 
         self.test_yolo_objsdnn_button_note=tk.Label(self.top,text='DNN \n webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.test_yolo_objsdnn_button_note.grid(row=14,column=2,sticky='ne')
 
@@ -2960,6 +3566,14 @@ class yolo_cfg:
             cmd_i=" bash '{}'".format(self.save_cfg_path_test.replace('.cfg','dnn_labelimg.sh'))
             self.test_yolo_labelimg_objs_button=Button(self.top,image=self.icon_labelImg,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
             self.test_yolo_labelimg_objs_button.grid(row=14-7+10,column=2,sticky='se')
+            self.test_yolo_labelimg_objs_button_tip=CreateToolTip(self.test_yolo_labelimg_objs_button,'''
+            TESTS your yolo model on incoming images sent form labelImg.py via the respective port to inference with opencv dnn.  
+
+            Requires you to have trained the respective model first.  Requires you to have labelImg.py open and the yolo option selected.
+            
+            APPLICABLE: yolov4 types ONLY \n\t 
+
+            ''') 
             self.test_yolo_labelimg_objs_button_note=tk.Label(self.top,text='inference \n labelImg \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_yolo_labelimg_objs_button_note.grid(row=15-7+10,column=2,sticky='ne')
 
@@ -2970,12 +3584,28 @@ class yolo_cfg:
         #cmd_i=" bash '{}'".format(self.tmp_test_path)
         self.test_yolo_objsdnn_button_rtsp=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.test_yolo_objsdnn_button_rtsp.grid(row=13+2,column=2,sticky='se')
+        self.test_yolo_objsdnn_button_rtsp_tip=CreateToolTip(self.test_yolo_objsdnn_button_rtsp,'''
+        TESTS your yolo model on an incoming RTSP stream to inference with opencv dnn.  
+
+        Requires you to have trained the respective model first.
+        
+        APPLICABLE: yolov4 types ONLY \n\t 
+
+        ''') 
         self.test_yolo_objsdnn_button_note_rtsp=tk.Label(self.top,text='DNN \n rtsp \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.test_yolo_objsdnn_button_note_rtsp.grid(row=14+2,column=2,sticky='ne')
 
     def test_yolodnn_rtmp(self):
         self.test_yolo_objsdnn_rtmp_button=Button(self.top,image=self.icon_test,command=self.run_cmd_rtmp,bg=self.root_bg,fg=self.root_fg)
         self.test_yolo_objsdnn_rtmp_button.grid(row=3,column=2,sticky='se')
+        self.test_yolo_objsdnn_rtmp_button_tip=CreateToolTip(self.test_yolo_objsdnn_rtmp_button,'''
+        TESTS your yolo model on the webcam and broadcasts to YOUTUBE via rtmp, using inference with opencv dnn.  
+
+        Requires you to have trained the respective model first.  Requires you to have setup the YOUTUBE entries first.
+        
+        APPLICABLE: yolov4 types ONLY \n\t 
+
+        ''') 
         self.test_yolo_objsdnn_rtmp_button_note=tk.Label(self.top,text='DNN webcam \n RTMP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.test_yolo_objsdnn_rtmp_button_note.grid(row=4,column=2,sticky='ne')
     
@@ -2991,6 +3621,16 @@ class yolo_cfg:
         #cmd_i=" bash '{}'".format(self.tmp_test_path)
         self.test_yolo_pred_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.test_yolo_pred_objs_button.grid(row=11,column=2,sticky='se')
+        self.test_yolo_pred_objs_button_tip=CreateToolTip(self.test_yolo_pred_objs_button,'''
+        TESTS your yolo model on a batch of prediction images, using inference with darknet.  
+        COCO mAP is evaluated with after for consistency with other algorithm types.
+
+        Requires you to have trained the respective model first.  
+        Requires you to have selected the prediction_JPEGImages directory in the main to the desired test batch.
+        
+        APPLICABLE: yolov4 types ONLY \n\t 
+
+        ''') 
         self.test_yolo_pred_objs_button_note=tk.Label(self.top,text='COCO mAP\n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.test_yolo_pred_objs_button_note.grid(row=12,column=2,sticky='ne')
 
@@ -3000,6 +3640,16 @@ class yolo_cfg:
         #cmd_i=" bash '{}'".format(self.tmp_test_path)
         self.test_yolo_res_objs_button=Button(self.top,image=self.icon_test,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
         self.test_yolo_res_objs_button.grid(row=9,column=2,sticky='se')
+        self.test_yolo_res_objs_button_tip=CreateToolTip(self.test_yolo_res_objs_button,'''
+        TESTS your yolo model on a batch of prediction images, using inference with darknet.  
+        darknet mAP is evaluated only, might not be consistent with other mAP values.
+
+        Requires you to have trained the respective model first.  
+        Requires you to have selected the prediction_JPEGImages directory in the main to the desired test batch.
+        
+        APPLICABLE: yolov4 types ONLY \n\t 
+
+        ''') 
         self.test_yolo_res_objs_button_note=tk.Label(self.top,text='mAP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.test_yolo_res_objs_button_note.grid(row=10,column=2,sticky='ne')
         
@@ -3020,6 +3670,14 @@ class yolo_cfg:
             #print('cmd_i: \n {}'.format(cmd_i))
             self.test_mp4_yolo_objs_button=Button(self.top,image=self.icon_test_mp4,command=partial(self.run_cmd,cmd_i),bg=self.root_bg,fg=self.root_fg)
             self.test_mp4_yolo_objs_button.grid(row=7,column=2,sticky='se')
+            self.test_mp4_yolo_objs_button_tip=CreateToolTip(self.test_mp4_yolo_objs_button,'''
+            TESTS your yolo model on a mp4 file you chose in the main area to inference on with darknet.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov4 types ONLY \n\t 
+
+            ''') 
             self.test_mp4_yolo_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolo_objs_button_note.grid(row=8,column=2,sticky='ne')
 
@@ -3243,6 +3901,12 @@ class yolo_cfg:
         if os.path.exists('libs/yolov7_path.py'):
             self.train_yolov7_objs_button=Button(self.top,image=self.icon_train,command=self.train_yolov7_cmd,bg=self.root_bg,fg=self.root_fg)
             self.train_yolov7_objs_button.grid(row=10-7,column=10-7,sticky='se')
+            self.train_yolov7_objs_button_tip=CreateToolTip(self.train_yolov7_objs_button,'''
+            This button TRAINs your yolov7-tiny model.   
+            
+            APPLICABLE: yolov7-tiny\n\t 
+
+            ''') 
             self.train_yolov7_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.train_yolov7_objs_button_note.grid(row=11-7,column=10-7,sticky='ne')
 
@@ -3254,11 +3918,30 @@ class yolo_cfg:
 
             self.train_yolov7_gpu_entry=tk.Entry(self.top,textvariable=self.train_yolov7_gpu)
             self.train_yolov7_gpu_entry.grid(row=10,column=10-7,sticky='sw')
+            self.train_yolov7_gpu_entry_tip=CreateToolTip(self.train_yolov7_gpu_entry,'''
+            This entry sets the number of gpus to use when training your yolov7-tiny model.   
+            
+            APPLICABLE: yolov7-tiny\n\t 
+
+            Note, multiple gpus has not been tested yet and might not work.  Recommended to try if you have them, and use 0 if it fails.
+
+            ''') 
             self.train_yolov7_gpu_label=tk.Label(self.top,text='gpus (i.e., 0,1,2)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.train_yolov7_gpu_label.grid(row=11,column=10-7,sticky='nw')
 
             self.epochs_yolov7_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_VAR)
             self.epochs_yolov7_entry.grid(row=12-7,column=10-7,sticky='sw')
+            self.epochs_yolov7_entry_tip=CreateToolTip(self.epochs_yolov7_entry,'''
+            This entry sets the number of EPOCHS to train your yolov7-tiny model.   
+            
+            APPLICABLE: yolov7-tiny\n\t 
+
+            Note, start with 40 or so EPOCHS and evaluate performance through the Loss and mAP value metrics to determine if more or less is needed.
+
+            If the mAP is not changing much with time after at least 40 epochs, then might be safe to stop training or change hyperparameters manually.
+            If the mAP is still increasing after 40 epochs, then you might want to increase the epochs since it is still learning well.
+
+            ''') 
             self.epochs_yolov7_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_yolov7_label.grid(row=13-7,column=10-7,sticky='nw')
 
@@ -3267,6 +3950,10 @@ class yolo_cfg:
             self.multi_train_yolov7_var.set(0)
             self.multi_train_yolov7_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov7_var,onvalue=1, offvalue=0)
             self.multi_train_yolov7_buttons.grid(row=14-7,column=10-7,sticky='sw')
+            self.multi_train_yolov7_buttons_tip=CreateToolTip(self.multi_train_yolov7_buttons,'''
+            This will allow it to be added to the list for training multiple models in sequence if others are selected.   
+
+            ''') 
 
     def train_yolov7_madness(self):
         self.clear_cache_yolov7()
@@ -3289,6 +3976,12 @@ class yolo_cfg:
             self.train_yolov7_e6_objs_button.grid(row=10-7,column=11-7,sticky='se')
             self.train_yolov7_e6_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.train_yolov7_e6_objs_button_note.grid(row=11-7,column=11-7,sticky='ne')
+            self.train_yolov7_e6_objs_button_tip=CreateToolTip(self.train_yolov7_e6_objs_button,'''
+            This button TRAINs your yolov7-e6 model.   
+            
+            APPLICABLE: yolov7-e6\n\t 
+
+            ''') 
 
 
             try:
@@ -3301,16 +3994,39 @@ class yolo_cfg:
             self.train_yolov7_e6_gpu_entry.grid(row=10,column=11-7,sticky='sw')
             self.train_yolov7_e6_gpu_label=tk.Label(self.top,text='gpus (i.e., 0,1,2)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.train_yolov7_e6_gpu_label.grid(row=11,column=11-7,sticky='nw')
+            self.train_yolov7_e6_gpu_entry_tip=CreateToolTip(self.train_yolov7_e6_gpu_entry,'''
+            This entry sets the number of gpus to use when training your yolov7-e6 model.   
+            
+            APPLICABLE: yolov7-e6\n\t 
+
+            Note, multiple gpus has not been tested yet and might not work.  Recommended to try if you have them, and use 0 if it fails.
+
+            ''') 
 
             self.epochs_yolov7_e6_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_e6_VAR)
             self.epochs_yolov7_e6_entry.grid(row=12-7,column=11-7,sticky='sw')
             self.epochs_yolov7_e6_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_yolov7_e6_label.grid(row=13-7,column=11-7,sticky='nw')
+            self.epochs_yolov7_e6_entry_tip=CreateToolTip(self.epochs_yolov7_e6_entry,'''
+            This entry sets the number of EPOCHS to train your yolov7-e6 model.   
+            
+            APPLICABLE: yolov7-e6\n\t 
+
+            Note, start with 40 or so EPOCHS and evaluate performance through the Loss and mAP value metrics to determine if more or less is needed.
+
+            If the mAP is not changing much with time after at least 40 epochs, then might be safe to stop training or change hyperparameters manually.
+            If the mAP is still increasing after 40 epochs, then you might want to increase the epochs since it is still learning well.
+
+            ''') 
 
             self.multi_train_yolov7_e6_var=tk.IntVar()
             self.multi_train_yolov7_e6_var.set(0)
             self.multi_train_yolov7_e6_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov7_e6_var,onvalue=1, offvalue=0)
             self.multi_train_yolov7_e6_buttons.grid(row=14-7,column=11-7,sticky='sw')
+            self.multi_train_yolov7_e6_buttons_tip=CreateToolTip(self.multi_train_yolov7_e6_buttons,'''
+            This will allow it to be added to the list for training multiple models in sequence if others are selected.   
+
+            ''') 
 
     def clear_cache_yolov7(self):
         self.YOLO_MODEL_PATH=os.path.join(self.base_path_OG,self.prefix_foldername)
@@ -3341,16 +4057,33 @@ class yolo_cfg:
 
     def train_yolov7_re(self):
         if os.path.exists('libs/yolov7_path.py'):
-            self.test_mp4_yolov7_re_objs_button=Button(self.top,image=self.icon_train,command=self.train_yolov7_re_cmd,bg=self.root_bg,fg=self.root_fg)
-            self.test_mp4_yolov7_re_objs_button.grid(row=10-7,column=12-7,sticky='se')
-            self.test_mp4_yolov7_re_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_mp4_yolov7_re_objs_button_note.grid(row=11-7,column=12-7,sticky='ne')
+            self.train_yolov7_re_objs_button=Button(self.top,image=self.icon_train,command=self.train_yolov7_re_cmd,bg=self.root_bg,fg=self.root_fg)
+            self.train_yolov7_re_objs_button.grid(row=10-7,column=12-7,sticky='se')
+            self.train_yolov7_re_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.train_yolov7_re_objs_button_note.grid(row=11-7,column=12-7,sticky='ne')
+            self.train_yolov7_re_objs_button_tip=CreateToolTip(self.train_yolov7_re_objs_button,'''
+            This button TRAINs your yolov7 model.   
+            
+            APPLICABLE: yolov7\n\t 
+
+            ''') 
 
 
             self.epochs_yolov7_re_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_re_VAR)
             self.epochs_yolov7_re_entry.grid(row=12-7,column=12-7,sticky='sw')
             self.epochs_yolov7_re_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_yolov7_re_label.grid(row=13-7,column=12-7,sticky='nw')
+            self.epochs_yolov7_re_entry_tip=CreateToolTip(self.epochs_yolov7_re_entry,'''
+            This entry sets the number of EPOCHS to train your yolov7 model.   
+            
+            APPLICABLE: yolov7\n\t 
+
+            Note, start with 40 or so EPOCHS and evaluate performance through the Loss and mAP value metrics to determine if more or less is needed.
+
+            If the mAP is not changing much with time after at least 40 epochs, then might be safe to stop training or change hyperparameters manually.
+            If the mAP is still increasing after 40 epochs, then you might want to increase the epochs since it is still learning well.
+
+            ''') 
 
             try:
                 self.train_yolov7_re_gpu_entry.destroy()
@@ -3362,11 +4095,23 @@ class yolo_cfg:
             self.train_yolov7_re_gpu_entry.grid(row=10,column=12-7,sticky='sw')
             self.train_yolov7_re_gpu_label=tk.Label(self.top,text='gpus (i.e., 0,1,2)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.train_yolov7_re_gpu_label.grid(row=11,column=12-7,sticky='nw')
+            self.train_yolov7_re_gpu_entry_tip=CreateToolTip(self.train_yolov7_re_gpu_entry,'''
+            This entry sets the number of gpus to use when training your yolov7 model.   
+            
+            APPLICABLE: yolov7\n\t 
+
+            Note, multiple gpus has not been tested yet and might not work.  Recommended to try if you have them, and use 0 if it fails.
+
+            ''') 
 
             self.multi_train_yolov7_re_var=tk.IntVar()
             self.multi_train_yolov7_re_var.set(0)
             self.multi_train_yolov7_re_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov7_re_var,onvalue=1, offvalue=0)
             self.multi_train_yolov7_re_buttons.grid(row=14-7,column=12-7,sticky='sw')
+            self.multi_train_yolov7_re_buttons_tip=CreateToolTip(self.multi_train_yolov7_re_buttons,'''
+            This will allow it to be added to the list for training multiple models in sequence if others are selected.   
+
+            ''') 
             #self.test_yolov7_mp4_re()
             #self.test_yolov7_webcam_re()
             #self.test_yolov7_webcam_re_RTMP()
@@ -3374,10 +4119,16 @@ class yolo_cfg:
 
     def train_yolov7_x(self):
         if os.path.exists('libs/yolov7_path.py'):
-            self.test_mp4_yolov7_x_objs_button=Button(self.top,image=self.icon_train,command=self.train_yolov7_x_cmd,bg=self.root_bg,fg=self.root_fg)
-            self.test_mp4_yolov7_x_objs_button.grid(row=10-7,column=13-7,sticky='se')
-            self.test_mp4_yolov7_x_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.test_mp4_yolov7_x_objs_button_note.grid(row=11-7,column=13-7,sticky='ne')
+            self.train_yolov7_x_objs_button=Button(self.top,image=self.icon_train,command=self.train_yolov7_x_cmd,bg=self.root_bg,fg=self.root_fg)
+            self.train_yolov7_x_objs_button.grid(row=10-7,column=13-7,sticky='se')
+            self.train_yolov7_x_objs_button_note=tk.Label(self.top,text='Train',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.train_yolov7_x_objs_button_note.grid(row=11-7,column=13-7,sticky='ne')
+            self.train_yolov7_x_objs_button_tip=CreateToolTip(self.train_yolov7_x_objs_button,'''
+            This button TRAINs your yolov7x model.   
+            
+            APPLICABLE: yolov7x\n\t 
+
+            ''') 
 
             try:
                 self.train_yolov7_x_gpu_entry.destroy()
@@ -3389,16 +4140,39 @@ class yolo_cfg:
             self.train_yolov7_x_gpu_entry.grid(row=10,column=13-7,sticky='sw')
             self.train_yolov7_x_gpu_label=tk.Label(self.top,text='gpus (i.e., 0,1,2)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.train_yolov7_x_gpu_label.grid(row=11,column=13-7,sticky='nw')
+            self.train_yolov7_x_gpu_entry_tip=CreateToolTip(self.train_yolov7_x_gpu_entry,'''
+            This entry sets the number of gpus to use when training your yolov7x model.   
+            
+            APPLICABLE: yolov7x\n\t 
+
+            Note, multiple gpus has not been tested yet and might not work.  Recommended to try if you have them, and use 0 if it fails.
+
+            ''') 
 
             self.epochs_yolov7_x_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_x_VAR)
             self.epochs_yolov7_x_entry.grid(row=12-7,column=13-7,sticky='sw')
             self.epochs_yolov7_x_label=tk.Label(self.top,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_yolov7_x_label.grid(row=13-7,column=13-7,sticky='nw')
+            self.epochs_yolov7_x_entry_tip=CreateToolTip(self.epochs_yolov7_x_entry,'''
+            This entry sets the number of EPOCHS to train your yolov7x model.   
+            
+            APPLICABLE: yolov7x\n\t 
+
+            Note, start with 40 or so EPOCHS and evaluate performance through the Loss and mAP value metrics to determine if more or less is needed.
+
+            If the mAP is not changing much with time after at least 40 epochs, then might be safe to stop training or change hyperparameters manually.
+            If the mAP is still increasing after 40 epochs, then you might want to increase the epochs since it is still learning well.
+
+            ''') 
 
             self.multi_train_yolov7_x_var=tk.IntVar()
             self.multi_train_yolov7_x_var.set(0)
             self.multi_train_yolov7_x_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov7_x_var,onvalue=1, offvalue=0)
             self.multi_train_yolov7_x_buttons.grid(row=14-7,column=13-7,sticky='sw')
+            self.multi_train_yolov7_x_buttons_tip=CreateToolTip(self.multi_train_yolov7_x_buttons,'''
+            This will allow it to be added to the list for training multiple models in sequence if others are selected.   
+
+            ''') 
 
     def train_yolov7_re_madness(self):
         self.clear_cache_yolov7()
@@ -3438,6 +4212,14 @@ class yolo_cfg:
             self.test_mp4_yolov7_objs_button.grid(row=14-7,column=10-7,sticky='se')
             self.test_mp4_yolov7_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolov7_objs_button_note.grid(row=15-7,column=10-7,sticky='ne')
+            self.test_mp4_yolov7_objs_button_tip=CreateToolTip(self.test_mp4_yolov7_objs_button,'''
+            TESTS your yolov7-tiny model on a mp4 file you chose in the main area.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7-tiny\n\t 
+
+            ''') 
 
     def test_yolov7_labelimg(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3447,6 +4229,14 @@ class yolo_cfg:
             self.test_labelimg_yolov7_objs_button.grid(row=14-7+10,column=10-7,sticky='se')
             self.test_labelimg_yolov7_objs_button_note=tk.Label(self.top,text='inference \n labelImg \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_labelimg_yolov7_objs_button_note.grid(row=15-7+10,column=10-7,sticky='ne')
+            self.test_labelimg_yolov7_objs_button_tip=CreateToolTip(self.test_labelimg_yolov7_objs_button,'''
+            TESTS your yolov7-tiny model on incoming images sent from labelImg.py via the respective port.  
+
+            Requires you to have trained the respective model first.  Requires you to have labelImg.py open and the yolo option selected.
+            
+            APPLICABLE: yolov7-tiny\n\t 
+
+            ''') 
 
     def test_yolov7_mp4_e6(self):
         if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
@@ -3456,6 +4246,14 @@ class yolo_cfg:
             self.test_mp4_yolov7_e6_objs_button.grid(row=14-7,column=11-7,sticky='se')
             self.test_mp4_yolov7_e6_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolov7_e6_objs_button_note.grid(row=15-7,column=11-7,sticky='ne')
+            self.test_mp4_yolov7_e6_objs_button_tip=CreateToolTip(self.test_mp4_yolov7_e6_objs_button,'''
+            TESTS your yolov7-e6 model on a mp4 file you chose in the main area.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7-e6\n\t 
+
+            ''') 
 
     def test_yolov7_labelimg_e6(self):
         if  os.path.exists('libs/yolov7_path.py'):
@@ -3465,6 +4263,14 @@ class yolo_cfg:
             self.test_labelimg_yolov7_e6_objs_button.grid(row=14-7+10,column=11-7,sticky='se')
             self.test_labelimg_yolov7_e6_objs_button_note=tk.Label(self.top,text='inference \n labelImg \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_labelimg_yolov7_e6_objs_button_note.grid(row=15-7+10,column=11-7,sticky='ne')
+            self.test_labelimg_yolov7_e6_objs_button_tip=CreateToolTip(self.test_labelimg_yolov7_e6_objs_button,'''
+            TESTS your yolov7-e6 model on incoming images sent from labelImg.py via the respective port.  
+
+            Requires you to have trained the respective model first.  Requires you to have labelImg.py open and the yolo option selected.
+            
+            APPLICABLE: yolov7-e6\n\t 
+
+            ''') 
 
     def test_yolov7_mp4_re(self):
         if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
@@ -3474,6 +4280,14 @@ class yolo_cfg:
             self.test_mp4_yolov7_re_objs_button.grid(row=14-7,column=12-7,sticky='se')
             self.test_mp4_yolov7_re_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolov7_re_objs_button_note.grid(row=15-7,column=12-7,sticky='ne')
+            self.test_mp4_yolov7_re_objs_button_tip=CreateToolTip(self.test_mp4_yolov7_re_objs_button,'''
+            TESTS your yolov7 model on a mp4 file you chose in the main area.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7\n\t 
+
+            ''') 
 
     def test_yolov7_mp4_x(self):
         if os.path.exists(self.mp4_video_path) and self.mp4_video_path.lower().find('.mp4')!=-1 and os.path.exists('libs/yolov7_path.py'):
@@ -3483,6 +4297,14 @@ class yolo_cfg:
             self.test_mp4_yolov7_x_objs_button.grid(row=14-7,column=13-7,sticky='se')
             self.test_mp4_yolov7_x_objs_button_note=tk.Label(self.top,text='mp4 \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_mp4_yolov7_x_objs_button_note.grid(row=15-7,column=13-7,sticky='ne')
+            self.test_mp4_yolov7_x_objs_button_tip=CreateToolTip(self.test_mp4_yolov7_x_objs_button,'''
+            TESTS your yolov7x model on a mp4 file you chose in the main area.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7x\n\t 
+
+            ''') 
 
     def test_yolov7_labelimg_re(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3492,6 +4314,14 @@ class yolo_cfg:
             self.test_labelimg_yolov7_re_objs_button.grid(row=14-7+10,column=12-7,sticky='se')
             self.test_labelimg_yolov7_re_objs_button_note=tk.Label(self.top,text='inference \n labelImg \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_labelimg_yolov7_re_objs_button_note.grid(row=15-7+10,column=12-7,sticky='ne')
+            self.test_labelimg_yolov7_re_objs_button_tip=CreateToolTip(self.test_labelimg_yolov7_re_objs_button,'''
+            TESTS your yolov7 model on incoming images sent from labelImg.py via the respective port.  
+
+            Requires you to have trained the respective model first.  Requires you to have labelImg.py open and the yolo option selected.
+            
+            APPLICABLE: yolov7\n\t 
+
+            ''') 
 
     def test_yolov7_labelimg_x(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3501,6 +4331,14 @@ class yolo_cfg:
             self.test_labelimg_yolov7_x_objs_button.grid(row=14-7+10,column=13-7,sticky='se')
             self.test_labelimg_yolov7_x_objs_button_note=tk.Label(self.top,text='inference \n labelImg \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_labelimg_yolov7_x_objs_button_note.grid(row=15-7+10,column=13-7,sticky='ne')
+            self.test_labelimg_yolov7_x_objs_button_tip=CreateToolTip(self.test_labelimg_yolov7_x_objs_button,'''
+            TESTS your yolov7x model on incoming images sent from labelImg.py via the respective port.  
+
+            Requires you to have trained the respective model first.  Requires you to have labelImg.py open and the yolo option selected.
+            
+            APPLICABLE: yolov7x\n\t 
+
+            ''') 
 
     def test_yolov7_webcam(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3510,6 +4348,14 @@ class yolo_cfg:
             self.test_webcam_yolov7_objs_button.grid(row=12-7,column=10-7,sticky='se')
             self.test_webcam_yolov7_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_objs_button_note.grid(row=13-7,column=10-7,sticky='ne')
+            self.test_webcam_yolov7_objs_button_tip=CreateToolTip(self.test_webcam_yolov7_objs_button,'''
+            TESTS your yolov7-tiny model on webcam or /dev/video0 etc input.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7-tiny\n\t 
+
+            ''') 
 
     def test_yolov7_rtsp(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3519,6 +4365,14 @@ class yolo_cfg:
             self.test_rtsp_yolov7_objs_button.grid(row=12-7+10,column=10-7,sticky='se')
             self.test_rtsp_yolov7_objs_button_note=tk.Label(self.top,text='rtsp \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_rtsp_yolov7_objs_button_note.grid(row=13-7+10,column=10-7,sticky='ne')
+            self.test_rtsp_yolov7_objs_button_tip=CreateToolTip(self.test_rtsp_yolov7_objs_button,'''
+            TESTS your yolov7-tiny model on incoming rtsp stream.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7-tiny\n\t 
+
+            ''') 
 
     def test_yolov7_webcam_RTMP(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3528,6 +4382,15 @@ class yolo_cfg:
             self.test_webcam_yolov7_RTMP_objs_button.grid(row=12-7-2,column=10-7,sticky='se')
             self.test_webcam_yolov7_RTMP_objs_button_note=tk.Label(self.top,text='webcam \n RTMP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_RTMP_objs_button_note.grid(row=13-7-2,column=10-7,sticky='ne')
+            self.test_webcam_yolov7_RTMP_objs_button_tip=CreateToolTip(self.test_webcam_yolov7_RTMP_objs_button,'''
+            TESTS your yolov7-tiny model on webcam or /dev/video0 etc input with output to YOUTUBE via RTMP.  
+
+            Requires you to have trained the respective model first.  
+            Requires you to have setup the YOUTUBE entries first.
+            
+            APPLICABLE: yolov7-tiny\n\t 
+
+            ''') 
 
     def run_create_test_bash_webcam_yolov7_RTMP(self):
         self.create_test_bash_webcam_yolov7_RTMP()
@@ -3542,6 +4405,14 @@ class yolo_cfg:
             self.test_webcam_yolov7_e6_objs_button.grid(row=12-7,column=11-7,sticky='se')
             self.test_webcam_yolov7_e6_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_e6_objs_button_note.grid(row=13-7,column=11-7,sticky='ne')
+            self.test_webcam_yolov7_e6_objs_button_tip=CreateToolTip(self.test_webcam_yolov7_e6_objs_button,'''
+            TESTS your yolov7-e6 model on webcam or /dev/video0 etc input.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7-e6\n\t 
+
+            ''') 
 
     def test_yolov7_rtsp_e6(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3551,6 +4422,14 @@ class yolo_cfg:
             self.test_rtsp_yolov7_e6_objs_button.grid(row=12-7+10,column=11-7,sticky='se')
             self.test_rtsp_yolov7_e6_objs_button_note=tk.Label(self.top,text='rtsp \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_rtsp_yolov7_e6_objs_button_note.grid(row=13-7+10,column=11-7,sticky='ne')
+            self.test_rtsp_yolov7_e6_objs_button_tip=CreateToolTip(self.test_rtsp_yolov7_e6_objs_button,'''
+            TESTS your yolov7-e6 model on incoming rtsp stream.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7-e6\n\t 
+
+            ''') 
 
     def test_yolov7_webcam_e6_RTMP(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3560,6 +4439,15 @@ class yolo_cfg:
             self.test_webcam_yolov7_e6_RTMP_objs_button.grid(row=12-7-2,column=11-7,sticky='se')
             self.test_webcam_yolov7_e6_RTMP_objs_button_note=tk.Label(self.top,text='webcam \n RTMP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_e6_RTMP_objs_button_note.grid(row=13-7-2,column=11-7,sticky='ne')
+            self.test_webcam_yolov7_e6_RTMP_objs_button_tip=CreateToolTip(self.test_webcam_yolov7_e6_RTMP_objs_button,'''
+            TESTS your yolov7-e6 model on webcam or /dev/video0 etc input with output to YOUTUBE via RTMP.  
+
+            Requires you to have trained the respective model first.  
+            Requires you to have setup the YOUTUBE entries first.
+            
+            APPLICABLE: yolov7-e6\n\t 
+
+            ''') 
 
     def run_create_test_bash_webcam_yolov7_e6_RTMP(self):
         self.create_test_bash_webcam_yolov7_e6_RTMP()
@@ -3574,6 +4462,14 @@ class yolo_cfg:
             self.test_webcam_yolov7_re_objs_button.grid(row=12-7,column=12-7,sticky='se')
             self.test_webcam_yolov7_re_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_re_objs_button_note.grid(row=13-7,column=12-7,sticky='ne')
+            self.test_webcam_yolov7_re_objs_button_tip=CreateToolTip(self.test_webcam_yolov7_re_objs_button,'''
+            TESTS your yolov7 model on webcam or /dev/video0 etc input.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7\n\t 
+
+            ''') 
 
     def test_yolov7_webcam_x(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3583,6 +4479,14 @@ class yolo_cfg:
             self.test_webcam_yolov7_x_objs_button.grid(row=12-7,column=13-7,sticky='se')
             self.test_webcam_yolov7_x_objs_button_note=tk.Label(self.top,text='webcam \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_x_objs_button_note.grid(row=13-7,column=13-7,sticky='ne')
+            self.test_webcam_yolov7_x_objs_button_tip=CreateToolTip(self.test_webcam_yolov7_x_objs_button,'''
+            TESTS your yolov7x model on webcam or /dev/video0 etc input.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7x\n\t 
+
+            ''') 
 
     def test_yolov7_rtsp_re(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3592,6 +4496,14 @@ class yolo_cfg:
             self.test_rtsp_yolov7_re_objs_button.grid(row=12-7+10,column=12-7,sticky='se')
             self.test_rtsp_yolov7_re_objs_button_note=tk.Label(self.top,text='rtsp \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_rtsp_yolov7_re_objs_button_note.grid(row=13-7+10,column=12-7,sticky='ne')
+            self.test_rtsp_yolov7_re_objs_button_tip=CreateToolTip(self.test_rtsp_yolov7_re_objs_button,'''
+            TESTS your yolov7 model on incoming rtsp stream.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7\n\t 
+
+            ''') 
 
     def test_yolov7_rtsp_x(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3601,6 +4513,14 @@ class yolo_cfg:
             self.test_rtsp_yolov7_x_objs_button.grid(row=12-7+10,column=13-7,sticky='se')
             self.test_rtsp_yolov7_x_objs_button_note=tk.Label(self.top,text='rtsp \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_rtsp_yolov7_x_objs_button_note.grid(row=13-7+10,column=13-7,sticky='ne')
+            self.test_rtsp_yolov7_x_objs_button_tip=CreateToolTip(self.test_rtsp_yolov7_x_objs_button,'''
+            TESTS your yolov7x model on incoming rtsp stream.  
+
+            Requires you to have trained the respective model first.  
+            
+            APPLICABLE: yolov7x\n\t 
+
+            ''') 
  
 
     def test_yolov7_webcam_re_RTMP(self):
@@ -3611,6 +4531,15 @@ class yolo_cfg:
             self.test_webcam_yolov7_re_RTMP_objs_button.grid(row=12-7-2,column=12-7,sticky='se')
             self.test_webcam_yolov7_re_RTMP_objs_button_note=tk.Label(self.top,text='webcam \n RTMP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_re_RTMP_objs_button_note.grid(row=13-7-2,column=12-7,sticky='ne')
+            self.test_webcam_yolov7_re_RTMP_objs_button_tip=CreateToolTip(self.test_webcam_yolov7_re_RTMP_objs_button,'''
+            TESTS your yolov7 model on webcam or /dev/video0 etc input with output to YOUTUBE via RTMP.  
+
+            Requires you to have trained the respective model first.  
+            Requires you to have setup the YOUTUBE entries first.
+            
+            APPLICABLE: yolov7\n\t 
+
+            ''') 
 
     def test_yolov7_webcam_x_RTMP(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3620,6 +4549,15 @@ class yolo_cfg:
             self.test_webcam_yolov7_x_RTMP_objs_button.grid(row=12-7-2,column=13-7,sticky='se')
             self.test_webcam_yolov7_x_RTMP_objs_button_note=tk.Label(self.top,text='webcam \n RTMP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_webcam_yolov7_x_RTMP_objs_button_note.grid(row=13-7-2,column=13-7,sticky='ne')
+            self.test_webcam_yolov7_x_RTMP_objs_button_tip=CreateToolTip(self.test_webcam_yolov7_x_RTMP_objs_button,'''
+            TESTS your yolov7x model on webcam or /dev/video0 etc input with output to YOUTUBE via RTMP.  
+
+            Requires you to have trained the respective model first.  
+            Requires you to have setup the YOUTUBE entries first.
+            
+            APPLICABLE: yolov7x\n\t 
+
+            ''') 
 
     def run_create_test_bash_webcam_yolov7_re_RTMP(self):
         self.create_test_bash_webcam_yolov7_re_RTMP()
@@ -3637,6 +4575,16 @@ class yolo_cfg:
             self.test_predict_MAP_yolov7_objs_button.grid(row=16-7,column=10-7,sticky='se')
             self.test_predict_MAP_yolov7_objs_button_note=tk.Label(self.top,text='mAP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_predict_MAP_yolov7_objs_button_note.grid(row=17-7,column=10-7,sticky='ne')
+            self.test_predict_MAP_yolov7_objs_button_tip=CreateToolTip(self.test_predict_MAP_yolov7_objs_button,'''
+            TESTS your yolov7-tiny model on a batch of prediction images.  
+            COCO mAP is evaluated with after for consistency with other algorithm types.
+
+            Requires you to have trained the respective model first.  
+            Requires you to have selected the prediction_JPEGImages directory in the main to the desired test batch.
+            
+            APPLICABLE: yolov7-tiny\n\t 
+
+            ''') 
 
     def run_create_predict_bash_mAP_yolov7(self):
         self.clear_cache_yolov7()
@@ -3650,6 +4598,16 @@ class yolo_cfg:
             self.test_predict_MAP_yolov7_e6_objs_button.grid(row=16-7,column=11-7,sticky='se')
             self.test_predict_MAP_yolov7_e6_objs_button_note=tk.Label(self.top,text='mAP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_predict_MAP_yolov7_e6_objs_button_note.grid(row=17-7,column=11-7,sticky='ne')
+            self.test_predict_MAP_yolov7_e6_objs_button_tip=CreateToolTip(self.test_predict_MAP_yolov7_e6_objs_button,'''
+            TESTS your yolov7-e6 model on a batch of prediction images.  
+            COCO mAP is evaluated with after for consistency with other algorithm types.
+
+            Requires you to have trained the respective model first.  
+            Requires you to have selected the prediction_JPEGImages directory in the main to the desired test batch.
+            
+            APPLICABLE: yolov7-e6\n\t 
+
+            ''') 
 
     def run_create_predict_bash_mAP_yolov7_e6(self):
         self.clear_cache_yolov7()
@@ -3663,6 +4621,16 @@ class yolo_cfg:
             self.test_predict_MAP_yolov7_re_objs_button.grid(row=16-7,column=12-7,sticky='se')
             self.test_predict_MAP_yolov7_re_objs_button_note=tk.Label(self.top,text='mAP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_predict_MAP_yolov7_re_objs_button_note.grid(row=17-7,column=12-7,sticky='ne')
+            self.test_predict_MAP_yolov7_re_objs_button_tip=CreateToolTip(self.test_predict_MAP_yolov7_re_objs_button,'''
+            TESTS your yolov7 model on a batch of prediction images.  
+            COCO mAP is evaluated with after for consistency with other algorithm types.
+
+            Requires you to have trained the respective model first.  
+            Requires you to have selected the prediction_JPEGImages directory in the main to the desired test batch.
+            
+            APPLICABLE: yolov7\n\t 
+
+            ''') 
 
     def test_yolov7_mAP_x(self):
         if os.path.exists('libs/yolov7_path.py'):
@@ -3670,6 +4638,16 @@ class yolo_cfg:
             self.test_predict_MAP_yolov7_x_objs_button.grid(row=16-7,column=13-7,sticky='se')
             self.test_predict_MAP_yolov7_x_objs_button_note=tk.Label(self.top,text='mAP \n',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
             self.test_predict_MAP_yolov7_x_objs_button_note.grid(row=17-7,column=13-7,sticky='ne')
+            self.test_predict_MAP_yolov7_x_objs_button_tip=CreateToolTip(self.test_predict_MAP_yolov7_x_objs_button,'''
+            TESTS your yolov7x model on a batch of prediction images.  
+            COCO mAP is evaluated with after for consistency with other algorithm types.
+
+            Requires you to have trained the respective model first.  
+            Requires you to have selected the prediction_JPEGImages directory in the main to the desired test batch.
+            
+            APPLICABLE: yolov7x\n\t 
+
+            ''') 
 
     def run_create_predict_bash_mAP_yolov7_re(self):
         self.clear_cache_yolov7()
@@ -3695,6 +4673,15 @@ class yolo_cfg:
                 self.convert_tflite_button.grid(row=3,column=6,sticky='se')
                 self.convert_tflite_button_note=tk.Label(self.frame_table1,text='Convert Yolov4 \n to TFLITE',bg=self.root_bg,fg=self.root_fg,font=("Arial", 7))
                 self.convert_tflite_button_note.grid(row=4,column=6,sticky='ne')
+                self.convert_tflite_button_tip=CreateToolTip(self.convert_tflite_button,'''
+                Convert your yolov4-tiny model to TFLITE.  
+
+                Requires you to have trained the respective model first.  
+                Requires you to have made a WIDTH==HEIGHT model.
+                
+                APPLICABLE: yolov4-tiny ONLY\n\t 
+
+                ''') 
 
     def calculate_epochs_yolov4(self):
         '''Calculates the number of epochs performed for training'''
@@ -3738,6 +4725,16 @@ class yolo_cfg:
             self.epochs_VAR.set(self.epochs)
             self.epochs_entry=tk.Entry(self.frame_table1,textvariable=self.epochs_VAR)
             self.epochs_entry.grid(row=21,column=0,sticky='se')
+            self.epochs_entry_tip=CreateToolTip(self.epochs_entry,'''
+            This will set the number of EPOCHS used for training yolov4/yolov4-tiny with darknet. \n\t 
+
+            APPLICABLE: yolov4 types ONLY.
+
+            It will adjust the NUM_ITERATIONS or max_batches in the configuration file for training.
+
+            If the config was generated for yolov4-tiny, then this will adjust configs for yolov4-tiny.
+            If the config was generated for regular yolov4, then this will adjust configs for regular yolov4.
+            ''')
             self.epochs_label=tk.Label(self.frame_table1,text='epochs',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.epochs_label.grid(row=22,column=0,sticky='ne')
 
@@ -6366,6 +7363,12 @@ class yolo_cfg:
         #TD train multiple models in series
         self.multi_load_buttons=Button(self.top,text='Run Selected Multi-Trains in Series?',command=self.multi_train_load,bg=self.root_bg,fg=self.root_fg)
         self.multi_load_buttons.grid(row=14-7,column=0,sticky='sw')   
+        self.multi_load_buttons_tip=CreateToolTip(self.multi_load_buttons,'''
+        If multiple models are selected.  This button will start training them in sequence. \n\t 
+
+        APPLICABLE: yolov4/yolov7 types.
+
+        ''')
 
 
         self.train_yolov4_note=tk.Label(self.top,text='{}'.format(self.var_yolo_choice.get().replace('-','\n-')),bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
@@ -6969,16 +7972,56 @@ class yolo_cfg:
             self.PREFIX_entry1.grid(row=7,column=0,columnspan=int(self.root.winfo_screenwidth()*0.75//1.0),sticky='sew')
             self.PREFIX_label1=tk.Label(self.top,text='PREFIX',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.PREFIX_label1.grid(row=8,column=0,sticky='ne')
+            self.PREFIX1_tip=CreateToolTip(self.PREFIX_entry1,'''
+            Set the PREFIX for the Yolo_Files the models will be created under. 
+            
+            
+            TYPE: STRING
+
+            APPLICABLE: yolov4, yolov7
+
+            Recommended to NOT use any Spaces in prefix name.
+            \n''')
+            
 
             self.WIDTH_NUM_entry1=tk.Entry(self.top,textvariable=self.WIDTH_NUM_VAR)
             self.WIDTH_NUM_entry1.grid(row=9,column=0,sticky='se')
             self.WIDTH_NUM_label1=tk.Label(self.top,text='WIDTH',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.WIDTH_NUM_label1.grid(row=10,column=0,sticky='ne')
+            self.WIDTH_NUM1_tip=CreateToolTip(self.WIDTH_NUM_entry1,'''
+            Set the WIDTH_NUM for the Yolo models.
+
+            TYPE: INTEGER
+
+            APPLICABLE: yolov4, yolov7
+            
+            Recommended this value EQUAL to the HEIGHT_NUM.
+
+            Smaller values, increase model throughput (i.e. FPS), but decrease model Accuracy (i.e. mAP).
+            Higher values, decrease throughput (i.e. FPS), but increase model Accuracy (i.e. mAP).
+
+            Be aware that if WIDTH!=HEIGHT, then there will be limitations to creating only Yolov4-tiny or Yolov4 regular models.
+            In addition, limitations WIDTH!=HEIGHT also includes the inability to create TFLITE models. \n''')
+
 
             self.HEIGHT_NUM_entry1=tk.Entry(self.top,textvariable=self.HEIGHT_NUM_VAR)
             self.HEIGHT_NUM_entry1.grid(row=11,column=0,sticky='se')
             self.HEIGHT_NUM_label1=tk.Label(self.top,text='HEIGHT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
             self.HEIGHT_NUM_label1.grid(row=12,column=0,sticky='ne')
+            self.HEIGHT_NUM1_tip=CreateToolTip(self.HEIGHT_NUM_entry1,'''
+            Set the HEIGHT_NUM for the Yolo models.
+
+            TYPE: INTEGER
+
+            APPLICABLE: yolov4, yolov7
+
+            Recommended this value EQUAL to the WIDTH_NUM.
+
+            Smaller values, increase model throughput (i.e. FPS), but decrease model Accuracy (i.e. mAP).
+            Higher values, decrease throughput (i.e. FPS), but increase model Accuracy (i.e. mAP).
+
+            Be aware that if WIDTH!=HEIGHT, then there will be limitations to creating only Yolov4-tiny or Yolov4 regular models.
+            In addition, limitations WIDTH!=HEIGHT also includes the inability to create TFLITE models. \n''')
 
             self.submit_options_prefix=Button(self.top,text='SUBMIT',command=self.SUBMIT_PREFIX,bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
             self.submit_options_prefix.grid(row=0,column=1,sticky='se')
@@ -7044,11 +8087,29 @@ class yolo_cfg:
         self.TRAIN_SPLIT_entry.grid(row=4,column=2,sticky='sw')
         self.TRAIN_SPLIT_label=tk.Label(self.frame_table1,text='TRAIN SPLIT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.TRAIN_SPLIT_label.grid(row=5,column=2,sticky='nw')
+        self.TRAIN_SPLIT_entry_tip=CreateToolTip(self.TRAIN_SPLIT_entry,'''
+        The split fraction used between Training and Validating. 
+
+        TYPE: FLOAT
+
+        If set to -1, then it uses your custom TRAIN.INPUT.  If unsure, check your inputs and possibly just go with the split.
+
+        RECOMENDED: 0.7 (This is 70% training and 30% validating)
+
+        APPLICABLE: yolov4, yolov7 \n''')
 
         self.split_yolo_objs_button=Button(self.frame_table1,image=self.icon_divide,command=self.split_objs,bg=self.root_bg,fg=self.root_fg)
         self.split_yolo_objs_button.grid(row=4,column=1,sticky='se')
         self.split_yolo_objs_button_note=tk.Label(self.frame_table1,text='2.b \n Split Train/Valid Yolo \n Objects (.jpg/.txt)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.split_yolo_objs_button_note.grid(row=5,column=1,sticky='ne')
+        self.split_yolo_objs_button_tip=CreateToolTip(self.split_yolo_objs_button,'''
+        This splits the Yolo_Objs into their respective Train/Valid lists.
+
+        If TRAIN_SPLIT is set to -1, then it uses your custom TRAIN.INPUT.  If unsure, check your inputs and possibly just go with the split.
+
+        RECOMENDED: 0.7 (This is 70% training and 30% validating)
+
+        APPLICABLE: yolov4, yolov7 \n''')
         self.SHOWTABLE_BUTTONS()
         self.TOTAL_LIST=list(self.df['path_jpeg_dest_i'])
         self.TOTAL_LIST_PATH=os.path.join(os.path.dirname(self.names_path),'TOTAL_LIST.INPUT')
@@ -7516,6 +8577,17 @@ class yolo_cfg:
         self.THRESH_VAR.set(self.THRESH)
         self.THRESH_entry=tk.Entry(self.frame_table1,textvariable=self.THRESH_VAR)
         self.THRESH_entry.grid(row=8,column=2,sticky='sw')
+        self.THRESH_entry_tip=CreateToolTip(self.THRESH_entry,'''
+        Set the THRESHOLD entry to a value between 0 and 1 for confidence threshold cutoff for detections from Yolo models.
+
+        TYPE: FLOAT
+
+        APPLICABLE: yolov4, yolov7
+
+        Recommended between 0.25 and 0.5.
+
+        Smaller values, more detections come through, but also more False Positives.
+        Higher values, less detections come through, but less False Positives. \n''')
         self.THRESH_label=tk.Label(self.frame_table1,text='Threshold',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.THRESH_label.grid(row=9,column=2,sticky='nw')
         self.IOU_THRESH_VAR=tk.StringVar()
@@ -7524,12 +8596,30 @@ class yolo_cfg:
         self.IOU_THRESH_entry.grid(row=8,column=3,sticky='sw')
         self.IOU_THRESH_label=tk.Label(self.frame_table1,text='IOU Threshold',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.IOU_THRESH_label.grid(row=9,column=3,sticky='nw')
+        self.IOU_THRESH_entry_tip=CreateToolTip(self.IOU_THRESH_entry,'''
+        Set the IOU THRESHOLD entry to a value between 0 and 1 for Intersection over Union (IOU) threshold cutoff for detections from Yolo models.
+
+        TYPE: FLOAT
+
+        APPLICABLE: yolov4, yolov7
+
+        Recommended between 0.25 and 0.5.
+
+        Smaller values, more detections come through, but also more False Positives.
+        Higher values, less detections come through, but less False Positives. \n''')
+
         self.POINTS_VAR=tk.StringVar()
         self.POINTS_LIST=['0: Custom','11: PascalVOC 2007','101: MS COCO']
         self.POINTS_VAR.set('0: Custom')
         self.POINTS=self.POINTS_VAR.get().split(':')[0]
         self.POINTS_dropdown=tk.OptionMenu(self.frame_table1,self.POINTS_VAR,*self.POINTS_LIST)
         self.POINTS_dropdown.grid(row=8,column=3,sticky='se')
+        self.POINTS_dropdown_entry_tip=CreateToolTip(self.POINTS_dropdown,'''
+        Set the POINTS dropdown to what you want darknet to use when evaluating mAP with Intersection over Union (IOU) from Yolo models.
+
+        TYPE: STRING
+
+        APPLICABLE: yolov4 type ONLY.\n''')
         self.POINTS_dropdown.config(bg='green',fg='black')
         self.POINTS_dropdown['menu'].config(fg='lime',bg='black')
         self.POINTS_label=tk.Label(self.frame_table1,text='POINTS',bg=self.root_bg,fg=self.root_fg,font=('Arial',7),padx=20)
@@ -7542,12 +8632,26 @@ class yolo_cfg:
     def change_obj_names_buttons(self):
         self.change_obj_names_button=Button(self.frame_table1,text='Change obj.names',command=self.open_popupwindow_labels,bg=self.root_fg,fg=self.root_bg)
         self.change_obj_names_button.grid(row=0,column=9,sticky='sw')
+        self.change_obj_names_button_tip=CreateToolTip(self.change_obj_names_button,'''
+        Change the obj.names file manually here.
+
+        USE_CASE:  Evaluating Yolo_Objs from a different directory where the INT values are different for the same Class Names.
+
+        APPLICABLE: yolov4, yolov7 \n''')
 
     def load_yolo_scripts_buttons(self):
         self.load_yolo_files_button=Button(self.frame_table1,image=self.icon_scripts,command=self.remaining_buttons,bg=self.root_bg,fg=self.root_fg)
         self.load_yolo_files_button.grid(row=6,column=1,sticky='se')
         self.load_yolo_files_button_note=tk.Label(self.frame_table1,text='3.a \n Load Yolo \n Scripts (.sh)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.load_yolo_files_button_note.grid(row=7,column=1,sticky='ne')
+        self.load_yolo_files_button_tip=CreateToolTip(self.load_yolo_files_button,'''
+        Load existing scripts without overwriting.
+
+        USE_CASE:  You manually adjusted a script and don't want it overwritten.
+
+        LOCATION: see Scripts button.
+
+        APPLICABLE: yolov4, yolov7 \n''')
         self.create_darknet_buttons()
 
 
@@ -7556,6 +8660,12 @@ class yolo_cfg:
         self.create_yolo_files_button.grid(row=8,column=1,sticky='se')
         self.create_yolo_files_button_note=tk.Label(self.frame_table1,text='3.b \n Create Yolo \n Scripts (.sh)',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.create_yolo_files_button_note.grid(row=9,column=1,sticky='ne')
+        self.create_yolo_files_button_tip=CreateToolTip(self.create_yolo_files_button,'''
+        Create bash scripts for calling upon button clicks for Yolo Models.
+
+        LOCATION: see Scripts button.
+
+        APPLICABLE: yolov4, yolov7 \n''')
         self.create_darknet_buttons()
     def create_darknet_buttons(self):
         if self.darknet_selected==True:
@@ -7568,6 +8678,14 @@ class yolo_cfg:
         self.open_darknet_button.grid(row=17,column=4,sticky='se')
         self.open_darknet_note=tk.Label(self.frame_table1,text="darknet_path dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_darknet_note.grid(row=18,column=4,sticky='ne')
+        self.open_darknet_button_tip=CreateToolTip(self.open_darknet_button,'''
+        This is allows you to specify the path to your darknet executable.
+
+        It should also be in your libs/DEFAULT_SETTINGS.py if you have not already set it there. 
+
+        APPLICABLE: yolov4 types ONLY.
+
+        \n''')
         cmd_i=open_cmd+" '{}'".format(self.open_darknet_label_var.get())
         self.open_darknet_label=Button(self.frame_table1,textvariable=self.open_darknet_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
         self.open_darknet_label.grid(row=17,column=5,columnspan=50,sticky='sw')
