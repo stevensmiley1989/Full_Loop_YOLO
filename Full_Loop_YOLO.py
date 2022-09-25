@@ -287,8 +287,6 @@ class main_entry:
                         self.df_settings.at[i,'path_JPEGImages']=line.split('=')[-1].replace("'",'"').split('"')[1].replace('\n','')
                     elif line.find('path_Yolo')!=-1:
                         self.df_settings.at[i,'path_Yolo']=line.split('=')[-1].replace("'",'"').split('"')[1].replace('\n','')
-                        
-
                     elif line.find('mp4_video_path')!=-1:
                         self.df_settings.at[i,'mp4_video_path']=line.split('=')[-1].replace("'",'"').split('"')[1]
                 if found==True:
@@ -367,36 +365,37 @@ class main_entry:
 
             
 
-    def select_file_script(self):
-        filetypes=(('sh','*.sh'),('All files','*.*'))
-        initialdir_i=os.getcwd()
-        self.filename=fd.askopenfilename(title='Open a file',
-                                    initialdir=initialdir_i,
-                                    filetypes=filetypes)
-        if os.path.exists(self.filename):
-            print(self.filename)
-            f=open(self.list_script_path,'r')
-            f_old=f.readlines()
-            f.close()
-            if len(f_old)>0:
-                print('length >0')
-                f_old.append(self.filename+'\n')
-                f_new=f_old
-            else:
-                f_old=['None']
-                f_old.append(self.filename+'\n')
-                f_new=f_old
-            print(f_new)
-            print(len(f_new))
-            print('------')
-            f_new_dic={path_i:i for i,path_i in enumerate(f_new) if path_i.find('.sh')!=-1}
-            f_new_list=list(f_new_dic.keys())
-            f=open(self.list_script_path,'w')
-            tmp=[f.writelines(w) for w in f_new_list]
-            f.close()
-            self.dropdown_menu()
-        showinfo(title='Selected File',
-                 message=self.filename)
+    # def select_file_script(self):
+    #     filetypes=(('sh','*.sh'),('All files','*.*'))
+    #     initialdir_i=os.getcwd()
+    #     self.filename=fd.askopenfilename(title='Open a file',
+    #                                 initialdir=initialdir_i,
+    #                                 filetypes=filetypes)
+    #     if os.path.exists(self.filename):
+    #         print(self.filename)
+    #         f=open(self.list_script_path,'r')
+    #         f_old=f.readlines()
+    #         f.close()
+    #         if len(f_old)>0:
+    #             print('length >0')
+    #             f_old.append(self.filename+'\n')
+    #             f_new=f_old
+    #         else:
+    #             f_old=['None']
+    #             f_old.append(self.filename+'\n')
+    #             f_new=f_old
+    #         print(f_new)
+    #         print(len(f_new))
+    #         print('------')
+    #         f_new_dic={path_i:i for i,path_i in enumerate(f_new) if path_i.find('.sh')!=-1}
+    #         f_new_list=list(f_new_dic.keys())
+    #         f=open(self.list_script_path,'w')
+    #         tmp=[f.writelines(w) for w in f_new_list]
+    #         f.close()
+    #         self.dropdown_menu()
+    #     showinfo(title='Selected File',
+    #              message=self.filename)
+
     def dropdown_menu(self):
         if self.dropdown!=None:
             self.dropdown_label.destroy()
@@ -591,18 +590,6 @@ class main_entry:
         self.frame_canvas.config(width=total_width,height=total_height)
         self.canvas.config(scrollregion=self.canvas.bbox('all'))
         
-
-
-
-        
-        
-
-
-
-        
-
-
-
     def close(self):
         self.root.destroy()
     def cleanup(self):
@@ -855,7 +842,7 @@ class yolo_cfg:
         self.save_custom_settings_note=tk.Label(self.frame_table1,text='Save Custom Settings',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         self.save_custom_settings_note.grid(row=2,column=3,sticky='ne')
 
-        self.return_to_main_button=Button(self.frame_table1,text='Return to Main Menu',command=self.return_to_main,bg=self.root_fg,fg=self.root_bg)
+        self.return_to_main_button=Button(self.frame_table1,text='Return to Main Menu',command=self.return_to_main,fg='lime',bg=self.root_bg)
         self.return_to_main_button.grid(row=0,column=0,sticky='se')
         # self.return_to_main_note=tk.Label(self.frame_table1,text='Main Menu',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
         # self.return_to_main_note.grid(row=1,column=1,sticky='nw')
@@ -865,9 +852,9 @@ class yolo_cfg:
 
         self.open_basepath_label_var=tk.StringVar()
         self.open_basepath_label_var.set(self.base_path_OG)
-        self.open_basepath_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.base_path_OG,'save path',self.open_basepath_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_basepath_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.base_path_OG,'Set the path for Yolo_Files',self.open_basepath_label_var),bg=self.root_bg,fg=self.root_fg)
         self.open_basepath_button.grid(row=1,column=5,sticky='se')
-        self.open_basepath_note=tk.Label(self.frame_table1,text="base_path_OG dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_basepath_note=tk.Label(self.frame_table1,text="Yolo_Files",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
         self.open_basepath_note.grid(row=2,column=5,sticky='ne')
         cmd_i=open_cmd+" '{}'".format(self.open_basepath_label_var.get())
         self.open_basepath_label=Button(self.frame_table1,textvariable=self.open_basepath_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
@@ -969,6 +956,60 @@ class yolo_cfg:
         self.RECORDRAW_BUTTONS()
         self.GENERATE_CUSTOM_DATASET_BUTTONS()
         self.COMPUTE_METRICS_BUTTONS()
+
+
+        if self.path_predJPEGImages==None:
+            self.path_predJPEGImages=self.path_JPEGImages
+        self.open_anno()
+        self.open_jpegs()
+        self.open_yolo_objs()
+        if self.SAVED_SETTINGS_PATH.lower().find('default_settings')!=-1:
+            self.NEW_SAVED_SETTINGS_PATH=True
+        else:
+            self.NEW_SAVED_SETTINGS_PATH=False
+        print(f'self.NEW_SAVED_SETTINGS_PATH={self.NEW_SAVED_SETTINGS_PATH}')
+        if self.NEW_SAVED_SETTINGS_PATH:
+            self.select_folder(self.base_path_OG,'Set Yolo_Files path',self.open_basepath_label_var)
+
+            parent_yolo_files=os.path.dirname(self.base_path_OG)
+            if os.path.exists(os.path.join(parent_yolo_files,'Annotations')):
+                self.path_Annotations=os.path.join(parent_yolo_files,'Annotations')
+                self.open_anno_label_var.set(self.path_Annotations)
+
+            self.select_folder(self.path_Annotations,'Set Annotations path',self.open_anno_label_var)
+            if os.path.exists(os.path.join(os.path.dirname(self.path_Annotations),'JPEGImages')):
+                self.path_JPEGImages=os.path.join(os.path.dirname(self.path_Annotations),'JPEGImages')
+                self.open_jpeg_label_var.set(self.path_JPEGImages)
+            self.select_folder(self.path_JPEGImages,'Set JPEGImages path',self.open_jpeg_label_var)
+            if os.path.exists(self.path_JPEGImages):
+                self.path_predJPEGImages=self.path_JPEGImages
+                self.open_predjpeg_label_var.set(self.path_predJPEGImages)
+            possible_yolo_objs_lower=['yolo_objs','yoloobjs','yoloobj','objyolo','objsyolo','yolo_obj']
+            self.parent_of_anno=os.path.dirname(self.path_Annotations)
+            parents_of_anno=os.listdir(self.parent_of_anno)
+
+            parents_of_anno=[w for w in parents_of_anno if os.path.isdir(os.path.join(self.parent_of_anno,w))]
+            FOUND_YOLO_OBJS=False
+            for pi in parents_of_anno:
+                if pi.lower() in possible_yolo_objs_lower:
+                    FOUND_YOLO_OBJS=True
+                    print(f'FOUND: {pi}')
+                    break
+            if FOUND_YOLO_OBJS:
+                self.path_Yolo=os.path.join(self.parent_of_anno,pi)
+                self.open_yolo_label_var.set(self.path_Yolo)
+            else:
+                self.path_Yolo=os.path.join(self.parent_of_anno,'Yolo_Objs')
+                if os.path.exists(self.path_Yolo)==False:
+                    os.makedirs(self.path_Yolo)
+                self.open_yolo_label_var.set(self.path_Yolo)
+
+            self.select_folder(self.path_Yolo,'Set Yolo_Objs path',self.open_yolo_label_var)
+            self.popupWindow_PREFIX()
+            
+
+
+            
 
     def COMPUTE_METRICS_BUTTONS(self):
         self.popup_metrics_buttons=Button(self.frame_table1,text='Compute Metrics',command=self.popupWindow_mAP,bg=self.root_fg,fg=self.root_bg)
@@ -1194,7 +1235,7 @@ class yolo_cfg:
                     self.open_darknet_label=Button(self.frame_table1,textvariable=self.open_darknet_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
                     self.open_darknet_label.grid(row=11,column=5,columnspan=50,sticky='sw')
                     self.darknet_path=self.foldername
-                    print(self.path_darknet)
+                    print(self.darknet_path)
                 if var_i==self.open_basepath_label_var:
                     self.basepath_selected=True
                     var_i.set(folder_i)
@@ -1746,41 +1787,41 @@ class yolo_cfg:
         # self.open_save_cfg_path_test_label.grid(row=7,column=5,columnspan=50,sticky='sw')
         self.save_cfg_path_test_selected=True
 
-        self.open_anno()
+        #self.open_anno()
 
-        self.open_jpeg_label_var=tk.StringVar()
-        self.open_jpeg_label_var.set(self.path_JPEGImages)
-        self.open_jpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_JPEGImages,'Open JPEGImages Folder',self.open_jpeg_label_var),bg=self.root_bg,fg=self.root_fg)
-        self.open_jpeg_button.grid(row=13,column=4,sticky='se')
-        self.open_jpeg_note=tk.Label(self.frame_table1,text="JPEGImages dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
-        self.open_jpeg_note.grid(row=14,column=4,sticky='ne')
-        cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var.get())
-        self.open_jpeg_label=Button(self.frame_table1,textvariable=self.open_jpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
-        self.open_jpeg_label.grid(row=13,column=5,columnspan=50,sticky='sw')
+        # self.open_jpeg_label_var=tk.StringVar()
+        # self.open_jpeg_label_var.set(self.path_JPEGImages)
+        # self.open_jpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_JPEGImages,'Open JPEGImages Folder',self.open_jpeg_label_var),bg=self.root_bg,fg=self.root_fg)
+        # self.open_jpeg_button.grid(row=13,column=4,sticky='se')
+        # self.open_jpeg_note=tk.Label(self.frame_table1,text="JPEGImages dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        # self.open_jpeg_note.grid(row=14,column=4,sticky='ne')
+        # cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var.get())
+        # self.open_jpeg_label=Button(self.frame_table1,textvariable=self.open_jpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        # self.open_jpeg_label.grid(row=13,column=5,columnspan=50,sticky='sw')
 
-        self.open_predjpeg_label_var=tk.StringVar()
-        self.open_predjpeg_label_var.set(self.path_predJPEGImages)
-        self.open_predjpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_predJPEGImages,'Open Prediction JPEGImages Folder',self.open_predjpeg_label_var),bg=self.root_bg,fg=self.root_fg)
-        self.open_predjpeg_button.grid(row=10+11,column=4,sticky='se')
-        self.open_predjpeg_note=tk.Label(self.frame_table1,text="Prediction JPEGImages dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
-        self.open_predjpeg_note.grid(row=11+11,column=4,sticky='ne')
-        cmd_i=open_cmd+" '{}'".format(self.open_predjpeg_label_var.get())
-        self.open_predjpeg_label=Button(self.frame_table1,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
-        self.open_predjpeg_label.grid(row=10+11,column=5,columnspan=50,sticky='sw')
+        # self.open_predjpeg_label_var=tk.StringVar()
+        # self.open_predjpeg_label_var.set(self.path_predJPEGImages)
+        # self.open_predjpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_predJPEGImages,'Open Prediction JPEGImages Folder',self.open_predjpeg_label_var),bg=self.root_bg,fg=self.root_fg)
+        # self.open_predjpeg_button.grid(row=10+11,column=4,sticky='se')
+        # self.open_predjpeg_note=tk.Label(self.frame_table1,text="Prediction JPEGImages dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        # self.open_predjpeg_note.grid(row=11+11,column=4,sticky='ne')
+        # cmd_i=open_cmd+" '{}'".format(self.open_predjpeg_label_var.get())
+        # self.open_predjpeg_label=Button(self.frame_table1,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        # self.open_predjpeg_label.grid(row=10+11,column=5,columnspan=50,sticky='sw')
 
         self.open_MOVMP4()
 
-        self.open_yolo_label_var=tk.StringVar()
-        if os.path.exists(self.path_Yolo)==False:
-            os.makedirs(self.path_Yolo)
-        self.open_yolo_label_var.set(self.path_Yolo)
-        self.open_yolo_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_Yolo,'Open Yolo Folder',self.open_yolo_label_var),bg=self.root_bg,fg=self.root_fg)
-        self.open_yolo_button.grid(row=15,column=4,sticky='se')
-        self.open_yolo_note=tk.Label(self.frame_table1,text="Yolo dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
-        self.open_yolo_note.grid(row=16,column=4,sticky='ne')
-        cmd_i=open_cmd+" '{}'".format(self.open_yolo_label_var.get())
-        self.open_yolo_label=Button(self.frame_table1,textvariable=self.open_yolo_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
-        self.open_yolo_label.grid(row=15,column=5,columnspan=50,sticky='sw')
+        # self.open_yolo_label_var=tk.StringVar()
+        # if os.path.exists(self.path_Yolo)==False:
+        #     os.makedirs(self.path_Yolo)
+        # self.open_yolo_label_var.set(self.path_Yolo)
+        # self.open_yolo_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_Yolo,'Open Yolo Folder',self.open_yolo_label_var),bg=self.root_bg,fg=self.root_fg)
+        # self.open_yolo_button.grid(row=15,column=4,sticky='se')
+        # self.open_yolo_note=tk.Label(self.frame_table1,text="Yolo dir",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        # self.open_yolo_note.grid(row=16,column=4,sticky='ne')
+        # cmd_i=open_cmd+" '{}'".format(self.open_yolo_label_var.get())
+        # self.open_yolo_label=Button(self.frame_table1,textvariable=self.open_yolo_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        # self.open_yolo_label.grid(row=15,column=5,columnspan=50,sticky='sw')
 
         self.create_yolo_objs_button=Button(self.frame_table1,image=self.icon_yolo_objects,command=self.convert_PascalVOC_to_YOLO,bg=self.root_bg,fg=self.root_fg)
         self.create_yolo_objs_button.grid(row=1,column=1,sticky='se')
@@ -1814,6 +1855,40 @@ class yolo_cfg:
                                      command=partial(self.select_yes_no,'No'))
         self.button_overwrite_no.grid(row=2,column=2,stick='nw')
 
+
+    def open_jpegs(self):
+        self.open_jpeg_label_var=tk.StringVar()
+        self.open_jpeg_label_var.set(self.path_JPEGImages)
+        self.open_jpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_JPEGImages,'Open JPEGImages Folder',self.open_jpeg_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_jpeg_button.grid(row=13,column=4,sticky='se')
+        self.open_jpeg_note=tk.Label(self.frame_table1,text="JPEGImages",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_jpeg_note.grid(row=14,column=4,sticky='ne')
+        cmd_i=open_cmd+" '{}'".format(self.open_jpeg_label_var.get())
+        self.open_jpeg_label=Button(self.frame_table1,textvariable=self.open_jpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_jpeg_label.grid(row=13,column=5,columnspan=50,sticky='sw')
+
+        self.open_predjpeg_label_var=tk.StringVar()
+        self.open_predjpeg_label_var.set(self.path_predJPEGImages)
+        self.open_predjpeg_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_predJPEGImages,'Open Prediction JPEGImages Folder',self.open_predjpeg_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_predjpeg_button.grid(row=10+11,column=4,sticky='se')
+        self.open_predjpeg_note=tk.Label(self.frame_table1,text="Prediction JPEGImages",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_predjpeg_note.grid(row=11+11,column=4,sticky='ne')
+        cmd_i=open_cmd+" '{}'".format(self.open_predjpeg_label_var.get())
+        self.open_predjpeg_label=Button(self.frame_table1,textvariable=self.open_predjpeg_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_predjpeg_label.grid(row=10+11,column=5,columnspan=50,sticky='sw')
+
+    def open_yolo_objs(self):
+        self.open_yolo_label_var=tk.StringVar()
+        if os.path.exists(self.path_Yolo)==False:
+            os.makedirs(self.path_Yolo)
+        self.open_yolo_label_var.set(self.path_Yolo)
+        self.open_yolo_button=Button(self.frame_table1,image=self.icon_folder,command=partial(self.select_folder,self.path_Yolo,'Open Yolo_Objs Folder',self.open_yolo_label_var),bg=self.root_bg,fg=self.root_fg)
+        self.open_yolo_button.grid(row=15,column=4,sticky='se')
+        self.open_yolo_note=tk.Label(self.frame_table1,text="Yolo_Objs",bg=self.root_bg,fg=self.root_fg,font=("Arial", 8))
+        self.open_yolo_note.grid(row=16,column=4,sticky='ne')
+        cmd_i=open_cmd+" '{}'".format(self.open_yolo_label_var.get())
+        self.open_yolo_label=Button(self.frame_table1,textvariable=self.open_yolo_label_var, command=partial(self.run_cmd,cmd_i),bg=self.root_fg,fg=self.root_bg,font=("Arial", 8))
+        self.open_yolo_label.grid(row=15,column=5,columnspan=50,sticky='sw')
 
 
 
@@ -1904,7 +1979,7 @@ class yolo_cfg:
         self.labelImg_buttons()
         self.MOSAIC_buttons()
         self.IMGAUG_buttons()
-        self.CLASSIFY_CHIPS_buttons()
+        #self.CLASSIFY_CHIPS_buttons()
         self.send_text_buttons()
         
         
@@ -2282,21 +2357,23 @@ class yolo_cfg:
         self.popup_RTSP_button.grid(row=16+5-2,column=3,sticky='sw')
 
     def CLASSIFY_CHIPS_BUTTONS(self):
-        self.popup_CLASSIFY_CHIPS_button=Button(self.frame_table1,text='CLASSIFY CHIPS Buttons',command=self.popupWindow_CLASSIFY_CHIPS,bg=self.root_fg,fg=self.root_bg)
-        self.popup_CLASSIFY_CHIPS_button.grid(row=9,column=8,sticky='sw')
+        self.popup_CLASSIFY_CHIPS_button=Button(self.frame_table1,image=self.icon_CLASSIFY_CHIPS,command=self.popupWindow_CLASSIFY_CHIPS,bg=self.root_bg,fg=self.root_fg)
+        self.popup_CLASSIFY_CHIPS_button.grid(row=9,column=7,sticky='s',padx=10)  
+        self.popup_CLASSIFY_CHIPS_button_note=tk.Label(self.frame_table1,text='CLASSIFY CHIPS GUI ',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+        self.popup_CLASSIFY_CHIPS_button_note.grid(row=10,column=7,sticky='n',padx=10)   
 
 
-        self.style3=ttk.Style()
-        self.style3.configure('Normal.TRadiobutton',
-                             background='green',
-                             foreground='black')
-        self.button_classify_yes=ttk.Radiobutton(self.frame_table1,text='Yes',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='Yes')
+        # self.style3=ttk.Style()
+        # self.style3.configure('Normal.TRadiobutton',
+        #                      background='green',
+        #                      foreground='black')
+        # self.button_classify_yes=ttk.Radiobutton(self.frame_table1,text='Yes',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='Yes')
 
-        self.button_classify_yes.grid(row=9,column=9,stick='nw')
-        self.button_classify_no=ttk.Radiobutton(self.frame_table1,text='No',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='No')
-        self.button_classify_no.grid(row=9,column=10,stick='ne')
-        self.label_classify=tk.Label(self.frame_table1,text='CLASSIFY CHIPS?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
-        self.label_classify.grid(row=8,column=9,columnspan=2,stick='sew')
+        # self.button_classify_yes.grid(row=9,column=9,stick='nw')
+        # self.button_classify_no=ttk.Radiobutton(self.frame_table1,text='No',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='No')
+        # self.button_classify_no.grid(row=9,column=10,stick='ne')
+        # self.label_classify=tk.Label(self.frame_table1,text='CLASSIFY CHIPS?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        # self.label_classify.grid(row=8,column=9,columnspan=2,stick='sew')
 
     def GENERATE_CUSTOM_DATASET_BUTTONS(self):
         self.popup_GCD_button=Button(self.frame_table1,text='GENERATE CUSTOM DATASET Buttons',command=self.popupWindow_GCD,bg=self.root_fg,fg=self.root_bg)
@@ -2561,6 +2638,20 @@ class yolo_cfg:
         self.OPEN_CLASSIFY_CHIPS_INFERENCE_Button.grid(row=17+spacer-2,column=3,sticky='sw')
         self.LOAD_CLASSIFY_CHIPS_INFERENCE_Button=tk.Button(self.top,text='LOAD CLASSIFY_CHIPS_INFERENCE Options',command=partial(self.load_CLASSIFY_CHIPS_INFERENCE_Options,spacer),bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
         self.LOAD_CLASSIFY_CHIPS_INFERENCE_Button.grid(row=18+spacer-2,column=3,sticky='sw')
+
+        self.style3=ttk.Style()
+        self.style3.configure('Normal.TRadiobutton',
+                             background='green',
+                             foreground='black')
+        self.button_classify_yes=ttk.Radiobutton(self.top,text='Yes',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='Yes')
+
+        self.button_classify_yes.grid(row=19+spacer-2,column=1,stick='nw')
+        self.button_classify_no=ttk.Radiobutton(self.top,text='No',style='Normal.TRadiobutton',variable=self.CLASSIFY_CHIPS_LOGIC,value='No')
+        self.button_classify_no.grid(row=19+spacer-2,column=2,stick='ne')
+        self.label_classify=tk.Label(self.top,text='CLASSIFY CHIPS?',bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+        self.label_classify.grid(row=19+spacer-2,column=0,columnspan=1,stick='sew')
+    
+        self.CLASSIFY_CHIPS_buttons()
 
 
 
@@ -3045,32 +3136,32 @@ class yolo_cfg:
         if os.path.exists('libs/labelImg_path.py'):
 
             self.labelImg_button=Button(self.frame_table1,image=self.icon_labelImg,command=self.popupWindow_labelImg,bg=self.root_bg,fg=self.root_fg)
-            self.labelImg_button.grid(row=9,column=4,sticky='se')
+            self.labelImg_button.grid(row=9,column=4,sticky='s',padx=10)  
             self.labelImg_button_note=tk.Label(self.frame_table1,text='LabelImg',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.labelImg_button_note.grid(row=10,column=4,sticky='ne')    
+            self.labelImg_button_note.grid(row=10,column=4,sticky='n',padx=10)      
 
     def MOSAIC_buttons(self):
         if os.path.exists('libs/MOSAIC_Chip_Sorter_path.py'):
 
             self.MOSAIC_button=Button(self.frame_table1,image=self.icon_MOSAIC,command=self.popupWindow_MOSAIC,bg=self.root_bg,fg=self.root_fg)
-            self.MOSAIC_button.grid(row=9,column=5,sticky='se')
+            self.MOSAIC_button.grid(row=9,column=5,sticky='s',padx=10)  
             self.MOSAIC_button_note=tk.Label(self.frame_table1,text='MOSAIC Chip Sorter',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.MOSAIC_button_note.grid(row=10,column=5,sticky='ne')         
+            self.MOSAIC_button_note.grid(row=10,column=5,sticky='n',padx=10)         
 
     def IMGAUG_buttons(self):
         if os.path.exists('libs/IMAGE_AUG_GUI_path.py'):
 
             self.IMGAUG_button=Button(self.frame_table1,image=self.icon_IMGAUG,command=self.popupWindow_IMGAUG,bg=self.root_bg,fg=self.root_fg)
-            self.IMGAUG_button.grid(row=9,column=6,sticky='se')
+            self.IMGAUG_button.grid(row=9,column=6,sticky='s',padx=10)  
             self.IMGAUG_button_note=tk.Label(self.frame_table1,text='IMAGE AUG GUI',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.IMGAUG_button_note.grid(row=10,column=6,sticky='ne') 
+            self.IMGAUG_button_note.grid(row=10,column=6,sticky='n',padx=10)    
 
     def CLASSIFY_CHIPS_buttons(self):
         if os.path.exists('libs/CLASSIFY_CHIPS_path.py'):
-            self.CLASSIFY_CHIPS_button=Button(self.frame_table1,image=self.icon_CLASSIFY_CHIPS,command=self.open_CLASSIFY_CHIPS,bg=self.root_bg,fg=self.root_fg)
-            self.CLASSIFY_CHIPS_button.grid(row=9,column=7,sticky='se')
-            self.CLASSIFY_CHIPS_button_note=tk.Label(self.frame_table1,text='CLASSIFY CHIPS GUI',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
-            self.CLASSIFY_CHIPS_button_note.grid(row=10,column=7,sticky='ne')       
+            self.CLASSIFY_CHIPS_button=Button(self.top,image=self.icon_CLASSIFY_CHIPS,command=self.open_CLASSIFY_CHIPS,bg=self.root_bg,fg=self.root_fg)
+            self.CLASSIFY_CHIPS_button.grid(row=10,column=1,sticky='sw',pady=10)   
+            self.CLASSIFY_CHIPS_button_note=tk.Label(self.top,text='CLASSIFY CHIPS GUI ',bg=self.root_bg,fg=self.root_fg,font=("Arial", 9))
+            self.CLASSIFY_CHIPS_button_note.grid(row=10,column=0,sticky='se',pady=10)       
 
     def open_CLASSIFY_CHIPS(self):
         from libs import CLASSIFY_CHIPS_path
@@ -6420,6 +6511,7 @@ class yolo_cfg:
         self.top=tk.Toplevel(self.root)
         self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.95//1.0),int(self.root.winfo_screenheight()*0.95//1.5)) )
         self.top.configure(background = 'black')
+
         self.b=Button(self.top,text='Close',command=self.cleanup,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
         self.b.grid(row=0,column=1,sticky='se')
 
@@ -6856,6 +6948,52 @@ class yolo_cfg:
             self.run_cmd(cmd_i)
             cmd_i=open_cmd+' '+self.check_path_ERROR_LABEL
             self.run_cmd(cmd_i)
+
+    def popupWindow_PREFIX(self):
+            try:
+                self.top.destroy()
+            except:
+                pass
+            self.top=tk.Toplevel(self.root)
+            self.top.geometry( "{}x{}".format(int(self.root.winfo_screenwidth()*0.55//1.0),int(self.root.winfo_screenheight()*0.55//1.0)) )
+            self.top.title('Set PREFIX, WIDTH & HEIGHT.')
+            self.top.configure(background = 'black')
+            self.b=Button(self.top,text='Close',command=self.cleanup_simple,bg=DEFAULT_SETTINGS.root_fg, fg=DEFAULT_SETTINGS.root_bg)
+            self.b.grid(row=0,column=0,sticky='se')
+
+            self.PREFIX_entry1=tk.Entry(self.top,textvariable=self.PREFIX_VAR)
+            self.PREFIX_entry1.grid(row=7,column=0,columnspan=int(self.root.winfo_screenwidth()*0.75//1.0),sticky='sew')
+            self.PREFIX_label1=tk.Label(self.top,text='PREFIX',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.PREFIX_label1.grid(row=8,column=0,sticky='ne')
+
+            self.WIDTH_NUM_entry1=tk.Entry(self.top,textvariable=self.WIDTH_NUM_VAR)
+            self.WIDTH_NUM_entry1.grid(row=9,column=0,sticky='se')
+            self.WIDTH_NUM_label1=tk.Label(self.top,text='WIDTH',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.WIDTH_NUM_label1.grid(row=10,column=0,sticky='ne')
+
+            self.HEIGHT_NUM_entry1=tk.Entry(self.top,textvariable=self.HEIGHT_NUM_VAR)
+            self.HEIGHT_NUM_entry1.grid(row=11,column=0,sticky='se')
+            self.HEIGHT_NUM_label1=tk.Label(self.top,text='HEIGHT',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.HEIGHT_NUM_label1.grid(row=12,column=0,sticky='ne')
+
+            self.submit_options_prefix=Button(self.top,text='SUBMIT',command=self.SUBMIT_PREFIX,bg=self.root_bg,fg=self.root_fg,font=('Arial',10))
+            self.submit_options_prefix.grid(row=0,column=1,sticky='se')
+    def cleanup_simple(self):
+        try:
+            self.top.destroy()
+        except:
+            pass
+    def SUBMIT_PREFIX(self):
+        self.PREFIX_VAR.set(self.PREFIX_entry1.get())
+        self.PREFIX=self.PREFIX_VAR.get()
+        self.WIDTH_NUM_VAR.set(self.WIDTH_NUM_entry1.get())
+        self.WIDTH_NUM=self.WIDTH_NUM_VAR.get()
+        self.HEIGHT_NUM_VAR.set(self.HEIGHT_NUM_entry1.get())
+        self.HEIGHT_NUM=self.HEIGHT_NUM_VAR.get()
+        self.generate_cfg()
+        self.top.destroy()
+
+ 
     def convert_PascalVOC_to_YOLO(self):
         self.grep_annos_labels()
         if len(self.df)>0:
