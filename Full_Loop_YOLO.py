@@ -743,6 +743,70 @@ class yolo_cfg:
         except:
             self.ITERATION_NUM=2000
         print('ITERATION_NUM={}\n'.format(self.ITERATION_NUM))
+        print('SAVED SETTINGS PATH: \n',SAVED_SETTINGS_PATH)
+
+
+        # yolov4/yolov4-tiny
+        try:
+            self.batch=DEFAULT_SETTINGS.batch
+        except:
+            self.batch=64
+        print('batch={}\n'.format(self.batch))
+        self.batch_VAR=tk.StringVar()
+        self.batch_VAR.set(self.batch)
+
+
+        # yolov7
+        try:
+            self.batch_yolov7=DEFAULT_SETTINGS.batch_yolov7
+        except:
+            if max(self.WIDTH_NUM,self.HEIGHT_NUM)>800:
+                batch_size=4
+            else:
+                batch_size=16
+            self.batch_yolov7=batch_size
+        print('batch_yolov7={}\n'.format(self.batch_yolov7))
+        self.batch_yolov7_VAR=tk.StringVar()
+        self.batch_yolov7_VAR.set(self.batch_yolov7)
+
+        # yolov7_re
+        try:
+            self.batch_yolov7_re=DEFAULT_SETTINGS.batch_yolov7_re
+        except:
+            if max(self.WIDTH_NUM,self.HEIGHT_NUM)>800:
+                batch_size=2
+            else:
+                batch_size=8
+            self.batch_yolov7_re=batch_size
+        print('batch_yolov7_re={}\n'.format(self.batch_yolov7_re))
+        self.batch_yolov7_re_VAR=tk.StringVar()
+        self.batch_yolov7_re_VAR.set(self.batch_yolov7_re)
+
+        # yolov7_e6
+        try:
+            self.batch_yolov7_e6=DEFAULT_SETTINGS.batch_yolov7_e6
+        except:
+            batch_size=2
+            self.batch_yolov7_e6=batch_size
+        print('batch_yolov7_e6={}\n'.format(self.batch_yolov7_e6))
+        self.batch_yolov7_e6_VAR=tk.StringVar()
+        self.batch_yolov7_e6_VAR.set(self.batch_yolov7_e6)
+
+        # yolov7_x
+        try:
+            self.batch_yolov7_x=DEFAULT_SETTINGS.batch_yolov7_x
+        except:
+            if max(self.WIDTH_NUM,self.HEIGHT_NUM)>800:
+                batch_size=2
+            else:
+                batch_size=8
+            self.batch_yolov7_x=batch_size
+        print('batch_yolov7_x={}\n'.format(self.batch_yolov7_x))
+        self.batch_yolov7_x_VAR=tk.StringVar()
+        self.batch_yolov7_x_VAR.set(self.batch_yolov7_x)
+
+
+
         try:
             self.epochs_yolov7=DEFAULT_SETTINGS.epochs_yolov7
         except:
@@ -1636,7 +1700,11 @@ class yolo_cfg:
                     print(self.path_JPEGImages_CUSTOM)  
                     self.open_jpeg_CUSTOM()
 
-
+    def update_batch(self):
+        try:
+            self.batch=self.batch.split('=')[0]+'='+str(int(self.batch_VAR.get()))+'\n'
+        except:
+            print(f'This could not be converted to an integer {self.batch_VAR.get()}')
 
     def update_paths(self,generate=True):
         self.PREFIX=str(self.PREFIX_VAR.get().strip())
@@ -1680,11 +1748,13 @@ class yolo_cfg:
         self.num_classes=int(self.num_classes_VAR.get().strip())
         self.random=self.random_VAR.get()
         self.ITERATION_NUM=self.ITERATION_NUM_VAR.get()
+
         if generate:
             self.update_height(self.HEIGHT_NUM)
             self.update_width(self.WIDTH_NUM)
             self.divide_filters_by(self.num_div)
             self.update_max_batches(self.ITERATION_NUM)
+            self.update_batch()
             self.update_classes()
         mp4_video_path='TBD' #testing video
         try:
@@ -2643,6 +2713,25 @@ class yolo_cfg:
         ''')
         self.train_yolo_gpu_label=tk.Label(self.top,text='gpus (i.e., 0,1,2)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
         self.train_yolo_gpu_label.grid(row=11,column=2,sticky='nw')
+
+        try:
+            self.train_yolo_batch_entry.destroy()
+            self.train_yolo_batch_label.destroy()
+        except:
+            pass
+
+        self.train_yolo_batch_entry=tk.Entry(self.top,textvariable=self.batch_VAR)
+        self.train_yolo_batch_entry.grid(row=12,column=2,sticky='sw')
+        self.train_yolo_batch_entry_tip=CreateToolTip(self.train_yolo_batch_entry,'''
+        This will set the BATCH_SIZE used for training yolov4/yolov4-tiny with darknet. \n\t 
+
+        APPLICABLE: yolov4 types ONLY.
+
+        It simply modifies the train.cfg file to use this BATCH_SIZE for training before training.
+
+        ''')
+        self.train_yolo_batch_label=tk.Label(self.top,text='batch_size (i.e., 32, 64, 128,etc)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+        self.train_yolo_batch_label.grid(row=13,column=2,sticky='nw')
 
         self.epochs_yolov_entry=tk.Entry(self.top,textvariable=self.epochs_VAR)
         self.epochs_yolov_entry.grid(row=5,column=2,sticky='sw')
@@ -3946,6 +4035,25 @@ class yolo_cfg:
             self.epochs_yolov7_label.grid(row=13-7,column=10-7,sticky='nw')
 
 
+            try:
+                self.train_yolov7_batch_entry.destroy()
+                self.train_yolov7_batch_label.destroy()
+            except:
+                pass
+
+            self.train_yolov7_batch_entry=tk.Entry(self.top,textvariable=self.batch_yolov7_VAR)
+            self.train_yolov7_batch_entry.grid(row=12,column=10-7,sticky='sw')
+            self.train_yolov7_batch_entry_tip=CreateToolTip(self.train_yolov7_batch_entry,'''
+            This will set the BATCH_SIZE used for training yolov7-tiny with PyTorch. \n\t 
+
+            APPLICABLE: yolov7-tiny\n\t
+
+            It simply modifies the command line for training with PyTorch.
+
+            ''')
+            self.train_yolov7_batch_label=tk.Label(self.top,text='batch_size (i.e., 32, 64, 128,etc)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.train_yolov7_batch_label.grid(row=13,column=10-7,sticky='nw')
+
             self.multi_train_yolov7_var=tk.IntVar()
             self.multi_train_yolov7_var.set(0)
             self.multi_train_yolov7_buttons=ttk.Checkbutton(self.top, style='Normal.TCheckbutton',text="Multi-train",variable=self.multi_train_yolov7_var,onvalue=1, offvalue=0)
@@ -4002,6 +4110,25 @@ class yolo_cfg:
             Note, multiple gpus has not been tested yet and might not work.  Recommended to try if you have them, and use 0 if it fails.
 
             ''') 
+
+            try:
+                self.train_yolov7_e6_batch_entry.destroy()
+                self.train_yolov7_e6_batch_label.destroy()
+            except:
+                pass
+
+            self.train_yolov7_e6_batch_entry=tk.Entry(self.top,textvariable=self.batch_yolov7_e6_VAR)
+            self.train_yolov7_e6_batch_entry.grid(row=12,column=11-7,sticky='sw')
+            self.train_yolov7_e6_batch_entry_tip=CreateToolTip(self.train_yolov7_e6_batch_entry,'''
+            This will set the BATCH_SIZE used for training yolov7-e6 with PyTorch. \n\t 
+
+            APPLICABLE: yolov7-e6\n\t
+
+            It simply modifies the command line for training with PyTorch.
+
+            ''')
+            self.train_yolov7_e6_batch_label=tk.Label(self.top,text='batch_size (i.e., 32, 64, 128,etc)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.train_yolov7_e6_batch_label.grid(row=13,column=11-7,sticky='nw')
 
             self.epochs_yolov7_e6_entry=tk.Entry(self.top,textvariable=self.epochs_yolov7_e6_VAR)
             self.epochs_yolov7_e6_entry.grid(row=12-7,column=11-7,sticky='sw')
@@ -4103,6 +4230,24 @@ class yolo_cfg:
             Note, multiple gpus has not been tested yet and might not work.  Recommended to try if you have them, and use 0 if it fails.
 
             ''') 
+            try:
+                self.train_yolov7_re_batch_entry.destroy()
+                self.train_yolov7_re_batch_label.destroy()
+            except:
+                pass
+
+            self.train_yolov7_re_batch_entry=tk.Entry(self.top,textvariable=self.batch_yolov7_re_VAR)
+            self.train_yolov7_re_batch_entry.grid(row=12,column=12-7,sticky='sw')
+            self.train_yolov7_re_batch_entry_tip=CreateToolTip(self.train_yolov7_re_batch_entry,'''
+            This will set the BATCH_SIZE used for training yolov7 with PyTorch. \n\t 
+
+            APPLICABLE: yolov7\n\t
+
+            It simply modifies the command line for training with PyTorch.
+
+            ''')
+            self.train_yolov7_re_batch_label=tk.Label(self.top,text='batch_size (i.e., 32, 64, 128,etc)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.train_yolov7_re_batch_label.grid(row=13,column=12-7,sticky='nw')
 
             self.multi_train_yolov7_re_var=tk.IntVar()
             self.multi_train_yolov7_re_var.set(0)
@@ -4164,6 +4309,24 @@ class yolo_cfg:
             If the mAP is still increasing after 40 epochs, then you might want to increase the epochs since it is still learning well.
 
             ''') 
+            try:
+                self.train_yolov7_x_batch_entry.destroy()
+                self.train_yolov7_x_batch_label.destroy()
+            except:
+                pass
+
+            self.train_yolov7_x_batch_entry=tk.Entry(self.top,textvariable=self.batch_yolov7_x_VAR)
+            self.train_yolov7_x_batch_entry.grid(row=12,column=13-7,sticky='sw')
+            self.train_yolov7_x_batch_entry_tip=CreateToolTip(self.train_yolov7_x_batch_entry,'''
+            This will set the BATCH_SIZE used for training yolov7x with PyTorch. \n\t 
+
+            APPLICABLE: yolov7x\n\t
+
+            It simply modifies the command line for training with PyTorch.
+
+            ''')
+            self.train_yolov7_x_batch_label=tk.Label(self.top,text='batch_size (i.e., 32, 64, 128,etc)',bg=self.root_bg,fg=self.root_fg,font=('Arial',7))
+            self.train_yolov7_x_batch_label.grid(row=13,column=13-7,sticky='nw')
 
             self.multi_train_yolov7_x_var=tk.IntVar()
             self.multi_train_yolov7_x_var.set(0)
@@ -4952,6 +5115,12 @@ class yolo_cfg:
             batch_size=4
         else:
             batch_size=16
+
+        try:
+            batch_size=int(self.batch_yolov7_VAR.get())
+            self.batch_yolov7=batch_size
+        except:
+            print(f'Could not convert to integer {self.batch_yolov7_VAR.get()}')
         gpu_string=self.train_yolov7_gpu.get()
         gpu_string=self.split_gpu_string(gpu_string)
         if len(gpu_string)==1:
@@ -4975,6 +5144,12 @@ class yolo_cfg:
         f.writelines('cd {} \n'.format(self.yolov7_path))
         self.last_weights_path_yolov7_e6=os.path.join(os.path.dirname(self.data_path),'yolov7-e6/weights/last.pt')
         batch_size=2
+        try:
+            batch_size=int(self.batch_yolov7_e6_VAR.get())
+            self.batch_yolov7_e6=batch_size
+        except:
+            print(f'Could not convert to integer {self.batch_yolov7_e6_VAR.get()}')
+
         gpu_string=self.train_yolov7_e6_gpu.get()
         gpu_string=self.split_gpu_string(gpu_string)
         if len(gpu_string)==1:
@@ -5000,6 +5175,11 @@ class yolo_cfg:
             batch_size=2
         else:
             batch_size=8
+        try:
+            batch_size=int(self.batch_yolov7_re_VAR.get())
+            self.batch_yolov7_re=batch_size
+        except:
+            print(f'Could not convert to integer {self.batch_yolov7_re_VAR.get()}')
         gpu_string=self.train_yolov7_re_gpu.get()
         gpu_string=self.split_gpu_string(gpu_string)
         if len(gpu_string)==1:
@@ -5026,6 +5206,11 @@ class yolo_cfg:
             batch_size=2
         else:
             batch_size=8
+        try:
+            batch_size=int(self.batch_yolov7_x_VAR.get())
+            self.batch_yolov7_x=batch_size
+        except:
+            print(f'Could not convert to integer {self.batch_yolov7_x_VAR.get()}')
         gpu_string=self.train_yolov7_x_gpu.get()
         gpu_string=self.split_gpu_string(gpu_string)
         if len(gpu_string)==1:
@@ -6661,6 +6846,10 @@ class yolo_cfg:
             f_new.append('epochs_yolov7_x={}\n'.format(self.epochs_yolov7_x_VAR.get()))   
             f_new.append('epochs_yolov7_re={}\n'.format(self.epochs_yolov7_re_VAR.get()))   
             f_new.append('epochs_yolov7_e6={}\n'.format(self.epochs_yolov7_e6_VAR.get()))   
+            f_new.append('batch={}\n'.format(self.batch_VAR.get()))
+            f_new.append('batch_yolov7={}\n'.format(self.batch_yolov7_VAR.get()))   
+            f_new.append('batch_yolov7_re={}\n'.format(self.batch_yolov7_re_VAR.get()))   
+            f_new.append('batch_yolov7_e6={}\n'.format(self.batch_yolov7_e6_VAR.get()))   
             f=open('{}.py'.format(os.path.join(save_root,prefix_save.replace('-','_'))),'w')
             wrote=[f.writelines(w) for w in f_new]
             f.close()
@@ -6747,7 +6936,11 @@ class yolo_cfg:
             f_new.append('epochs_yolov7={}\n'.format(self.epochs_yolov7_VAR.get()))
             f_new.append('epochs_yolov7_x={}\n'.format(self.epochs_yolov7_x_VAR.get()))
             f_new.append('epochs_yolov7_re={}\n'.format(self.epochs_yolov7_re_VAR.get()))        
-            f_new.append('epochs_yolov7_e6={}\n'.format(self.epochs_yolov7_e6_VAR.get()))   
+            f_new.append('epochs_yolov7_e6={}\n'.format(self.epochs_yolov7_e6_VAR.get()))  
+            f_new.append('batch={}\n'.format(self.batch_VAR.get()))
+            f_new.append('batch_yolov7={}\n'.format(self.batch_yolov7_VAR.get()))   
+            f_new.append('batch_yolov7_re={}\n'.format(self.batch_yolov7_re_VAR.get()))   
+            f_new.append('batch_yolov7_e6={}\n'.format(self.batch_yolov7_e6_VAR.get()))    
             self.SAVED_SETTINGS_PATH_CUSTOM='{}.py'.format(os.path.join(save_root,prefix_save.replace('-','_')))
             f=open(self.SAVED_SETTINGS_PATH_CUSTOM,'w')
             wrote=[f.writelines(w) for w in f_new]
