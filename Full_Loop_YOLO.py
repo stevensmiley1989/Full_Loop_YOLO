@@ -7411,10 +7411,11 @@ class yolo_cfg:
                                 label=label.replace('augmentation_','')
                             else:
                                 print('ERROR FOUND WITH LABEL')
-                                self.ERROR_FOUND=True
+                                #self.ERROR_FOUND=True #new sjs bypass
                                 f=open(self.check_path_ERROR_LABEL,'a')
                                 f.writelines(ERROR_i)
                                 f.close()
+                                break #new sjs bypass
                             
                         xmin = int(float(bndbox.find('xmin').text))
                         ymin = int(float(bndbox.find('ymin').text))
