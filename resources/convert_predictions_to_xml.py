@@ -8,6 +8,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--path_result_list_txt",type=str,default=None,help='The path to your Yolo predictions.txt list')
 ap.add_argument("--path_predictions_folder",type=str,default=None,help="The path to your Yolo predictions folder to output Annotations/JPEGImages")
 ap.add_argument("--path_compute_mAP",type=str,default="None")
+ap.add_argument("--path_objs_names",type=str,default=None,help="path to the obj.names file")
 args=ap.parse_args()
 if args.path_result_list_txt!=None:
     path_result_list_txt=args.path_result_list_txt
@@ -22,6 +23,14 @@ else:
     if args.path_result_list_txt!=None:
         path_predictions_folder=os.path.join(os.path.dirname(path_result_list_txt),'predictions')
         print("Using --path_predictions_folder == {}".format(path_predictions_folder))
+if args.path_objs_names!=None:
+    path_objs_names=args.path_objs_names
+    print("--path_objs_names == {}".format(path_objs_names))
+else:
+    print('WARNING! \n \t --path_objs_names \t None specified')
+    path_objs_names=os.path.join(os.path.dirname(path_predictions_folder),'obj.names')
+    print(f'ASSUMING! \n \t --path_objs_names \t {path_objs_names} specified')
+
 #path_result_list_txt="/media/steven/Elements//Drone_Images/Yolo/tiny_yolo-Elements_upto_5_15_single_w1920_h1056_d4_c1/predictions.txt"
 #path_predictions_folder=os.path.join(os.path.dirname(path_result_list_txt),'predictions')
 #answer1=input('Does this look good? Yes or No')
@@ -144,7 +153,7 @@ if os.path.exists(PATH_JPEG_GT_DIR):
                     os.remove(result_file)
                 if os.path.exists(args.path_compute_mAP):
                     print("SUCCESS:",args.path_compute_mAP)
-                    cmd_i=f'python3 {args.path_compute_mAP} --valid_list="{path_result_list_txt}" --path_Anno_Pred="{path_Anno_Pred}"  --path_JPEGS_GT="{path_JPEGS_GT}" --path_Anno_GT="{path_Anno_GT}" --result_file="{result_file}"'
+                    cmd_i=f'python3 {args.path_compute_mAP} --valid_list="{path_result_list_txt}" --path_Anno_Pred="{path_Anno_Pred}"  --path_JPEGS_GT="{path_JPEGS_GT}" --path_Anno_GT="{path_Anno_GT}"  --obj_names_path="{path_objs_names}" --result_file="{result_file}"'
                     os.system(cmd_i)
                     RAN_CUSTOM_METRICS=True
                 else:
