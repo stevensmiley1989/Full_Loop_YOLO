@@ -3547,7 +3547,7 @@ class yolo_cfg:
             f=open(self.RTSP_CLIENT_LIST,'r')
             f_read=f.readlines()
             f.close()
-            self.RTSP_CLIENTS=[w.replace(' ','').replace('\n','') for w in f_read if w.find('rtsp')!=-1]
+            self.RTSP_CLIENTS=[w.replace(' ','').replace('\n','') for w in f_read if w.find('rtsp')!=-1 or w.find('http')!=-1]
         else:
             f=open(self.RTSP_CLIENT_LIST,'w')
             f.writelines('NO RTSP OPTIONS AVAILABLE\n')
@@ -3555,7 +3555,7 @@ class yolo_cfg:
             f=open(self.RTSP_CLIENT_LIST,'r')
             f_read=f.readlines()
             f.close()
-            self.RTSP_CLIENTS=[w.replace(' ','').replace('\n','') for w in f_read if w.find('rtsp')!=-1]
+            self.RTSP_CLIENTS=[w.replace(' ','').replace('\n','') for w in f_read if w.find('rtsp')!=-1 or w.find('http')!=-1]
 
 
 
@@ -4971,7 +4971,7 @@ class yolo_cfg:
 
         # main_path
         self.RAW_VIDEO_main_path_VAR=tk.StringVar()
-        self.RAW_VIDEO_main_path_VAR.set(r"/media/steven/OneTouch4tb/Videos/")
+        self.RAW_VIDEO_main_path_VAR.set(r"/mnt/DATA1/WEBCAMVIDEO/Videos/")
         self.RAW_VIDEO_main_path_entry=tk.Entry(self.top,textvariable=self.RAW_VIDEO_main_path_VAR)
         self.RAW_VIDEO_main_path_entry.grid(row=7,column=2,columnspan=20,sticky='we')
         self.RAW_VIDEO_main_path_note=tk.Label(self.top,text='--main_path',bg=self.root_fg,fg=self.root_bg,font=("Arial", 9))
